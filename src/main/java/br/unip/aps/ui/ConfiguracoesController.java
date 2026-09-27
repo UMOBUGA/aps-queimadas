@@ -49,7 +49,7 @@ public class ConfiguracoesController implements Pagina.Controlador {
         btnRestaurar.setGraphic(Icones.de(Icones.RECARREGAR, 16));
 
         String[][] atalhos = {
-                {"Ctrl + 1 … 6", "Ir para Visão geral, Ordenação, Benchmark, Mapa, ML, Qualidade"},
+                {"Ctrl + 1 … 7", "Ir para Visão geral, Ordenação, Estruturas, Benchmark, Mapa, ML, Qualidade"},
                 {"Ctrl + O", "Abrir CSV"}, {"Ctrl + R", "Recarregar dados"}, {"Ctrl + E", "Exportar relatório"},
                 {"Ctrl + T", "Alternar tema claro/escuro"}, {"Ctrl + B", "Recolher/expandir menu"}, {"F1", "Sobre"},
                 {"Enter", "Ordenar (na tela de Ordenação)"}};

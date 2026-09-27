@@ -50,6 +50,14 @@ public final class OperationCounter {
         leituras += n;
     }
 
+    /** Acumula as contagens de outra execucao (tarefas paralelas, fases de um algoritmo composto). */
+    public void somar(OperationMetrics m) {
+        comparacoes += m.comparacoes();
+        trocas += m.trocas();
+        atribuicoes += m.atribuicoes();
+        leituras += m.leituras();
+    }
+
     /** Inicia a medicao de tempo. */
     public void iniciar() {
         medindo = true;

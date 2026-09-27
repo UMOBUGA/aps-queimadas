@@ -43,4 +43,27 @@ class ArquiteturaTest {
         }
         assertTrue(violacoes.isEmpty(), "Ordenacao pronta encontrada:\n" + String.join("\n", violacoes));
     }
+
+    private static final Pattern ESTRUTURA_PRONTA = Pattern.compile(
+            "\\b(HashMap|LinkedHashMap|TreeMap|TreeSet|HashSet|LinkedHashSet|Hashtable|PriorityQueue|ConcurrentHashMap|IdentityHashMap)\\b"
+                    + "|\\b(Collections|Arrays)\\s*\\.\\s*binarySearch\\s*\\(");
+
+    @Test
+    @DisplayName("heap, arvore, hash e busca binaria dos pacotes estruturas e busca sao implementados a mao")
+    void estruturasImplementadasAMao() throws IOException {
+        List<String> violacoes = new ArrayList<>();
+        for (String pacote : List.of("src/main/java/br/unip/aps/estruturas", "src/main/java/br/unip/aps/busca")) {
+            try (Stream<Path> s = Files.walk(Path.of(pacote))) {
+                for (Path p : (Iterable<Path>) s.filter(f -> f.toString().endsWith(".java"))::iterator) {
+                    List<String> linhas = Files.readAllLines(p, StandardCharsets.UTF_8);
+                    for (int i = 0; i < linhas.size(); i++) {
+                        String l = linhas.get(i).strip();
+                        if (l.startsWith("*") || l.startsWith("//") || l.startsWith("/*")) continue;
+                        if (ESTRUTURA_PRONTA.matcher(l).find()) violacoes.add(p + ":" + (i + 1) + "  " + l);
+                    }
+                }
+            }
+        }
+        assertTrue(violacoes.isEmpty(), "Estrutura pronta nos pacotes novos:\n" + String.join("\n", violacoes));
+    }
 }

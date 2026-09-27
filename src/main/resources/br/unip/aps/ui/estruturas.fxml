@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import br.unip.aps.ui.componentes.ChartCard?>
+<?import br.unip.aps.ui.componentes.GradeResponsiva?>
+<?import br.unip.aps.ui.componentes.KpiCard?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.TextFlow?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="br.unip.aps.ui.EstruturasController" fitToWidth="true" styleClass="pagina-scroll">
+    <VBox styleClass="page">
+        <VBox styleClass="manchete" spacing="6">
+            <Label text="Por que ordenar antes de consultar?" styleClass="manchete-linha"/>
+            <TextFlow fx:id="tfManchete" maxWidth="900"/>
+        </VBox>
+
+        <ChartCard fx:id="cConsultas" titulo="Quatro formas de responder a mesma pergunta"
+                   subtitulo="Todas encontram os mesmos focos; muda o custo. A contagem usa o mesmo contador de operações dos algoritmos de ordenação."/>
+        <FlowPane fx:id="fpControles" hgap="12" vgap="10" alignment="CENTER_LEFT">
+            <HBox fx:id="segTipo" styleClass="segmented">
+                <ToggleButton fx:id="tgMunicipio" text="Por município" selected="true"/>
+                <ToggleButton fx:id="tgIntervalo" text="Por intervalo de datas"/>
+            </HBox>
+            <ComboBox fx:id="cbMunicipio" prefWidth="240" promptText="Município"/>
+            <HBox fx:id="boxDatas" spacing="6" alignment="CENTER_LEFT">
+                <DatePicker fx:id="dpDe" prefWidth="140" promptText="De"/>
+                <Label text="→" styleClass="field-label"/>
+                <DatePicker fx:id="dpAte" prefWidth="140" promptText="Até"/>
+            </HBox>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Consultas" styleClass="field-label"/>
+                <Spinner fx:id="spConsultas" prefWidth="104" editable="true"/>
+            </HBox>
+            <Button fx:id="btnConsultar" text="Consultar" onAction="#consultar" styleClass="btn-primary"/>
+        </FlowPane>
+        <GradeResponsiva fx:id="gradePlacar" larguraMinima="170" maxColunas="4" gap="24" styleClass="placar">
+            <KpiCard fx:id="kLinear" titulo="Busca sequencial" icone="mdi2m-magnify"/>
+            <KpiCard fx:id="kBinaria" titulo="Ordenar + busca binária" icone="mdi2s-sort-ascending"/>
+            <KpiCard fx:id="kAvl" titulo="Índice AVL" icone="mdi2f-file-tree-outline"/>
+            <KpiCard fx:id="kHash" titulo="Tabela hash" icone="mdi2p-pound"/>
+        </GradeResponsiva>
+        <ChartCard fx:id="cTotal" titulo="Custo total, preparo incluído"
+                   subtitulo="Comparações para responder todas as consultas, somando o preparo (ordenar, montar a árvore ou a tabela) · escala logarítmica"
+                   prefHeight="250"/>
+
+        <ChartCard fx:id="cArvore" titulo="Árvore AVL: cada inserção mantém a altura em O(log n)"
+                   subtitulo="Inserir em ordem alfabética transformaria uma árvore de busca comum numa lista; a AVL rotaciona e continua baixa"/>
+
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="36">
+            <ChartCard fx:id="cTopK" titulo="Top K com heap" subtitulo="Heap mínimo de tamanho K sobre as contagens da tabela hash × ordenar todos os municípios" prefHeight="440"/>
+            <ChartCard fx:id="cMemoria" titulo="Memória extra por algoritmo" subtitulo="Bytes alocados durante a ordenação (critério data/hora), descontado o custo fixo da instrumentação · escala logarítmica" prefHeight="440"/>
+        </GradeResponsiva>
+
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="36">
+            <ChartCard fx:id="cExterno" titulo="External Merge Sort" subtitulo="Ordena CSVs maiores que a memória: runs ordenados em disco e intercalação k-way com o heap próprio" prefHeight="420"/>
+            <ChartCard fx:id="cParalelo" titulo="Merge Sort paralelo" subtitulo="Speedup S(p) = T(1) / T(p) com Fork/Join; a linha tracejada é o ideal S = p" prefHeight="420"/>
+        </GradeResponsiva>
+    </VBox>
+</ScrollPane>

@@ -42,12 +42,25 @@ public final class DownloaderInpe {
         if (uf == null || !uf.strip().matches("[A-Za-z]{2}")) {
             throw new ApsException("UF invalida: '" + uf + "'. Use a sigla com 2 letras, ex.: SP.");
         }
-        String url = url(uf, ano);
+        return baixarUrl(url(uf, ano), destino);
+    }
+
+    /** URL do arquivo anual do Brasil inteiro (satelite de referencia). */
+    public String urlBrasil(int ano) {
+        return urlBase.replace("EstadosBr_sat_ref/", "Brasil_sat_ref/") + "focos_br_ref_" + ano + ".zip";
+    }
+
+    /** Baixa o CSV anual do Brasil inteiro (usado pelo External Merge Sort). */
+    public Path baixarBrasil(int ano, Path destino) throws ApsException {
+        return baixarUrl(urlBrasil(ano), destino);
+    }
+
+    private Path baixarUrl(String url, Path destino) throws ApsException {
         LOG.info(() -> "Baixando " + url);
         try {
             Files.createDirectories(destino);
             HttpRequest req = HttpRequest.newBuilder(URI.create(url))
-                    .timeout(Duration.ofMinutes(2))
+                    .timeout(Duration.ofMinutes(10))
                     .header("User-Agent", "APS-Queimadas-UNIP/1.0 (Java HttpClient)")
                     .GET().build();
             HttpResponse<InputStream> resp = http.send(req, HttpResponse.BodyHandlers.ofInputStream());

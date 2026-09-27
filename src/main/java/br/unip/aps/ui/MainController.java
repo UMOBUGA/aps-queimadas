@@ -349,7 +349,7 @@ public class MainController {
         s.getAccelerators().put(new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN),
                 () -> GerenciadorTema.get().sidebarRecolhidaProperty().set(!GerenciadorTema.get().sidebarRecolhidaProperty().get()));
         s.getAccelerators().put(new KeyCodeCombination(KeyCode.F1), () -> ctx.navegar(Pagina.SOBRE));
-        KeyCode[] numeros = {KeyCode.DIGIT1, KeyCode.DIGIT2, KeyCode.DIGIT3, KeyCode.DIGIT4, KeyCode.DIGIT5, KeyCode.DIGIT6};
+        KeyCode[] numeros = {KeyCode.DIGIT1, KeyCode.DIGIT2, KeyCode.DIGIT3, KeyCode.DIGIT4, KeyCode.DIGIT5, KeyCode.DIGIT6, KeyCode.DIGIT7};
         Pagina[] ps = Pagina.values();
         for (int i = 0; i < numeros.length; i++) {
             Pagina p = ps[i];

@@ -16,6 +16,13 @@ public final class Formatos {
         return NumberFormat.getIntegerInstance(Textos.PT_BR).format(n);
     }
 
+    /** Bytes em B, KB ou MB (base 1024), no formato pt-BR. */
+    public static String bytes(long b) {
+        if (b < 1024) return inteiro(b) + " B";
+        if (b < 1024L * 1024) return decimal(b / 1024.0, 1) + " KB";
+        return decimal(b / (1024.0 * 1024), 1) + " MB";
+    }
+
     public static String decimal(double v, int casas) {
         NumberFormat nf = NumberFormat.getNumberInstance(Textos.PT_BR);
         nf.setMinimumFractionDigits(casas);

@@ -8,6 +8,8 @@ public enum Pagina {
             "Indicadores e distribuição dos focos de queimadas"),
     ORDENACAO("Ordenação", Icones.ORDENACAO, "ordenacao.fxml", true, false,
             "Ordene os focos e veja as operações de cada algoritmo"),
+    ESTRUTURAS("Estruturas & Busca", Icones.ESTRUTURAS, "estruturas.fxml", false, false,
+            "Busca binária, AVL, hash, heap, ordenação externa e paralela"),
     BENCHMARK("Benchmark", Icones.BENCHMARK, "benchmark.fxml", false, false,
             "Custo dos algoritmos em função do tamanho da entrada"),
     MAPA("Mapa", Icones.MAPA, "mapa.fxml", true, false,

@@ -8,6 +8,7 @@ public final class Icones {
     public static final String VISAO_GERAL = "mdi2v-view-dashboard-outline";
     public static final String ORDENACAO = "mdi2s-sort-ascending";
     public static final String BENCHMARK = "mdi2s-speedometer";
+    public static final String ESTRUTURAS = "mdi2f-file-tree-outline";
     public static final String MAPA = "mdi2m-map-outline";
     public static final String ML = "mdi2b-brain";
     public static final String QUALIDADE = "mdi2s-shield-check-outline";

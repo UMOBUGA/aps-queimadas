@@ -54,7 +54,7 @@ final class CapturaTelas {
                     GerenciadorTema.get().temaProperty().set(tema);
                     ctx.navegar(p);
                     Object c = main.controllerDe(p);
-                    Runnable capturar = () -> esperar(p == Pagina.MAPA ? 8000 : 900, () -> {
+                    Runnable capturar = () -> esperar(p == Pagina.MAPA ? 8000 : p == Pagina.ESTRUTURAS ? 14000 : 900, () -> {
                         String base = String.format("%02d-%s-%s", num, p.name().toLowerCase().replace('_', '-'),
                                 tema == GerenciadorTema.Tema.CLARO ? "claro" : "escuro");
                         salvar(base + ".png");

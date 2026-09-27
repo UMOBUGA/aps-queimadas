@@ -62,6 +62,7 @@ public final class Main {
                 case "resultados" -> resultados(sessao, op.containsKey("rapido"), out);
                 case "relatorio-codigo" -> relatorioCodigo(sessao, out);
                 case "baixar" -> baixar(sessao, op, out);
+                case "estruturas" -> estruturas(sessao, op, out);
                 case "help", "ajuda", "h" -> ajuda(out);
                 default -> {
                     out.println("Modo desconhecido: " + args[0]);
@@ -230,6 +231,49 @@ public final class Main {
         return m;
     }
 
+    private static void estruturas(Sessao sessao, Map<String, String> op, PrintStream out) throws ApsException {
+        try {
+            executarEstruturas(sessao, op, out);
+        } catch (java.io.IOException e) {
+            throw new ApsException("Falha nos experimentos de estruturas: " + e.getMessage(), e);
+        }
+    }
+
+    private static void executarEstruturas(Sessao sessao, Map<String, String> op, PrintStream out) throws ApsException, java.io.IOException {
+        var base = sessao.carregar();
+        java.util.List<java.nio.file.Path> brasil = new java.util.ArrayList<>();
+        if (op.containsKey("brasil")) {
+            String[] faixa = op.get("brasil").split("-");
+            int de = Integer.parseInt(faixa[0].strip()), ate = Integer.parseInt(faixa[faixa.length - 1].strip());
+            java.nio.file.Path dir = java.nio.file.Path.of("data", "brasil");
+            br.unip.aps.io.DownloaderInpe d = new br.unip.aps.io.DownloaderInpe(sessao.config().urlInpe());
+            for (int ano = de; ano <= ate; ano++) {
+                java.nio.file.Path csv = dir.resolve("focos_br_ref_" + ano + ".csv");
+                if (!java.nio.file.Files.isRegularFile(csv)) {
+                    out.println("Baixando focos do Brasil " + ano + "...");
+                    csv = d.baixarBrasil(ano, dir);
+                }
+                brasil.add(csv);
+            }
+        }
+        int memoria = Integer.parseInt(op.getOrDefault("memoria", "200000"));
+        java.nio.file.Path temp = java.nio.file.Files.createTempDirectory("aps-estruturas");
+        if (op.containsKey("so-externo")) {
+            String md = new br.unip.aps.app.ExperimentosEstruturas(s -> out.println("  " + s)).somenteExterno(brasil, memoria, temp);
+            java.nio.file.Path destino = java.nio.file.Path.of("docs", "resultados", "estruturas-externo.md");
+            java.nio.file.Files.writeString(destino, md, java.nio.charset.StandardCharsets.UTF_8);
+            out.println(md);
+            return;
+        }
+        String md = new br.unip.aps.app.ExperimentosEstruturas(s -> out.println("  " + s))
+                .executar(base.getFocos(), brasil, memoria, temp);
+        java.nio.file.Path destino = java.nio.file.Path.of("docs", "resultados", "estruturas.md");
+        java.nio.file.Files.createDirectories(destino.getParent());
+        java.nio.file.Files.writeString(destino, md, java.nio.charset.StandardCharsets.UTF_8);
+        out.println(md);
+        out.println("Gravado em " + destino.toAbsolutePath());
+    }
+
     private static void ajuda(PrintStream out) {
         out.println("""
                 APS Queimadas - uso: java -jar aps-queimadas-1.0.0-all.jar [modo] [opcoes]
@@ -245,6 +289,9 @@ public final class Main {
                   relatorio-codigo      gera relatorios/codigo-fonte.pdf (Relatorio com as linhas de codigo)
                   capturas [--saida DIR] abre o dashboard e salva prints de todas as telas (claro/escuro) em docs/prints
                   baixar                --uf SP --anos 2023,2024  (baixa do INPE para data/raw)
+                  estruturas            buscas, AVL, hash, heap, memoria, Merge Sort paralelo e External Merge Sort;
+                                        [--brasil 2019-2024] baixa o Brasil para data/brasil; [--memoria 200000]
+                                        grava docs/resultados/estruturas.md
 
                 Algoritmos: """ + SortAlgorithmFactory.nomes());
     }
