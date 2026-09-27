@@ -55,6 +55,56 @@ public final class DownloaderInpe {
         return baixarUrl(urlBrasil(ano), destino);
     }
 
+    /** URL do anual do Brasil com todos os satelites (traz dias sem chuva, precipitacao, risco de fogo e FRP). */
+    public String urlTodosSatelites(int ano) {
+        return urlBase.replace("EstadosBr_sat_ref/", "Brasil_todos_sats/") + "focos_br_todos-sats_" + ano + ".zip";
+    }
+
+    /** Baixa o anual de todos os satelites guardando apenas as linhas do estado informado (streaming, sem o Brasil em disco). */
+    public Path baixarTodosSatelites(int ano, String estado, String uf, Path destino) throws ApsException {
+        String url = urlTodosSatelites(ano);
+        String alvo = "," + estado.toUpperCase(Locale.ROOT) + ",";
+        LOG.info(() -> "Baixando e filtrando " + url);
+        try {
+            Files.createDirectories(destino);
+            HttpRequest req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofMinutes(20))
+                    .header("User-Agent", "APS-Queimadas-UNIP/1.0 (Java HttpClient)").GET().build();
+            HttpResponse<InputStream> resp = http.send(req, HttpResponse.BodyHandlers.ofInputStream());
+            if (resp.statusCode() != 200) {
+                resp.body().close();
+                throw new ApsException("O servidor do INPE respondeu HTTP " + resp.statusCode() + " para " + url);
+            }
+            Path saida = destino.resolve("focos_" + uf.toLowerCase(Locale.ROOT) + "_todos-sats_" + ano + ".csv");
+            try (ZipInputStream zip = new ZipInputStream(resp.body())) {
+                ZipEntry e;
+                while ((e = zip.getNextEntry()) != null) {
+                    if (e.isDirectory() || !e.getName().toLowerCase(Locale.ROOT).endsWith(".csv")) continue;
+                    java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(zip, java.nio.charset.StandardCharsets.UTF_8));
+                    try (java.io.BufferedWriter out = Files.newBufferedWriter(saida, java.nio.charset.StandardCharsets.UTF_8)) {
+                        String cab = in.readLine();
+                        if (cab == null) continue;
+                        out.write(cab);
+                        out.newLine();
+                        String linha;
+                        while ((linha = in.readLine()) != null) {
+                            if (linha.toUpperCase(Locale.ROOT).contains(alvo)) {
+                                out.write(linha);
+                                out.newLine();
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            return saida;
+        } catch (IOException e) {
+            throw new ApsException("Falha ao baixar " + url + " (" + e.getMessage() + ")", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ApsException("Download interrompido.", e);
+        }
+    }
+
     private Path baixarUrl(String url, Path destino) throws ApsException {
         LOG.info(() -> "Baixando " + url);
         try {

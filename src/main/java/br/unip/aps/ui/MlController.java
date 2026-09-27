@@ -52,7 +52,7 @@ public class MlController implements Pagina.Controlador {
     @FXML private Button btnMapa, btnTreinar;
     @FXML private Label lblPreparo;
     @FXML private KpiCard kMae, kRmse, kR2, kAcuracia, kF1;
-    @FXML private ChartCard cPrevisao, cMatriz, cImportancia, cHotspots, cCotovelo;
+    @FXML private ChartCard cPrevisao, cMatriz, cImportancia, cHotspots, cCotovelo, cJanelas, cAblacao, cPermutacao, cCaso;
     @FXML private TextFlow textoSobre;
 
     private final LineChart<String, Number> grafPrevisao = new LineChart<>(new CategoryAxis(), new NumberAxis());
@@ -118,6 +118,17 @@ public class MlController implements Pagina.Controlador {
         configurarTabela();
         for (KpiCard k : List.of(kMae, kRmse, kR2, kAcuracia, kF1)) k.valor("—").contexto("treine os modelos", KpiCard.Tendencia.NEUTRA);
         escreverSobre();
+        br.unip.aps.ml.EstudoPrevisao.Resultado estudo = EstudoMlPainel.carregar();
+        if (estudo != null) {
+            EstudoMlPainel.janelas(cJanelas, estudo);
+            EstudoMlPainel.ablacao(cAblacao, estudo);
+            EstudoMlPainel.permutacao(cPermutacao, estudo);
+            EstudoMlPainel.caso(cCaso, estudo);
+            ctx.registrarGrafico("ML: ablação", cAblacao);
+            ctx.registrarGrafico("ML: agosto de 2024", cCaso);
+        } else {
+            for (ChartCard c : List.of(cJanelas, cAblacao, cPermutacao, cCaso)) c.estado(ChartCard.Estado.VAZIO);
+        }
 
         ctx.mlProperty().addListener((o, a, r) -> {
             if (r != null && r != resultado) exibir(r);

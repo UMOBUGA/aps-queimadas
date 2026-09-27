@@ -63,6 +63,8 @@ public final class Main {
                 case "relatorio-codigo" -> relatorioCodigo(sessao, out);
                 case "baixar" -> baixar(sessao, op, out);
                 case "estruturas" -> estruturas(sessao, op, out);
+                case "historico" -> historico(sessao, op, out);
+                case "ml-estudo" -> mlEstudo(op, out);
                 case "help", "ajuda", "h" -> ajuda(out);
                 default -> {
                     out.println("Modo desconhecido: " + args[0]);
@@ -274,6 +276,66 @@ public final class Main {
         out.println("Gravado em " + destino.toAbsolutePath());
     }
 
+    private static void historico(Sessao sessao, Map<String, String> op, PrintStream out) throws ApsException {
+        String[] faixa = op.getOrDefault("anos", "2019-2024").split("-");
+        int de = Integer.parseInt(faixa[0].strip()), ate = Integer.parseInt(faixa[faixa.length - 1].strip());
+        String uf = op.getOrDefault("uf", sessao.config().uf());
+        java.nio.file.Path dir = java.nio.file.Path.of("data", "historico");
+        br.unip.aps.io.DownloaderInpe d = new br.unip.aps.io.DownloaderInpe(sessao.config().urlInpe());
+        for (int ano = de; ano <= ate; ano++) {
+            java.nio.file.Path ref = dir.resolve("focos_br_" + uf.toLowerCase(Textos.PT_BR) + "_ref_" + ano + ".csv");
+            if (!java.nio.file.Files.isRegularFile(ref)) {
+                out.println("Satélite de referência " + uf + " " + ano + "...");
+                d.baixar(uf, ano, dir);
+            }
+            if (op.containsKey("meteorologia")) {
+                String estado = op.getOrDefault("estado", "SÃO PAULO");
+                java.nio.file.Path todos = dir.resolve("focos_" + uf.toLowerCase(Textos.PT_BR) + "_todos-sats_" + ano + ".csv");
+                if (!java.nio.file.Files.isRegularFile(todos)) {
+                    out.println("Todos os satélites (meteorologia) " + ano + ", filtrando " + estado + "...");
+                    d.baixarTodosSatelites(ano, estado, uf, dir);
+                }
+            }
+        }
+        out.println("Histórico em " + dir.toAbsolutePath());
+    }
+
+    private static void mlEstudo(Map<String, String> op, PrintStream out) throws ApsException {
+        try {
+            java.nio.file.Path dir = java.nio.file.Path.of(op.getOrDefault("dir", "data/historico"));
+            java.util.List<java.nio.file.Path> ref = new java.util.ArrayList<>();
+            java.util.List<java.nio.file.Path> todos = new java.util.ArrayList<>();
+            try (var s = java.nio.file.Files.list(dir)) {
+                s.forEach(p -> {
+                    String n = p.getFileName().toString();
+                    if (n.contains("_ref_") && n.endsWith(".csv")) ref.add(p);
+                    if (n.contains("todos-sats") && n.endsWith(".csv")) todos.add(p);
+                });
+            }
+            if (ref.isEmpty()) throw new ApsException("Sem histórico em " + dir + ". Rode: historico --anos 2019-2024 --meteorologia");
+            br.unip.aps.sorting.Ordenacoes.ordenar(ref, java.util.Comparator.comparing(p -> p.getFileName().toString()));
+            var base = new br.unip.aps.io.CsvLoader().carregar(ref);
+            out.println("Focos de referência: " + base.tamanho() + " (" + ref.size() + " arquivos)");
+            var meteo = br.unip.aps.ml.MeteoMensal.ler(todos);
+            out.println("Detecções de todos os satélites: " + meteo.linhas());
+            int anoTeste = base.anos().get(base.anos().size() - 1);
+            var r = new br.unip.aps.ml.EstudoPrevisao(Integer.parseInt(op.getOrDefault("arvores", "200")), 42L, s -> out.println("  " + s))
+                    .executar(base.getFocos(), meteo, anoTeste);
+            String md = br.unip.aps.app.RelatorioEstudoMl.markdown(r);
+            java.nio.file.Path destino = java.nio.file.Path.of("docs", "resultados", "ml-estudo.md");
+            java.nio.file.Files.writeString(destino, md, StandardCharsets.UTF_8);
+            java.nio.file.Path bin = java.nio.file.Path.of("src", "main", "resources", "resultados", "ml-estudo.bin");
+            java.nio.file.Files.createDirectories(bin.getParent());
+            try (var o = new java.io.ObjectOutputStream(java.nio.file.Files.newOutputStream(bin))) {
+                o.writeObject(r);
+            }
+            out.println(md);
+            out.println("Gravado em " + destino.toAbsolutePath() + " e " + bin);
+        } catch (java.io.IOException e) {
+            throw new ApsException("Falha no estudo de ML: " + e.getMessage(), e);
+        }
+    }
+
     private static void ajuda(PrintStream out) {
         out.println("""
                 APS Queimadas - uso: java -jar aps-queimadas-1.0.0-all.jar [modo] [opcoes]
@@ -292,6 +354,7 @@ public final class Main {
                   estruturas            buscas, AVL, hash, heap, memoria, Merge Sort paralelo e External Merge Sort;
                                         [--brasil 2019-2024] baixa o Brasil para data/brasil; [--memoria 200000]
                                         grava docs/resultados/estruturas.md
+                  historico             --anos 2019-2024 [--meteorologia]  baixa o historico de SP para data/historico
 
                 Algoritmos: """ + SortAlgorithmFactory.nomes());
     }

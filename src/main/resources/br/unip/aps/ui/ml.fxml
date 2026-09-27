@@ -51,6 +51,17 @@
             <ChartCard fx:id="cHotspots" titulo="Hotspots geográficos" subtitulo="Grupos de focos encontrados pela clusterização" prefHeight="400"/>
         </GradeResponsiva>
 
+        <ChartCard fx:id="cJanelas" titulo="Seis anos de histórico: validação em janelas"
+                   subtitulo="Para cada ano de teste, o modelo treina com todos os anos anteriores (rolling origin) e é comparado a três baselines"/>
+        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="32">
+            <ChartCard fx:id="cAblacao" titulo="O que cada grupo de variáveis acrescenta"
+                       subtitulo="MAE no teste de 2024 (treino 2020–2023); grupos acumulados; menor é melhor" prefHeight="420"/>
+            <ChartCard fx:id="cPermutacao" titulo="Importância por permutação"
+                       subtitulo="Quanto o MAE piora ao embaralhar cada variável (modelo completo, teste de 2024)" prefHeight="420"/>
+        </GradeResponsiva>
+        <ChartCard fx:id="cCaso" titulo="Por que o modelo não previu agosto de 2024"
+                   subtitulo="Focos por dia em agosto: 2024 contra a média dos agostos anteriores" prefHeight="470"/>
+
         <GradeResponsiva larguraMinima="540" maxColunas="2" gap="32">
             <ChartCard fx:id="cCotovelo" titulo="Método do cotovelo (K-Means)" subtitulo="Distorção média (km²) × k: o 'cotovelo' sugere um k adequado" prefHeight="300"/>
             <VBox styleClass="panel-card" spacing="8">

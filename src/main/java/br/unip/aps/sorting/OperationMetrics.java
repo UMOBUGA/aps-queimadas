@@ -3,7 +3,7 @@ package br.unip.aps.sorting;
 import br.unip.aps.util.Formatos;
 
 /** Resultado imutavel da contagem de operacoes de uma execucao de ordenacao. */
-public record OperationMetrics(long comparacoes, long trocas, long atribuicoes, long leituras, long nanos) {
+public record OperationMetrics(long comparacoes, long trocas, long atribuicoes, long leituras, long nanos) implements java.io.Serializable {
     public long acessos() {
         return leituras + atribuicoes;
     }

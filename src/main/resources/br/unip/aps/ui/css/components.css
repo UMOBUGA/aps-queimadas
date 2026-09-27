@@ -540,3 +540,7 @@
 }
 
 .kpi-unidade { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 22px; -fx-text-fill: -aps-text-2; -fx-padding: 0 0 6 0; }
+
+.tabela-leve-cabecalho { -fx-font-family: "Inter SemiBold"; -fx-font-size: 12px; -fx-text-fill: -aps-text-2; -fx-padding: 0 0 6 0; }
+.tabela-leve-celula { -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
+.tabela-leve-celula.destaque { -fx-font-family: "Inter SemiBold"; -fx-text-fill: -aps-accent-text; }
