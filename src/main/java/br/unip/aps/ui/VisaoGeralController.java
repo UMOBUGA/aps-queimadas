@@ -289,13 +289,7 @@ public class VisaoGeralController implements Pagina.Controlador {
     }
 
     static String capitalizar(String s) {
-        StringBuilder sb = new StringBuilder();
-        for (String p : s.toLowerCase(br.unip.aps.util.Textos.PT_BR).split(" ")) {
-            if (!sb.isEmpty()) sb.append(' ');
-            if (Set.of("de", "da", "do", "das", "dos", "e", "d'oeste").contains(p)) sb.append(p);
-            else if (!p.isEmpty()) sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1));
-        }
-        return sb.toString();
+        return br.unip.aps.util.Textos.nomeProprio(s);
     }
 
     private void montarMensal(Estatisticas est, List<Integer> anos, int anoMax) {

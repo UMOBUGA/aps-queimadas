@@ -17,7 +17,7 @@ https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/EstadosBr_s
 - **Formato:** cada `.zip` contém um único `.csv` com o mesmo nome.
 - **Como baixar:**
   - **Manual:** clique no `.zip` no navegador e extraia o CSV para `data/raw/`.
-  - **Pelo sistema:** botão **"Baixar do INPE…"** no dashboard, ou `java -jar aps-queimadas-1.0.0-all.jar baixar --uf SP --anos 2023,2024`.
+  - **Pelo sistema:** botão **"Baixar do INPE…"** no dashboard, ou `java -jar aps-queimadas-2.0.0-all.jar baixar --uf SP --anos 2023,2024`.
   - **No projeto:** os arquivos de SP (2023 e 2024) já estão versionados em `data/raw/`.
 
 > **Por que o diretório `EstadosBr_sat_ref`?**

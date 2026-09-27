@@ -114,7 +114,7 @@ public class MainController {
         conteudo.getChildren().addAll(vazio, overlay);
         paleta = new br.unip.aps.ui.componentes.PaletaComandos(this::comandos);
         raiz.getChildren().add(paleta);
-        apresentacao = new ModoApresentacao(this, ctx, raiz);
+        apresentacao = new ModoApresentacao(ctx, raiz);
         tour = new TourGuiado(raiz, List.of(
                 new TourGuiado.Passo(() -> sidebar, "Sete telas, uma pergunta cada",
                         "Visão geral, Ordenação, Estruturas & Busca, Benchmark, Mapa, Machine Learning e Qualidade dos dados. Ctrl+1 a Ctrl+7 levam direto a cada uma."),
@@ -489,7 +489,7 @@ public class MainController {
         fc.setTitle("Salvar relatório");
         Path sugestao = ctx.sessao().arquivoRelatorio("relatorio", "." + tipo);
         File dir = sugestao.toAbsolutePath().getParent().toFile();
-        dir.mkdirs();
+        if (!dir.isDirectory() && !dir.mkdirs()) dir = new File(System.getProperty("user.home"));
         fc.setInitialDirectory(dir);
         fc.setInitialFileName(sugestao.getFileName().toString());
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(tipo.toUpperCase(), "*." + tipo));

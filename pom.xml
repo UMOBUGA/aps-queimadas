@@ -6,7 +6,7 @@
 
     <groupId>br.unip.aps</groupId>
     <artifactId>aps-queimadas</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <packaging>jar</packaging>
 
     <name>APS Queimadas - Analise de Performance de Algoritmos de Ordenacao</name>
@@ -173,6 +173,45 @@
                         <phase>verify</phase>
                         <goals><goal>report</goal></goals>
                     </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.65</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>br.unip.aps.sorting*</include>
+                                        <include>br.unip.aps.estruturas</include>
+                                        <include>br.unip.aps.busca</include>
+                                        <include>br.unip.aps.analysis</include>
+                                        <include>br.unip.aps.benchmark</include>
+                                        <include>br.unip.aps.ml</include>
+                                        <include>br.unip.aps.model</include>
+                                        <include>br.unip.aps.geo</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.85</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -213,7 +252,7 @@
                 </configuration>
             </plugin>
 
-            <!-- JAR executavel unico (fat jar): target/aps-queimadas-1.0.0-all.jar -->
+            <!-- JAR executavel unico (fat jar): target/aps-queimadas-2.0.0-all.jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -229,6 +268,10 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>${main.class}</mainClass>
+                                    <manifestEntries>
+                                        <Implementation-Title>APS Queimadas</Implementation-Title>
+                                        <Implementation-Version>${project.version}</Implementation-Version>
+                                    </manifestEntries>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
@@ -260,9 +303,128 @@
                     <doctitle>APS Queimadas - Documentacao da API</doctitle>
                 </configuration>
             </plugin>
+
+            <!-- Qualidade: estilo (Checkstyle), analise estatica (PMD, SpotBugs) e cobertura minima (JaCoCo) no verify -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>10.26.1</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>config/checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <violationSeverity>warning</violationSeverity>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.27.0</version>
+                <configuration>
+                    <rulesets>
+                        <ruleset>config/pmd.xml</ruleset>
+                    </rulesets>
+                    <targetJdk>${java.version}</targetJdk>
+                    <printFailingErrors>true</printFailingErrors>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pmd</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.9.3.2</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Medium</threshold>
+                    <excludeFilterFile>config/spotbugs-exclude.xml</excludeFilterFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotbugs</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <profiles>
+        <!-- Teste de mutacao (PIT) nos algoritmos e estruturas: mvnw -Pmutacao test-compile org.pitest:pitest-maven:mutationCoverage -->
+        <profile>
+            <id>mutacao</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.junit.platform</groupId>
+                    <artifactId>junit-platform-launcher</artifactId>
+                    <version>1.13.4</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>1.17.4</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>1.2.1</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <targetClasses>
+                                <param>br.unip.aps.sorting.algorithms.*</param>
+                                <param>br.unip.aps.estruturas.*</param>
+                                <param>br.unip.aps.busca.*</param>
+                            </targetClasses>
+                            <targetTests>
+                                <param>br.unip.aps.sorting.*</param>
+                                <param>br.unip.aps.estruturas.*</param>
+                                <param>br.unip.aps.busca.*</param>
+                            </targetTests>
+                            <excludedClasses>
+                                <param>br.unip.aps.estruturas.MedidorMemoria</param>
+                            </excludedClasses>
+                            <threads>4</threads>
+                            <mutationThreshold>65</mutationThreshold>
+                            <timestampedReports>false</timestampedReports>
+                            <outputFormats>
+                                <param>HTML</param>
+                                <param>CSV</param>
+                            </outputFormats>
+                            <jvmArgs>
+                                <value>-Xss8m</value>
+                            </jvmArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>jmh</id>
             <dependencies>

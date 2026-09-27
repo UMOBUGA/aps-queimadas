@@ -58,10 +58,10 @@ cd aps-queimadas
 | Menu no terminal | `mvnw.cmd -q exec:java -Dexec.args="cli"` | `./mvnw -q exec:java -Dexec.args="cli"` |
 | Gerar o **JAR executável** | `mvnw.cmd -DskipTests package` | `./mvnw -DskipTests package` |
 
-O JAR gerado, `target/aps-queimadas-1.0.0-all.jar`, contém todas as dependências. Para rodar:
+O JAR gerado, `target/aps-queimadas-2.0.0-all.jar`, contém todas as dependências. Para rodar:
 
 ```bash
-java -jar target/aps-queimadas-1.0.0-all.jar
+java -jar target/aps-queimadas-2.0.0-all.jar
 ```
 
 Sem argumentos, abre o dashboard. Os modos de linha de comando estão abaixo.
@@ -131,7 +131,7 @@ Todos os prints em [`docs/prints/`](docs/prints/) (páginas inteiras em `complet
 
 ## Modos de execução
 
-Uso geral: `java -jar target/aps-queimadas-1.0.0-all.jar <modo> [opções]`. Também funciona com `mvnw -q exec:java -Dexec.args="<modo> …"`.
+Uso geral: `java -jar target/aps-queimadas-2.0.0-all.jar <modo> [opções]`. Também funciona com `mvnw -q exec:java -Dexec.args="<modo> …"`.
 
 | Modo | O que faz |
 |---|---|
@@ -150,7 +150,7 @@ Uso geral: `java -jar target/aps-queimadas-1.0.0-all.jar <modo> [opções]`. Tam
 **Exemplo real:**
 
 ```text
-$ java -jar aps-queimadas-1.0.0-all.jar comparar --criterios municipio --cenario aleatorio
+$ java -jar aps-queimadas-2.0.0-all.jar comparar --criterios municipio --cenario aleatorio
 Algoritmo                Comparacoes  Trocas      Atribuicoes  Acessos      Tempo       Verif.
 Bubble Sort               53.736.380  26.626.863   53.253.726  213.980.212     3,013 s  OK
 Selection Sort            53.846.253      10.363       20.726  107.733.958     1,511 s  OK

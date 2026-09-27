@@ -25,6 +25,9 @@ public final class DownloaderInpe {
     private final HttpClient http;
 
     public DownloaderInpe(String urlBase) {
+        if (urlBase == null || !urlBase.startsWith("https://")) {
+            throw new IllegalArgumentException("O endereço do INPE deve usar https (aps.inpe.url): " + urlBase);
+        }
         this.urlBase = urlBase.endsWith("/") ? urlBase : urlBase + "/";
         this.http = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(20))
@@ -61,6 +64,7 @@ public final class DownloaderInpe {
     }
 
     /** Baixa o anual de todos os satelites guardando apenas as linhas do estado informado (streaming, sem o Brasil em disco). */
+    @SuppressWarnings({"PMD.CloseResource", "PMD.AvoidBranchingStatementAsLastInLoop"})
     public Path baixarTodosSatelites(int ano, String estado, String uf, Path destino) throws ApsException {
         String url = urlTodosSatelites(ano);
         String alvo = "," + estado.toUpperCase(Locale.ROOT) + ",";

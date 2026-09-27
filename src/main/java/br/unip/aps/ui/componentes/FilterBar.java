@@ -306,7 +306,12 @@ public class FilterBar extends VBox {
     /** Reaplica uma visao salva pelo nome. */
     public void abrirVisao(String nome) {
         String v = prefsVisoes.get(nome, null);
-        if (v != null) aplicar(desserializar(v));
+        if (v == null) return;
+        try {
+            aplicar(desserializar(v));
+        } catch (RuntimeException e) {
+            Feedback.alerta("Visão \"" + nome + "\" não pôde ser aberta", "Os filtros salvos estão num formato antigo. Salve a visão de novo.");
+        }
     }
 
     static String serializar(FiltroGlobal f) {

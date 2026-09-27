@@ -40,6 +40,7 @@ public final class Main {
 
     private Main() { }
 
+    @SuppressWarnings("PMD.CloseResource")
     public static void main(String[] args) {
         LogConfig.inicializar();
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
@@ -123,7 +124,8 @@ public final class Main {
     private static List<BenchmarkResult> benchmark(Sessao s, boolean rapido, PrintStream out, boolean exportar) throws ApsException {
         BaseDeFocos b = s.base() != null ? s.base() : s.carregar();
         BenchmarkConfig cfg = rapido ? BenchmarkConfig.rapido() : s.benchmarkConfig();
-        out.println("Benchmark: " + cfg.totalCasos() + " casos, " + cfg.aquecimentos() + " aquecimentos + "
+        out.println("Benchmark: " + cfg.totalCasos() + " casos, aquecimento de " + cfg.aquecimentos() + " execucoes"
+                + (cfg.aquecimentoMs() > 0 ? " e no minimo " + cfg.aquecimentoMs() + " ms" : "") + " + "
                 + cfg.repeticoes() + " repeticoes por caso...");
         long t0 = System.nanoTime();
         List<BenchmarkResult> rs = new BenchmarkRunner().executar(b.getFocos(), cfg, p -> {
@@ -338,7 +340,7 @@ public final class Main {
 
     private static void ajuda(PrintStream out) {
         out.println("""
-                APS Queimadas - uso: java -jar aps-queimadas-1.0.0-all.jar [modo] [opcoes]
+                APS Queimadas - uso: java -jar aps-queimadas-2.0.0-all.jar [modo] [opcoes]
 
                   (sem modo)            abre o dashboard (JavaFX)
                   cli                   menu interativo no terminal

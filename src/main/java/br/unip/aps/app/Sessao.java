@@ -85,7 +85,8 @@ public final class Sessao {
                 config.inteiros("aps.benchmark.tamanhos", List.of(100, 1_000, 5_000, 10_000, 0)),
                 List.of(CenarioEntrada.ALEATORIO, CenarioEntrada.ORDENADO, CenarioEntrada.INVERSO),
                 config.inteiro("aps.benchmark.aquecimentos", 2), config.inteiro("aps.benchmark.repeticoes", 5),
-                config.inteiro("aps.benchmark.semente", 42), Integer.MAX_VALUE);
+                config.inteiro("aps.benchmark.semente", 42), Integer.MAX_VALUE,
+                config.inteiro("aps.benchmark.aquecimentoMs", (int) BenchmarkConfig.AQUECIMENTO_MS_PADRAO));
     }
 
     public Preditor.Parametros parametrosMl(int anoTreino, int anoTeste) {

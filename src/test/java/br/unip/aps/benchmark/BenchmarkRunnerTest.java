@@ -46,6 +46,21 @@ class BenchmarkRunnerTest {
     }
 
     @Test
+    @DisplayName("aquecimento por tempo roda o algoritmo ate atingir o minimo antes de medir")
+    void aquecimentoPorTempo() {
+        BenchmarkConfig cfg = new BenchmarkConfig(List.of(AlgoritmoTipo.MERGE), List.of(CriterioOrdenacao.DATA), List.of(200),
+                List.of(CenarioEntrada.ALEATORIO), 0, 1, 1L, Integer.MAX_VALUE, 150);
+        long t0 = System.nanoTime();
+        List<BenchmarkResult> r = new BenchmarkRunner().executar(Focos.aleatorios(500, 2), cfg, null);
+        assertTrue((System.nanoTime() - t0) / 1e6 >= 150, "o aquecimento deve durar pelo menos 150 ms");
+        assertEquals(1, r.size());
+        assertTrue(r.get(0).verificado());
+        assertEquals(BenchmarkConfig.AQUECIMENTO_MS_PADRAO, BenchmarkConfig.padrao().aquecimentoMs());
+        assertThrows(IllegalArgumentException.class, () -> new BenchmarkConfig(List.of(AlgoritmoTipo.MERGE),
+                List.of(CriterioOrdenacao.DATA), List.of(1), List.of(CenarioEntrada.ALEATORIO), 0, 1, 1L, 1, -1));
+    }
+
+    @Test
     @DisplayName("O(n²) acima do limite e pulado; configuracao invalida e rejeitada")
     void limitesEValidacao() {
         BenchmarkConfig cfg = new BenchmarkConfig(List.of(AlgoritmoTipo.BUBBLE, AlgoritmoTipo.HEAP),

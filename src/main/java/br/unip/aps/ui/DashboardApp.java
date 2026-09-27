@@ -4,7 +4,6 @@ import br.unip.aps.app.Sessao;
 import br.unip.aps.config.AppConfig;
 import br.unip.aps.config.LogConfig;
 import br.unip.aps.ui.componentes.Dialogos;
-import br.unip.aps.ui.componentes.Icones;
 import br.unip.aps.ui.tema.GerenciadorTema;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;

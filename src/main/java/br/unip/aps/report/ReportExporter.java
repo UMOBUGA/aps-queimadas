@@ -80,7 +80,6 @@ import java.util.logging.Logger;
 public final class ReportExporter {
     private static final Logger LOG = Logger.getLogger(ReportExporter.class.getName());
     private static final char SEP = ';';
-    private static final int MAX_LINHAS_PDF = 300;
 
     /** Exporta focos (por exemplo, o resultado de uma ordenacao) em CSV. */
     public Path exportarFocosCsv(List<FocoIncendio> focos, Path destino) throws ApsException {
@@ -137,9 +136,18 @@ public final class ReportExporter {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < v.length; i++) {
             if (i > 0) sb.append(SEP);
-            sb.append(CsvParser.escapar(v[i], SEP));
+            sb.append(CsvParser.escapar(semFormula(v[i]), SEP));
         }
         return sb.toString();
+    }
+
+    /** Neutraliza texto que o Excel executaria como formula (=, +, @, - nao numerico): prefixa com apostrofo. */
+    static String semFormula(String v) {
+        if (v == null || v.isEmpty()) return v;
+        char c = v.charAt(0);
+        boolean perigoso = c == '=' || c == '+' || c == '@' || c == '\t' || c == '\r'
+                || (c == '-' && !v.matches("-\\d[\\d.,]*"));
+        return perigoso ? "'" + v : v;
     }
 
     private static String num(double d) {

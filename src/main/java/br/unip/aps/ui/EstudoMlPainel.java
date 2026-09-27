@@ -33,6 +33,8 @@ final class EstudoMlPainel {
         try (InputStream in = EstudoMlPainel.class.getResourceAsStream("/resultados/ml-estudo.bin")) {
             if (in == null) return null;
             try (ObjectInputStream o = new ObjectInputStream(in)) {
+                o.setObjectInputFilter(java.io.ObjectInputFilter.Config.createFilter(
+                        "maxdepth=20;maxrefs=200000;br.unip.aps.**;java.base/*;!*"));
                 return (EstudoPrevisao.Resultado) o.readObject();
             }
         } catch (IOException | ClassNotFoundException | ClassCastException e) {

@@ -82,3 +82,10 @@ Em uma ordenação **estável**, focos com a mesma chave (por exemplo, o mesmo m
 
 - **Algoritmos instáveis** (Selection, Shell, Quick, Heap) podem embaralhar os empates.
 - **Nesta base** isso é visível: há até 146 focos no mesmo município e 5.762 no mesmo bioma.
+
+## Como adicionar um algoritmo
+
+1. **Implementar** `sorting/algorithms/<Nome>Sort.java` com a interface `SortAlgorithm`: `nome()`, `complexidade()`, `descricao()` e `ordenar(InstrumentedArray<T> a)`. Os dados são acessados só por `a.get`, `a.set`, `a.swap`, `a.less`, `a.compare` e `a.auxiliar(n)`; algoritmos sem comparação (radix, counting) retornam `exigeChaveNumerica() = true` e usam `a.key(i)`.
+2. **Registrar** a constante em `sorting/AlgoritmoTipo.java` (ex.: `COMB(CombSort::new)`). Menu, dashboard, benchmark e relatórios passam a enxergá-lo sozinhos.
+3. **Testar:** o `SortAlgorithmsTest` é parametrizado por `AlgoritmoTipo`, então o novo algoritmo já entra nos casos de vazio, repetidos, nulos, estabilidade e multicritério. Acrescente em `OperationCounterTest` a contagem exata de um caso conhecido e ajuste o total em `fabricaPorNome`.
+4. **Documentar** na tabela acima e, se entrar na dissertação, rodar de novo o modo `resultados`.

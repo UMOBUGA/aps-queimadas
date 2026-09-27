@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pacotes:
+    name: Instalador (${{ matrix.nome }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            nome: windows
+            tipo: app-image
+          - os: ubuntu-latest
+            nome: linux
+            tipo: deb
+          - os: macos-latest
+            nome: macos
+            tipo: dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: JAR executavel (com o JavaFX desta plataforma)
+        shell: bash
+        run: ./mvnw -B -ntp -DskipTests package
+
+      - name: Versao
+        id: versao
+        shell: bash
+        run: |
+          v=$(./mvnw -q -DforceStdout help:evaluate -Dexpression=project.version)
+          echo "v=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Instalador com runtime proprio (jpackage + jlink)
+        shell: bash
+        run: |
+          mkdir -p entrada
+          cp "target/aps-queimadas-${{ steps.versao.outputs.v }}-all.jar" entrada/
+          extra=()
+          if [ "${{ matrix.nome }}" = "linux" ]; then extra+=(--linux-shortcut); fi
+          jpackage --type "${{ matrix.tipo }}" \
+            --name "APS Queimadas" \
+            --app-version "${{ steps.versao.outputs.v }}" \
+            --vendor "APS UNIP" \
+            --description "Focos de queimadas do INPE e algoritmos de ordenacao" \
+            --input entrada \
+            --main-jar "aps-queimadas-${{ steps.versao.outputs.v }}-all.jar" \
+            --main-class br.unip.aps.Main \
+            --java-options "-Xss8m -Dfile.encoding=UTF-8" \
+            --add-modules java.base,java.desktop,java.logging,java.net.http,java.prefs,java.management,java.scripting,java.sql,java.xml,jdk.jsobject,jdk.unsupported,jdk.xml.dom,jdk.management,jdk.localedata,jdk.charsets,jdk.crypto.ec,jdk.zipfs \
+            --jlink-options "--strip-debug --no-header-files --no-man-pages" \
+            --dest pacotes \
+            "${extra[@]}"
+          if [ "${{ matrix.tipo }}" = "app-image" ]; then
+            (cd pacotes && 7z a -tzip "APS-Queimadas-${{ steps.versao.outputs.v }}-windows-portatil.zip" "APS Queimadas" > /dev/null && rm -rf "APS Queimadas")
+          fi
+          ls -la pacotes
+
+      - name: JAR multiplataforma
+        if: matrix.nome == 'linux'
+        shell: bash
+        run: cp "target/aps-queimadas-${{ steps.versao.outputs.v }}-all.jar" pacotes/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pacote-${{ matrix.nome }}
+          path: pacotes/*
+
+  publicar:
+    name: Publicar release
+    needs: pacotes
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: pacotes
+          merge-multiple: true
+      - name: Notas da versao (do CHANGELOG)
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          awk -v t="$tag" '$0 ~ "^## \\[" t "\\]" {p=1; next} /^## \[/ {p=0} p' CHANGELOG.md > notas.md
+          cat notas.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: APS Queimadas ${{ github.ref_name }}
+          body_path: notas.md
+          files: pacotes/*

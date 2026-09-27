@@ -11,7 +11,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -19,9 +18,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -39,7 +35,6 @@ final class ModoApresentacao {
             new Etapa("ml", "Machine Learning", "Previsão por município e mês, validação honesta e por que agosto de 2024 escapou ao modelo", Pagina.ML),
             new Etapa("conclusao", "Conclusão", "", null));
 
-    private final MainController main;
     private final UiContexto ctx;
     private final StackPane raiz;
     private final HBox barra = new HBox(16);
@@ -55,8 +50,7 @@ final class ModoApresentacao {
     private boolean ativo;
     private boolean menuEstavaRecolhido;
 
-    ModoApresentacao(MainController main, UiContexto ctx, StackPane raiz) {
-        this.main = main;
+    ModoApresentacao(UiContexto ctx, StackPane raiz) {
         this.ctx = ctx;
         this.raiz = raiz;
         lerGrupo();
@@ -81,16 +75,8 @@ final class ModoApresentacao {
     }
 
     private void lerGrupo() {
-        try (InputStream in = getClass().getResourceAsStream("/grupo.properties")) {
-            if (in != null) grupo.load(new InputStreamReader(in, StandardCharsets.UTF_8));
-        } catch (java.io.IOException e) {
-            return;
-        }
-        for (int i = 1; i <= 5; i++) {
-            String v = grupo.getProperty("integrante." + i, "").strip();
-            if (v.isEmpty() || v.contains("«")) continue;
-            nomes.add(v.split(";")[0].strip());
-        }
+        grupo.putAll(br.unip.aps.config.Grupo.carregar());
+        nomes.addAll(br.unip.aps.config.Grupo.integrantes(grupo));
     }
 
     boolean ativo() {

@@ -32,10 +32,7 @@ import com.lowagie.text.pdf.draw.LineSeparator;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -203,18 +200,18 @@ final class RelatorioPdf {
         faixaTermica(c, m, 222, pg.getWidth() - 2 * m, 34);
 
         float y = 150;
-        Properties g = grupo();
+        Properties g = br.unip.aps.config.Grupo.carregar();
         List<String[]> meta = new ArrayList<>();
         if (ctx.base().dataInicial() != null) {
             meta.add(new String[]{"Período", ctx.base().dataInicial().format(Formatos.DATA) + " a " + ctx.base().dataFinal().format(Formatos.DATA)});
         }
         meta.add(new String[]{"Recorte", ctx.filtro()});
         meta.add(new String[]{"Gerado em", geradoEm.format(Formatos.DATA_HORA)});
-        String inst = valor(g, "instituicao"), curso = valor(g, "curso");
+        String inst = br.unip.aps.config.Grupo.valor(g, "instituicao"), curso = br.unip.aps.config.Grupo.valor(g, "curso");
         if (inst != null) meta.add(new String[]{"Instituição", inst + (curso != null ? " · " + curso : "")});
-        String disc = valor(g, "disciplina");
+        String disc = br.unip.aps.config.Grupo.valor(g, "disciplina");
         if (disc != null) meta.add(new String[]{"Disciplina", disc});
-        List<String> nomes = integrantes(g);
+        List<String> nomes = br.unip.aps.config.Grupo.integrantes(g);
         if (!nomes.isEmpty()) meta.add(new String[]{"Equipe", String.join(", ", nomes)});
         c.setColorStroke(new Color(0x3A, 0x2E, 0x28));
         c.setLineWidth(0.8f);
@@ -680,38 +677,7 @@ final class RelatorioPdf {
     }
 
     static String capitalizar(String s) {
-        if (s == null) return "";
-        StringBuilder sb = new StringBuilder();
-        for (String p : s.toLowerCase(br.unip.aps.util.Textos.PT_BR).split(" ")) {
-            if (!sb.isEmpty()) sb.append(' ');
-            if (List.of("de", "da", "do", "das", "dos", "e", "d'oeste").contains(p)) sb.append(p);
-            else if (!p.isEmpty()) sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1));
-        }
-        return sb.toString();
-    }
-
-    private static Properties grupo() {
-        Properties p = new Properties();
-        try (InputStream in = RelatorioPdf.class.getResourceAsStream("/grupo.properties")) {
-            if (in != null) p.load(new InputStreamReader(in, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            return p;
-        }
-        return p;
-    }
-
-    private static String valor(Properties p, String chave) {
-        String v = p.getProperty(chave);
-        return v == null || v.isBlank() || v.contains("«") ? null : v.strip();
-    }
-
-    private static List<String> integrantes(Properties p) {
-        List<String> r = new ArrayList<>();
-        for (int i = 1; i <= 5; i++) {
-            String v = valor(p, "integrante." + i);
-            if (v != null) r.add(v.split(";")[0].strip());
-        }
-        return r;
+        return br.unip.aps.util.Textos.nomeProprio(s);
     }
 
     /** Cabecalho, rodape com "pagina N de T" e registro das paginas das secoes para o sumario. */

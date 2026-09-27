@@ -125,6 +125,7 @@ public final class ExternalMergeSort {
         return run;
     }
 
+    @SuppressWarnings("PMD.CloseResource")
     private void intercalar(List<Path> runs, Path saida, String cabecalho, OperationCounter contador, long[] pico,
                             Consumer<String> progresso) throws IOException {
         BufferedReader[] leitores = new BufferedReader[runs.size()];

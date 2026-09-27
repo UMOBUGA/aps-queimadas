@@ -37,14 +37,14 @@ jobs:
             >> "$GITHUB_STEP_SUMMARY"
 
       - name: Relatorio com as linhas de codigo
-        run: java -jar target/aps-queimadas-1.0.0-all.jar relatorio-codigo
+        run: java -jar target/aps-queimadas-2.0.0-all.jar relatorio-codigo
 
       - name: Artefatos (JAR executavel, cobertura, codigo-fonte)
         uses: actions/upload-artifact@v4
         with:
           name: aps-queimadas
           path: |
-            target/aps-queimadas-1.0.0-all.jar
+            target/aps-queimadas-2.0.0-all.jar
             target/site/jacoco/
             relatorios/codigo-fonte.pdf
           retention-days: 30

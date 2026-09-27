@@ -101,6 +101,18 @@ class ReportExporterTest {
     }
 
     @Test
+    @DisplayName("CSV nao deixa texto virar formula no Excel, mas preserva numeros negativos")
+    void csvSemFormula() {
+        assertEquals("'=HYPERLINK(\"x\")", ReportExporter.semFormula("=HYPERLINK(\"x\")"));
+        assertEquals("'+1", ReportExporter.semFormula("+1"));
+        assertEquals("'@SUM(A1)", ReportExporter.semFormula("@SUM(A1)"));
+        assertEquals("'-A1", ReportExporter.semFormula("-A1"));
+        assertEquals("-23,5471", ReportExporter.semFormula("-23,5471"));
+        assertEquals("RIBEIRÃO PRETO", ReportExporter.semFormula("RIBEIRÃO PRETO"));
+        assertEquals("", ReportExporter.semFormula(""));
+    }
+
+    @Test
     @DisplayName("rotulos diretos dos graficos do PDF nao se sobrepoem")
     void rotulosAfastados() {
         float[] ys = GraficosPdf.afastar(new float[]{50, 52, 10, 51}, 9);

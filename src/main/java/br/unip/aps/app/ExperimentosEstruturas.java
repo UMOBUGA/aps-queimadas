@@ -183,7 +183,8 @@ public final class ExperimentosEstruturas {
         FocoIncendio[] a = focos.toArray(new FocoIncendio[0]);
         CriterioOrdenacao crit = CriterioOrdenacao.DATA;
         md.append("| Algoritmo | Espaço extra teórico | Bytes alocados (medidos) | Bytes por elemento |\n|---|---|---:|---:|\n");
-        for (MedidorMemoria.Medicao m : MedidorMemoria.medir(a, crit.comparador(br.unip.aps.sorting.Ordem.CRESCENTE), crit.chaveNumerica(br.unip.aps.sorting.Ordem.CRESCENTE), List.of(AlgoritmoTipo.values()))) {
+        var ordem = br.unip.aps.sorting.Ordem.CRESCENTE;
+        for (MedidorMemoria.Medicao m : MedidorMemoria.medir(a, crit.comparador(ordem), crit.chaveNumerica(ordem), List.of(AlgoritmoTipo.values()))) {
             md.append("| ").append(m.algoritmo()).append(" | ").append(m.espacoTeorico()).append(" | ")
                     .append(Formatos.inteiro(m.bytesAlocados())).append(" | ").append(Formatos.inteiro(m.bytesPorElemento())).append(" |\n");
         }

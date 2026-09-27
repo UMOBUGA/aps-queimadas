@@ -31,6 +31,18 @@ public final class Textos {
         return texto == null ? null : collator().getCollationKey(texto);
     }
 
+    /** Nome proprio em caixa de titulo ("SAO JOSE DO RIO PRETO" vira "Sao Jose do Rio Preto"), mantendo preposicoes minusculas. */
+    public static String nomeProprio(String s) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder();
+        for (String p : s.toLowerCase(PT_BR).split(" ")) {
+            if (!sb.isEmpty()) sb.append(' ');
+            if (java.util.Set.of("de", "da", "do", "das", "dos", "e", "d'oeste").contains(p)) sb.append(p);
+            else if (!p.isEmpty()) sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1));
+        }
+        return sb.toString();
+    }
+
     /** Remove espacos das pontas e colapsa espacos internos repetidos. */
     public static String limpar(String s) {
         if (s == null) return null;

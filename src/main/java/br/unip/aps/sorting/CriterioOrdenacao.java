@@ -2,7 +2,6 @@ package br.unip.aps.sorting;
 
 import br.unip.aps.model.FocoIncendio;
 
-import java.text.CollationKey;
 import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.function.Function;

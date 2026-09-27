@@ -14,10 +14,7 @@ import javafx.scene.layout.VBox;
 
 import java.awt.Desktop;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /** Tela Sobre. */
@@ -37,16 +34,11 @@ public class SobreController implements Pagina.Controlador {
     @FXML
     private void initialize() {
         marca.getChildren().add(br.unip.aps.ui.componentes.Logo.criar(56));
-        chipsVersao.getChildren().addAll(Chip.de("Versão 1.0", Icones.CUBO, Chip.Variante.NEUTRO),
+        chipsVersao.getChildren().addAll(Chip.de("Versão " + br.unip.aps.config.Versao.atual(), Icones.CUBO, Chip.Variante.NEUTRO),
                 Chip.de("Java 21 · JavaFX 21", null, Chip.Variante.NEUTRO),
                 Chip.de("SP · 2023–2024", Icones.MUNICIPIO, Chip.Variante.DESTAQUE));
 
-        Properties g = new Properties();
-        try (InputStream in = getClass().getResourceAsStream("/grupo.properties")) {
-            if (in != null) g.load(new InputStreamReader(in, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            Feedback.alerta("grupo.properties não lido", e.getMessage());
-        }
+        Properties g = br.unip.aps.config.Grupo.carregar();
         lblCurso.setText(valor(g, "curso", "Ciência da Computação") + " · " + valor(g, "instituicao", "UNIP")
                 + " · " + valor(g, "campus", "") + " · " + valor(g, "turma", ""));
         for (int i = 1; i <= 5; i++) {

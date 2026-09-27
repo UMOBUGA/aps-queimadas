@@ -78,9 +78,12 @@ public final class BenchmarkRunner {
     private BenchmarkResult medir(SortAlgorithm alg, CriterioOrdenacao criterio, CenarioEntrada cenario,
                                   FocoIncendio[] entrada, Comparator<FocoIncendio> cmp,
                                   ToLongFunction<FocoIncendio> chave, BenchmarkConfig config) {
-        for (int i = 0; i < config.aquecimentos(); i++) {
+        long limite = System.nanoTime() + config.aquecimentoMs() * 1_000_000L;
+        int feitos = 0;
+        while (feitos < config.aquecimentos() || (config.aquecimentoMs() > 0 && System.nanoTime() < limite)) {
             verificarCancelamento();
             alg.ordenar(Arrays.copyOf(entrada, entrada.length), cmp, chave);
+            feitos++;
         }
         long[] tempos = new long[config.repeticoes()];
         OperationMetrics ultima = null;

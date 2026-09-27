@@ -607,7 +607,7 @@ public class OrdenacaoController implements Pagina.Controlador {
         FileChooser fc = new FileChooser();
         Path sug = ctx.sessao().arquivoRelatorio("dados-ordenados", ".csv");
         File dir = sug.toAbsolutePath().getParent().toFile();
-        dir.mkdirs();
+        if (!dir.isDirectory() && !dir.mkdirs()) dir = new File(System.getProperty("user.home"));
         fc.setInitialDirectory(dir);
         fc.setInitialFileName(sug.getFileName().toString());
         File f = fc.showSaveDialog(ctx.stage());
