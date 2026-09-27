@@ -107,3 +107,19 @@ O JAR carrega tudo o que a apresentação precisa, sem internet e sem a pasta `d
 - **Mapa sem internet:** se os mapas-base da Esri não responderem em 6 segundos, ou falharem três vezes seguidas, o mapa troca sozinho para a malha do IBGE e mostra o aviso "Modo offline".
 - **Forçar o modo offline:** para testar sem desligar a rede, rode com `-Daps.mapa.offline=true`.
 - **Machine Learning:** é calculado em segundo plano logo após a carga dos dados (cerca de 10 s). Ao abrir a tela ML, o resultado já está pronto; o botão refaz o treino ao vivo.
+
+## Limites da contagem de focos (viés do sensor)
+
+- **Um satélite, uma passagem por dia.** O "satélite de referência" do INPE (AQUA, sensor MODIS) passa sobre SP no início da tarde. Os focos registrados se concentram entre 13h e 15h, hora local.
+  - **Vantagem:** a série é comparável entre anos, porque é o mesmo sensor no mesmo horário.
+  - **Custo:** focos curtos, noturnos ou encobertos por nuvens não entram na contagem.
+  - **Onde o aviso aparece:** o dashboard mostra essa ressalva logo abaixo da manchete da Visão geral e no gráfico de horas.
+- **Foco não é área queimada.** Um foco é um pixel (cerca de 1 km) com anomalia térmica num instante. Um incêndio grande pode gerar dezenas de focos, e uma queima rápida pode não gerar nenhum.
+- **Comparação conceitual com o MapBiomas Fogo:**
+  - **O que o MapBiomas mede:** mapeia **cicatrizes de área queimada** (em hectares) com imagens Landsat de 30 m, mês a mês.
+  - **Relação com os focos do INPE:** as duas fontes são complementares.
+    - Os focos do INPE indicam **onde e quando** houve fogo ativo, quase em tempo real.
+    - O MapBiomas indica **quanto** queimou, com semanas de defasagem.
+  - **Uso na dissertação:** o MapBiomas pode ser citado para dimensionar o impacto da temporada de 2024, deixando claro que este sistema conta focos, e não área.
+- **Densidade por área.** A camada "Municípios" do mapa divide os focos pela área territorial oficial do IBGE (focos por 1.000 km²). Assim, municípios grandes não aparecem como críticos só por serem grandes.
+- **Classificação da densidade:** as classes vêm por quebras naturais de Jenks (padrão), que agrupam valores parecidos, ou por quantis, com o mesmo número de municípios por classe.

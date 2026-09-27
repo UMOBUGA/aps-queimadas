@@ -242,3 +242,23 @@ Os tempos são a média de 5 repetições após o aquecimento. As tabelas estão
 9. **Custo real × contagem.** O Heap Sort faz cerca de 2× mais comparações que o Merge (245 mil contra 132 mil no aleatório) e, na maioria dos casos, é o mais lento dos O(n log n), pela pouca localidade de cache nos saltos pai→filho do heap. A exceção é o bioma aleatório, em que as muitas chaves iguais encurtam a descida no heap. Os tempos dos O(n log n) são todos da ordem de 10–30 ms para 10 mil registros, enquanto os O(n²) levam de 0,9 a 6 s: **2 a 3 ordens de grandeza de diferença**.
 
 10. **Variabilidade.** O desvio-padrão de alguns casos passa de 20% da média (ex.: Insertion no município aleatório, 1.464 ± 658 ms), por efeitos de JIT, GC e frequência variável da CPU do notebook. As contagens de operações, determinísticas, são a base mais confiável para comparar os algoritmos.
+
+
+## Validação com JMH
+
+O benchmark próprio foi conferido com o **JMH** (Java Microbenchmark Harness, da equipe do OpenJDK), num perfil Maven separado:
+
+```bash
+./mvnw -Pjmh -DskipTests compile exec:exec@jmh
+```
+
+**Configuração:** critério data/hora, cenário aleatório (semente 42), n = 10.378, 2 forks, cada um com 5 aquecimentos e 10 medições de 1 s. O JMH informa o intervalo de confiança de 99,9%. Os resultados estão em [`resultados/jmh.md`](resultados/jmh.md).
+
+**O que a comparação mostrou (primeira rodada):**
+- **Tempos absolutos:** o benchmark próprio mediu tempos **2,3 a 4 vezes maiores** que o JMH. Por exemplo, Merge Sort: 12,1 ms contra 4,1 ms.
+  - **Causa:** o aquecimento de 2 execuções por caso não bastava para o compilador JIT (C2) otimizar os métodos.
+  - **Não é a contagem:** a instrumentação de operações é a mesma nas duas medições.
+- **Ordem relativa:** praticamente preservada, com correlação de Spearman de 0,89. As quatro primeiras posições coincidem (Radix, Quick 3-Way, Quick e Merge); só Shell, Tim e Heap trocam de lugar entre si.
+- **Contagens de operações:** idênticas, porque não dependem da JVM.
+
+**Correção aplicada:** o aquecimento passou a ser por **tempo mínimo** (cada algoritmo roda até completar 500 ms de aquecimento no caso), e a bateria foi regerada. A tabela final fica em [`resultados/jmh.md`](resultados/jmh.md).

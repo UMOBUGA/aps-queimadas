@@ -19,6 +19,8 @@
                 <Label fx:id="mUnidade" styleClass="manchete-unidade" text="focos de incêndio"/>
             </HBox>
             <TextFlow fx:id="mApoio" maxWidth="820"/>
+            <Label fx:id="mMetodo" styleClass="nota-metodo" wrapText="true" maxWidth="820"
+                   text="Contagem do satélite de referência do INPE (AQUA, passagem no início da tarde): é o mesmo sensor todos os anos, o que torna os anos comparáveis, mas um foco curto ou noturno pode não ser registrado. Por isso os números indicam a tendência, não o total de queimadas."/>
         </VBox>
         <FlowPane fx:id="destaques" styleClass="destaques" vgap="18"/>
         <ChartCard fx:id="cMensal" titulo="A temporada, mês a mês"

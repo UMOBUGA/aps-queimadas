@@ -29,19 +29,19 @@
             </VBox>
             <Separator/>
 
-            <Label text="CRITÉRIOS (ARRASTE PARA REORDENAR)" styleClass="section-label"/>
+            <Label text="Critérios · arraste para reordenar" styleClass="section-label"/>
             <ListView fx:id="lvCriterios" styleClass="lista-criterios" prefHeight="136" minHeight="60"/>
             <Button fx:id="btnAdicionar" text="Adicionar critério" onAction="#adicionarCriterio" styleClass="btn-ghost"/>
             <Label text="O 2º e o 3º critérios apenas desempatam o anterior (thenComparing)." styleClass="t-caption" wrapText="true"/>
             <Separator/>
 
-            <Label text="ALGORITMO" styleClass="section-label"/>
+            <Label text="Algoritmo" styleClass="section-label"/>
             <ComboBox fx:id="cbAlgoritmo" maxWidth="Infinity"/>
             <FlowPane fx:id="chipsAlgoritmo" hgap="6" vgap="6"/>
             <Label fx:id="lblDescricao" styleClass="t-small" wrapText="true"/>
             <Separator/>
 
-            <Label text="ENTRADA" styleClass="section-label"/>
+            <Label text="Entrada" styleClass="section-label"/>
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <Label text="Tamanho da amostra" styleClass="field-label"/>
                 <TextField fx:id="tfAmostra" text="0" prefWidth="96" promptText="0 = todos"/>

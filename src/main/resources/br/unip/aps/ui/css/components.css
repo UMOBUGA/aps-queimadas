@@ -107,7 +107,7 @@
 .chip-danger .ikonli-font-icon { -fx-icon-color: -aps-danger; }
 .chip-info { -fx-background-color: -aps-info-subtle; -fx-border-color: transparent; -fx-text-fill: -aps-info; }
 .chip-info .ikonli-font-icon { -fx-icon-color: -aps-info; }
-.chip-mono { -fx-font-family: "Cascadia Mono", "Consolas", monospace; -fx-font-size: 12px; }
+.chip-mono { -fx-font-family: "Inter SemiBold"; -fx-font-size: 12px; }
 
 .chip-filtro { -fx-padding: 2 4 2 9; -fx-spacing: 4; -fx-alignment: center-left; }
 .chip-filtro .chip-fechar {
@@ -544,3 +544,5 @@
 .tabela-leve-cabecalho { -fx-font-family: "Inter SemiBold"; -fx-font-size: 12px; -fx-text-fill: -aps-text-2; -fx-padding: 0 0 6 0; }
 .tabela-leve-celula { -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
 .tabela-leve-celula.destaque { -fx-font-family: "Inter SemiBold"; -fx-text-fill: -aps-accent-text; }
+
+.nota-metodo { -fx-font-size: 12.5px; -fx-text-fill: -aps-text-3; -fx-padding: 10 0 0 0; }

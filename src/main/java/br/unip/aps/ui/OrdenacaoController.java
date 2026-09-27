@@ -616,6 +616,11 @@ public class OrdenacaoController implements Pagina.Controlador {
                 p -> Feedback.sucesso("CSV exportado", p.getFileName().toString()));
     }
 
+    /** Seleciona o algoritmo (paleta de comandos). */
+    void selecionarAlgoritmo(AlgoritmoTipo tipo) {
+        cbAlgoritmo.getSelectionModel().select(tipo);
+    }
+
     @Override
     public void demonstrar(Runnable concluido) {
         niveis.setAll(new NivelEditavel(CriterioOrdenacao.BIOMA, Ordem.CRESCENTE),

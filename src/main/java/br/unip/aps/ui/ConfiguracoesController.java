@@ -65,8 +65,8 @@ public class ConfiguracoesController implements Pagina.Controlador {
         AppConfig c = ctx.sessao().config();
         String[][] dados = {
                 {"UF e anos", c.uf() + " · " + c.anos()},
-                {"Pasta dos CSVs", c.diretorioDados().toAbsolutePath().toString()},
-                {"Pasta de relatórios", c.diretorioRelatorios().toAbsolutePath().toString()},
+                {"Pasta dos CSVs", relativo(c.diretorioDados())},
+                {"Pasta de relatórios", relativo(c.diretorioRelatorios())},
                 {"Aviso O(n²) a partir de", Formatos.inteiro(c.limiteQuadratico()) + " elementos"},
                 {"Fonte", c.urlInpe()}};
         for (int i = 0; i < dados.length; i++) {
@@ -90,5 +90,11 @@ public class ConfiguracoesController implements Pagina.Controlador {
     private void restaurar() {
         GerenciadorTema.get().restaurarPadroes();
         Feedback.info("Preferências restauradas", "Tema claro, animações ligadas e menu expandido.");
+    }
+
+    private static String relativo(java.nio.file.Path p) {
+        java.nio.file.Path base = java.nio.file.Path.of("").toAbsolutePath();
+        java.nio.file.Path abs = p.toAbsolutePath().normalize();
+        return abs.startsWith(base) ? base.relativize(abs).toString().replace('\\', '/') + "/" : abs.toString();
     }
 }

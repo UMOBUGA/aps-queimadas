@@ -138,7 +138,7 @@ public class QualidadeController implements Pagina.Controlador {
         cCompletude.setExtra(Chip.de("* obrigatória", null, Chip.Variante.NEUTRO));
         cCompletude.estado(ChartCard.Estado.CONTEUDO);
         kCompletude.valor(Formatos.decimal(nObrig == 0 ? 0 : somaObrig / nObrig, 1) + "%")
-                .contexto("obrigatórias · " + ausentes.size() + " opcionais ausentes", KpiCard.Tendencia.NEUTRA)
+                .contexto(ausentes.size() + " opcionais ausentes", KpiCard.Tendencia.NEUTRA)
                 .icone(KpiCard.EstiloIcone.DESTAQUE);
 
         montarProblemas(r, ausentes, b);

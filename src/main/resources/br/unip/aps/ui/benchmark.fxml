@@ -29,16 +29,16 @@
                 <Button fx:id="btnExecutar" text="Executar benchmark" onAction="#executar" styleClass="btn-primary"/>
             </HBox>
             <GridPane hgap="32" vgap="10">
-                <Label text="ALGORITMOS" styleClass="section-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label text="Algoritmos" styleClass="section-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                 <FlowPane fx:id="fpAlgoritmos" hgap="6" vgap="6" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
-                <Label text="CRITÉRIOS" styleClass="section-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label text="Critérios" styleClass="section-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                 <FlowPane fx:id="fpCriterios" hgap="6" vgap="6" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                <Label text="CENÁRIOS" styleClass="section-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label text="Cenários" styleClass="section-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                 <FlowPane fx:id="fpCenarios" hgap="6" vgap="6" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                <Label text="EXECUÇÃO" styleClass="section-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <Label text="Execução" styleClass="section-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                 <HBox spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
                     <Label text="Tamanhos (n)" styleClass="field-label"/>
-                    <TextField fx:id="tfTamanhos" text="100, 1000, 5000, 10000, 0" prefWidth="220" promptText="0 = base inteira"/>
+                    <TextField fx:id="tfTamanhos" text="100, 1000, 5000, 10000, todos" prefWidth="220" promptText="use todos para a base inteira"/>
                     <Label text="Aquecimentos" styleClass="field-label"/>
                     <Spinner fx:id="spAquecimentos" prefWidth="84"/>
                     <Label text="Repetições" styleClass="field-label"/>

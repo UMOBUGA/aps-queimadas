@@ -243,6 +243,33 @@ public class FilterBar extends VBox {
         aplicar();
     }
 
+    /** Filtra exatamente um municipio (paleta de comandos). */
+    public void municipio(String nome) {
+        atualizando = true;
+        tfMunicipio.setText(nome);
+        atualizando = false;
+        municipioExato = nome != null;
+        aplicar();
+    }
+
+    /** Estado atual dos filtros, para salvar uma visao. */
+    public FiltroGlobal atual() {
+        return filtro.get();
+    }
+
+    /** Reaplica uma visao salva. */
+    public void aplicar(FiltroGlobal f) {
+        atualizando = true;
+        checksBioma.forEach(c -> c.setSelected(f.biomas().contains(c.getText())));
+        checksAno.forEach(c -> c.setSelected(f.anos().contains(Integer.parseInt(c.getText()))));
+        tfMunicipio.setText(f.municipio() == null ? "" : f.municipio());
+        cbDe.setValue(f.de());
+        cbAte.setValue(f.ate());
+        atualizando = false;
+        municipioExato = f.exato();
+        aplicar();
+    }
+
     /** Define o periodo (mes inicial e final); nulos removem o filtro de periodo. */
     public void periodo(YearMonth de, YearMonth ate) {
         atualizando = true;

@@ -70,10 +70,10 @@ public class KpiCard extends VBox {
     public KpiCard valor(String texto) {
         java.util.regex.Matcher m = COM_UNIDADE.matcher(texto == null ? "" : texto);
         if (m.matches()) {
-            valor.setText(m.group(1));
+            Movimento.contar(valor, m.group(1));
             unidade.setText(m.group(2));
         } else {
-            valor.setText(texto);
+            Movimento.contar(valor, texto);
             unidade.setText("");
         }
         valor.getStyleClass().remove("kpi-valor-texto");

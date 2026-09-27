@@ -11,9 +11,9 @@
 <StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="br.unip.aps.ui.MapaController" fx:id="moldura" styleClass="mapa-palco">
     <WebView fx:id="webView"/>
-    <VBox styleClass="mapa-titulo" pickOnBounds="false" StackPane.alignment="TOP_LEFT" maxWidth="-Infinity" maxHeight="-Infinity">
+    <VBox styleClass="mapa-titulo" pickOnBounds="false" StackPane.alignment="BOTTOM_LEFT" maxWidth="-Infinity" maxHeight="-Infinity">
         <StackPane.margin>
-            <Insets top="18" left="20"/>
+            <Insets bottom="44" left="20"/>
         </StackPane.margin>
         <Label fx:id="lblContagem" styleClass="mapa-titulo-numero" text="—"/>
         <Label fx:id="lblContagemTexto" styleClass="mapa-titulo-texto" text="focos no mapa"/>
@@ -26,6 +26,17 @@
             <ToggleButton fx:id="tgPontos" text="Pontos" selected="true"/>
             <ToggleButton fx:id="tgCluster" text="Agrupado"/>
             <ToggleButton fx:id="tgCalor" text="Calor"/>
+            <ToggleButton fx:id="tgMunicipios" text="Municípios"/>
+        </HBox>
+        <HBox fx:id="boxCoro" spacing="8" alignment="CENTER_LEFT" managed="false" visible="false">
+            <HBox fx:id="segMedida" styleClass="segmented">
+                <ToggleButton fx:id="tgDensidade" text="Por 1.000 km²" selected="true"/>
+                <ToggleButton fx:id="tgContagem" text="Contagem"/>
+            </HBox>
+            <HBox fx:id="segClasses" styleClass="segmented">
+                <ToggleButton fx:id="tgJenks" text="Jenks" selected="true"/>
+                <ToggleButton fx:id="tgQuantis" text="Quantis"/>
+            </HBox>
         </HBox>
         <HBox spacing="8" alignment="CENTER_LEFT">
             <Label text="Cor por" styleClass="field-label"/>

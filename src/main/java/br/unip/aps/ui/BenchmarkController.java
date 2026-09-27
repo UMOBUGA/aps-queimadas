@@ -177,12 +177,17 @@ public class BenchmarkController implements Pagina.Controlador {
         List<Integer> tamanhos = new ArrayList<>();
         for (String p : tfTamanhos.getText().split("[,;\\s]+")) {
             if (p.isBlank()) continue;
+            if (p.strip().equalsIgnoreCase("todos") || p.strip().equalsIgnoreCase("base")) {
+                tamanhos.add(0);
+                continue;
+            }
             try {
                 int v = Integer.parseInt(p.replace(".", "").strip());
                 if (v < 0) throw new NumberFormatException();
                 tamanhos.add(v);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Tamanho inválido: '" + p + "'. Use inteiros ≥ 0 separados por vírgula (0 = base inteira).");
+                throw new IllegalArgumentException("O tamanho '" + p + "' não é válido. Digite números inteiros separados por vírgula, "
+                        + "ou todos para usar a base inteira. Exemplo: 100, 1000, todos");
             }
         }
         return new BenchmarkConfig(algs, crits, tamanhos, cens, spAquecimentos.getValue(), spRepeticoes.getValue(), 42L, Integer.MAX_VALUE);
@@ -378,7 +383,8 @@ public class BenchmarkController implements Pagina.Controlador {
                     return nova;
                 });
                 classes.put(t.nome(), SERIE.get(t));
-                s.getData().add(new XYChart.Data<>(r.n(), log ? Math.log10(v) : v));
+                if (log && r.n() <= 0) continue;
+                s.getData().add(new XYChart.Data<>(log ? Math.log10(r.n()) : r.n(), log ? Math.log10(v) : v));
                 if (!ns.contains(r.n())) ns.add(r.n());
                 linhas.add(new String[]{t.nome(), Formatos.inteiro(r.n()), formatar(metrica, v)});
             }
@@ -388,7 +394,7 @@ public class BenchmarkController implements Pagina.Controlador {
             g.getData().add(e.getValue());
             Graficos.classe(e.getValue(), classes.get(e.getKey()));
             card.adicionarLegenda(e.getKey(), classes.get(e.getKey()), "linha");
-            Graficos.tooltips(e.getValue(), d -> e.getKey() + "\nn = " + Formatos.inteiro(d.getXValue().longValue()) + "\n"
+            Graficos.tooltips(e.getValue(), d -> e.getKey() + "\nn = " + Formatos.inteiro(Math.round(log ? Math.pow(10, d.getXValue().doubleValue()) : d.getXValue().doubleValue())) + "\n"
                     + metrica + ": " + formatar(metrica, log ? Math.pow(10, d.getYValue().doubleValue()) : d.getYValue().doubleValue()));
         }
         boolean teorica = !metrica.startsWith("Tempo") && !ns.isEmpty();
@@ -397,13 +403,18 @@ public class BenchmarkController implements Pagina.Controlador {
             t.setName(quadraticos ? "n²/2 (teórico)" : "n·log₂n (teórico)");
             for (int n : ns) {
                 double v = quadraticos ? n * (n - 1) / 2.0 : (n <= 1 ? 0 : n * Math.log(n) / Math.log(2));
-                if (!log || v > 0) t.getData().add(new XYChart.Data<>(n, log ? Math.log10(v) : v));
+                if (!log || v > 0) t.getData().add(new XYChart.Data<>(log ? Math.log10(n) : n, log ? Math.log10(v) : v));
             }
             g.getData().add(t);
             Graficos.classe(t, "serie-teorica");
             card.adicionarLegenda(t.getName(), "tracejada");
         }
         NumberAxis y = (NumberAxis) g.getYAxis();
+        NumberAxis x = (NumberAxis) g.getXAxis();
+        x.setLabel(log ? "n (escala log: a inclinação da reta é o expoente k)" : "n (tamanho da entrada)");
+        Graficos.eixoLog(x, log);
+        x.setAutoRanging(true);
+        if (log) x.setTickUnit(1);
         y.setLabel(metrica + (log ? " (escala log)" : ""));
         Graficos.eixoLog(y, log);
         if (log) {

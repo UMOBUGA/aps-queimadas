@@ -117,8 +117,12 @@ final class CapturaTelas {
                     mc.modo("cluster");
                     esperar(4000, () -> {
                         salvar(String.format("%02d-mapa-agrupado.png", n[0]++));
-                        mc.modo("pontos");
-                        proximo();
+                        mc.modo("municipios");
+                        esperar(4000, () -> {
+                            salvar(String.format("%02d-mapa-municipios.png", n[0]++));
+                            mc.modo("pontos");
+                            proximo();
+                        });
                     });
                 });
             } else {

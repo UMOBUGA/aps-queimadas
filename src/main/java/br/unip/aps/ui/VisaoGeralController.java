@@ -180,7 +180,11 @@ public class VisaoGeralController implements Pagina.Controlador {
 
     private void numero(long alvo) {
         if (contagem != null) contagem.stop();
-        if (jaAnimou || !GerenciadorTema.get().animacoesProperty().get() || alvo < 10) {
+        if (jaAnimou) {
+            br.unip.aps.ui.componentes.Movimento.contar(mNumero, Formatos.inteiro(alvo));
+            return;
+        }
+        if (!GerenciadorTema.get().animacoesProperty().get() || alvo < 10) {
             mNumero.setText(Formatos.inteiro(alvo));
             jaAnimou = true;
             return;

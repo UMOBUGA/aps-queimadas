@@ -79,7 +79,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
   var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 },
                  hotspots: [], offline: false, malha: null, coro: null };
   var mapa = L.map('mapa', { preferCanvas: true, zoomControl: false, attributionControl: true });
-  mapa.fitBounds(SP, { paddingTopLeft: [20, 110], paddingBottomRight: [20, 20] });
+  mapa.fitBounds(SP, { paddingTopLeft: [20, 80], paddingBottomRight: [20, 20] });
   L.control.zoom({ position: 'topright' }).addTo(mapa);
   var atrib = 'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, HERE, Garmin, &copy; colaboradores do OpenStreetMap';
   var base = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
@@ -252,9 +252,9 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
       estado.dados = dados;
       desenhar();
       if (dados.focos.length) {
-        mapa.fitBounds(dados.focos.map(function (f) { return [f[0], f[1]]; }), { paddingTopLeft: [24, 110], paddingBottomRight: [24, 24], maxZoom: 11 });
+        mapa.fitBounds(dados.focos.map(function (f) { return [f[0], f[1]]; }), { paddingTopLeft: [24, 80], paddingBottomRight: [24, 24], maxZoom: 11 });
       } else {
-        mapa.fitBounds(SP, { paddingTopLeft: [20, 110], paddingBottomRight: [20, 20] });
+        mapa.fitBounds(SP, { paddingTopLeft: [20, 80], paddingBottomRight: [20, 20] });
       }
     },
     setHotspots: function (h) { estado.hotspots = h; desenharHotspots(); },

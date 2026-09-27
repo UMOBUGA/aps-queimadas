@@ -85,6 +85,7 @@ public class MainController {
     private Button btnRecolher;
     private EmptyState vazio;
     private Pagina exibida;
+    private final java.util.Set<Pagina> primeiraVez = java.util.EnumSet.allOf(Pagina.class);
 
     public MainController(UiContexto ctx) {
         this.ctx = ctx;
@@ -307,7 +308,9 @@ public class MainController {
         Node no = semDados ? null : carregar(p);
         if (no != null) {
             no.setVisible(true);
-            if (GerenciadorTema.get().animacoesProperty().get() && exibida != p) {
+            if (primeiraVez.remove(p) && no instanceof Parent pag) {
+                br.unip.aps.ui.componentes.Movimento.entradaEscalonada(pag);
+            } else if (GerenciadorTema.get().animacoesProperty().get() && exibida != p) {
                 no.setOpacity(0);
                 FadeTransition f = new FadeTransition(Duration.millis(200), no);
                 f.setToValue(1);
