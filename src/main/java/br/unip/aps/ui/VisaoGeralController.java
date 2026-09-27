@@ -22,10 +22,17 @@ import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
@@ -49,7 +56,16 @@ public class VisaoGeralController implements Pagina.Controlador {
     @FXML private Label mLinha, mNumero, mUnidade;
     @FXML private TextFlow mApoio;
     @FXML private FlowPane destaques;
-    @FXML private ChartCard cMensal, cBiomas, cMunicipios, cHoras, cCalendario;
+    @FXML private ChartCard cMensal, cBiomas, cMunicipios, cHoras, cCalendario, cBiomasMes, cComparar;
+
+    private final ToggleButton tgLinear = new ToggleButton("Linear"), tgLog = new ToggleButton("Log");
+    private final HBox escala = new HBox(tgLinear, tgLog);
+    private final HBox multiplos = new HBox(28);
+    private final ComboBox<YearMonth> cbA = new ComboBox<>(), cbB = new ComboBox<>();
+    private final GridPane gradeComparar = new GridPane();
+    private Estatisticas ultimaEst;
+    private List<Integer> ultimosAnos;
+    private int ultimoAnoMax;
 
     private final AreaChart<String, Number> mensal = new AreaChart<>(new CategoryAxis(), new NumberAxis());
     private final DonutChart donut = new DonutChart();
@@ -73,6 +89,18 @@ public class VisaoGeralController implements Pagina.Controlador {
         mensal.setVerticalGridLinesVisible(false);
         ((NumberAxis) mensal.getYAxis()).setMinorTickVisible(false);
         Graficos.eixoLog((NumberAxis) mensal.getYAxis(), false);
+        ToggleGroup g = new ToggleGroup();
+        tgLinear.setToggleGroup(g);
+        tgLog.setToggleGroup(g);
+        tgLinear.setSelected(true);
+        escala.getStyleClass().add("segmented");
+        escala.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+        tgLog.setTooltip(new Tooltip("Escala logarítmica: os meses calmos e o pico ficam legíveis no mesmo gráfico"));
+        g.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) a.setSelected(true);
+            else if (ultimaEst != null) montarMensal(ultimaEst, ultimosAnos, ultimoAnoMax);
+        });
+        montarComparacao();
         horas.setLegendVisible(false);
         horas.setAnimated(false);
         horas.setVerticalGridLinesVisible(false);
@@ -88,6 +116,7 @@ public class VisaoGeralController implements Pagina.Controlador {
         ctx.registrarGrafico("Focos por bioma", cBiomas);
         ctx.registrarGrafico("Calendário de focos por dia", cCalendario);
         ctx.registrarGrafico("Focos por hora local", cHoras);
+        ctx.registrarGrafico("Focos por bioma e mês", cBiomasMes);
         for (ChartCard c : cards()) c.estado(ChartCard.Estado.CARREGANDO);
         ctx.focosFiltradosProperty().addListener((o, a, n) -> {
             pendente = true;
@@ -96,7 +125,7 @@ public class VisaoGeralController implements Pagina.Controlador {
     }
 
     private List<ChartCard> cards() {
-        return List.of(cMensal, cBiomas, cMunicipios, cHoras, cCalendario);
+        return List.of(cMensal, cBiomas, cMunicipios, cHoras, cCalendario, cBiomasMes);
     }
 
     @Override
@@ -132,6 +161,8 @@ public class VisaoGeralController implements Pagina.Controlador {
         montarMunicipios(est);
         montarHoras(est);
         montarCalendario(focos, anos);
+        montarBiomasMes(focos, est, anos, anoMax);
+        atualizarOpcoesComparacao();
     }
 
     private void montarManchete(Estatisticas est, List<Integer> anos) {
@@ -268,6 +299,11 @@ public class VisaoGeralController implements Pagina.Controlador {
     }
 
     private void montarMensal(Estatisticas est, List<Integer> anos, int anoMax) {
+        ultimaEst = est;
+        ultimosAnos = anos;
+        ultimoAnoMax = anoMax;
+        boolean log = tgLog.isSelected();
+        Graficos.eixoLog((NumberAxis) mensal.getYAxis(), log);
         mensal.getData().clear();
         cMensal.limparLegenda();
         Map<YearMonth, Long> serie = est.serieMensal();
@@ -286,15 +322,18 @@ public class VisaoGeralController implements Pagina.Controlador {
             long totalAno = 0;
             for (long v : m) totalAno += v;
             for (int i = 0; i < 12; i++) {
-                s.getData().add(new XYChart.Data<>(Estatisticas.MESES[i], m[i]));
+                s.getData().add(new XYChart.Data<>(Estatisticas.MESES[i], log ? Math.log10(1 + m[i]) : m[i]));
                 tabela.get(i)[col] = Formatos.inteiro(m[i]);
             }
             col++;
             mensal.getData().add(s);
             Graficos.classe(s, ano == anoMax ? "serie-ano-recente" : "serie-ano-anterior");
             final long tot = totalAno;
-            Graficos.tooltips(s, d -> d.getXValue() + "/" + ano + ": " + Formatos.inteiro(d.getYValue().longValue()) + " focos ("
-                    + Formatos.decimal(tot == 0 ? 0 : 100.0 * d.getYValue().longValue() / tot, 1) + "% do ano)");
+            Graficos.tooltips(s, d -> {
+                long v = m[indiceMes(d.getXValue())];
+                return d.getXValue() + "/" + ano + ": " + Formatos.inteiro(v) + " focos ("
+                        + Formatos.decimal(tot == 0 ? 0 : 100.0 * v / tot, 1) + "% do ano)";
+            });
             if (pico != null && pico.getKey().getYear() == ano) {
                 XYChart.Data<String, Number> dp = s.getData().get(pico.getKey().getMonthValue() - 1);
                 if (dp.getNode() != null) dp.getNode().getStyleClass().add("ponto-pico");
@@ -311,7 +350,12 @@ public class VisaoGeralController implements Pagina.Controlador {
             sub.getStyleClass().add("rotulo-pico-sub");
             VBox anot = new VBox(0, num, sub);
             anot.setAlignment(Pos.TOP_RIGHT);
-            cMensal.setExtra(anot);
+            HBox extra = new HBox(20, escala, anot);
+            extra.setAlignment(Pos.TOP_RIGHT);
+            extra.setFillHeight(false);
+            cMensal.setExtra(extra);
+        } else {
+            cMensal.setExtra(escala);
         }
         String[] cab = new String[anos.size() + 1];
         cab[0] = "Mês";
@@ -396,5 +440,184 @@ public class VisaoGeralController implements Pagina.Controlador {
         anot.setAlignment(Pos.TOP_RIGHT);
         cCalendario.setExtra(anot);
         cCalendario.estado(ChartCard.Estado.CONTEUDO);
+    }
+
+    private static int indiceMes(String abrev) {
+        for (int i = 0; i < 12; i++) if (Estatisticas.MESES[i].equals(abrev)) return i;
+        return 0;
+    }
+
+    private void montarBiomasMes(List<FocoIncendio> focos, Estatisticas est, List<Integer> anos, int anoMax) {
+        List<String> biomas = new ArrayList<>();
+        for (Contagem c : est.porBioma()) biomas.add(c.chave());
+        Map<String, long[][]> dados = new HashMap<>();
+        for (String b : biomas) dados.put(b, new long[anos.size()][12]);
+        for (FocoIncendio f : focos) {
+            long[][] d = dados.get(f.getBioma());
+            int ia = anos.indexOf(f.getAno());
+            if (d != null && ia >= 0) d[ia][f.getMes() - 1]++;
+        }
+        long max = 1;
+        for (long[][] d : dados.values()) for (long[] a : d) for (long v : a) max = Math.max(max, v);
+        double bruto = max / 4.0, ordem = Math.pow(10, Math.floor(Math.log10(Math.max(1, bruto))));
+        double passo = bruto <= ordem ? ordem : bruto <= 2 * ordem ? 2 * ordem : bruto <= 5 * ordem ? 5 * ordem : 10 * ordem;
+        double topo = Math.ceil(max / passo) * passo;
+        List<String[]> linhas = new ArrayList<>();
+        multiplos.getChildren().clear();
+        for (String b : biomas) {
+            NumberAxis y = new NumberAxis(0, topo, passo);
+            y.setMinorTickVisible(false);
+            Graficos.eixoLog(y, false);
+            AreaChart<String, Number> g = new AreaChart<>(new CategoryAxis(), y);
+            g.setLegendVisible(false);
+            g.setAnimated(false);
+            g.setCreateSymbols(false);
+            g.setVerticalGridLinesVisible(false);
+            g.setPrefHeight(240);
+            long totalBioma = 0;
+            for (int ia = 0; ia < anos.size(); ia++) {
+                int ano = anos.get(ia);
+                long[] serie = dados.get(b)[ia];
+                XYChart.Series<String, Number> s = new XYChart.Series<>();
+                s.setName(String.valueOf(ano));
+                for (int m = 0; m < 12; m++) {
+                    s.getData().add(new XYChart.Data<>(Estatisticas.MESES[m], serie[m]));
+                    linhas.add(new String[]{b, String.valueOf(ano), Estatisticas.MESES[m], Formatos.inteiro(serie[m])});
+                    totalBioma += serie[m];
+                }
+                g.getData().add(s);
+                Graficos.classe(s, ano == anoMax ? "serie-ano-recente" : "serie-ano-anterior");
+                Graficos.tooltips(s, d -> b + ", " + d.getXValue() + "/" + ano + ": " + Formatos.inteiro(d.getYValue().longValue()) + " focos");
+            }
+            Label t = new Label(b);
+            t.getStyleClass().add("multiplo-titulo");
+            Label tot = new Label(Formatos.inteiro(totalBioma) + " focos");
+            tot.getStyleClass().add("multiplo-total");
+            HBox cab = new HBox(10, t, tot);
+            cab.setAlignment(Pos.BASELINE_LEFT);
+            VBox painel = new VBox(4, cab, g);
+            HBox.setHgrow(painel, Priority.ALWAYS);
+            painel.setMinWidth(0);
+            painel.setPrefWidth(10);
+            multiplos.getChildren().add(painel);
+        }
+        cBiomasMes.limparLegenda();
+        for (Integer ano : anos) cBiomasMes.adicionarLegenda(String.valueOf(ano), ano == anoMax ? "ano-recente" : "ano-anterior");
+        cBiomasMes.conteudo(multiplos);
+        cBiomasMes.setDados(new String[]{"Bioma", "Ano", "Mês", "Focos"}, () -> linhas);
+        cBiomasMes.estado(biomas.isEmpty() ? ChartCard.Estado.VAZIO : ChartCard.Estado.CONTEUDO);
+    }
+
+    private void montarComparacao() {
+        StringConverter<YearMonth> conv = new StringConverter<>() {
+            @Override
+            public String toString(YearMonth ym) {
+                return ym == null ? "" : mesExtenso(ym);
+            }
+
+            @Override
+            public YearMonth fromString(String s) {
+                return null;
+            }
+        };
+        for (ComboBox<YearMonth> cb : List.of(cbA, cbB)) {
+            cb.setConverter(conv);
+            cb.setVisibleRowCount(12);
+            cb.valueProperty().addListener((o, a, n) -> atualizarComparacao());
+        }
+        cbA.setAccessibleText("Primeiro período da comparação");
+        cbB.setAccessibleText("Segundo período da comparação");
+        Label x = new Label("comparado a");
+        x.getStyleClass().add("t-small");
+        HBox seletores = new HBox(12, cbA, x, cbB);
+        seletores.setAlignment(Pos.CENTER_LEFT);
+        gradeComparar.getStyleClass().add("grade-comparar");
+        gradeComparar.setHgap(48);
+        gradeComparar.setVgap(12);
+        cComparar.conteudo(new VBox(20, seletores, gradeComparar));
+        cComparar.estado(ChartCard.Estado.CARREGANDO);
+    }
+
+    private void atualizarOpcoesComparacao() {
+        var base = ctx.baseProperty().get();
+        if (base == null) return;
+        List<YearMonth> meses = new ArrayList<>(new Estatisticas(base.getFocos()).serieMensal().keySet());
+        if (meses.isEmpty() || meses.equals(cbA.getItems())) return;
+        cbA.getItems().setAll(meses);
+        cbB.getItems().setAll(meses);
+        YearMonth ultimo = meses.get(meses.size() - 1);
+        YearMonth b = YearMonth.of(ultimo.getYear(), 8);
+        if (!meses.contains(b)) b = ultimo;
+        YearMonth a = b.minusYears(1);
+        if (!meses.contains(a)) a = meses.get(0);
+        cbA.setValue(a);
+        cbB.setValue(b);
+        cComparar.estado(ChartCard.Estado.CONTEUDO);
+    }
+
+    private void atualizarComparacao() {
+        var base = ctx.baseProperty().get();
+        YearMonth a = cbA.getValue(), b = cbB.getValue();
+        gradeComparar.getChildren().clear();
+        if (base == null || a == null || b == null) return;
+        List<FocoIncendio> fa = new ArrayList<>(), fb = new ArrayList<>();
+        for (FocoIncendio f : base.getFocos()) {
+            YearMonth ym = YearMonth.from(f.getDataHora());
+            if (ym.equals(a)) fa.add(f);
+            if (ym.equals(b)) fb.add(f);
+        }
+        String[] cab = {"", mesExtenso(a), mesExtenso(b), "Variação"};
+        for (int i = 0; i < cab.length; i++) {
+            Label l = new Label(cab[i]);
+            l.getStyleClass().add("comparar-cabecalho");
+            gradeComparar.add(l, i, 0);
+        }
+        linhaComparacao(1, "Focos", fa.size(), fb.size());
+        linhaComparacao(2, "Municípios com focos", distintos(fa, true), distintos(fb, true));
+        linhaComparacao(3, "Dias com focos", distintos(fa, false), distintos(fb, false));
+        linhaTexto(4, "Município com mais focos", lider(fa), lider(fb));
+        linhaTexto(5, "Bioma com mais focos", fa.isEmpty() ? "—" : new Estatisticas(fa).porBioma().get(0).chave(),
+                fb.isEmpty() ? "—" : new Estatisticas(fb).porBioma().get(0).chave());
+    }
+
+    private static long distintos(List<FocoIncendio> focos, boolean municipio) {
+        Set<Object> s = new HashSet<>();
+        for (FocoIncendio f : focos) s.add(municipio ? f.getMunicipio() : f.getData());
+        return s.size();
+    }
+
+    private static String lider(List<FocoIncendio> focos) {
+        if (focos.isEmpty()) return "—";
+        Contagem c = new Estatisticas(focos).topMunicipios(1).get(0);
+        return capitalizar(c.chave()) + " (" + Formatos.inteiro(c.total()) + ")";
+    }
+
+    private void linhaComparacao(int linha, String rotulo, long va, long vb) {
+        String var = va == 0 ? (vb == 0 ? "sem variação" : "novo")
+                : (vb >= va ? "+" : "−") + Formatos.decimal(Math.abs(100.0 * (vb - va) / va), 0) + "%";
+        Label v = new Label(var);
+        v.getStyleClass().add("comparar-variacao");
+        if (vb > va) v.getStyleClass().add("alta");
+        else if (vb < va) v.getStyleClass().add("queda");
+        gradeComparar.addRow(linha, rotulo(rotulo), valor(Formatos.inteiro(va)), valor(Formatos.inteiro(vb)), v);
+    }
+
+    private void linhaTexto(int linha, String rotulo, String a, String b) {
+        Label la = valor(a), lb = valor(b);
+        la.getStyleClass().add("texto");
+        lb.getStyleClass().add("texto");
+        gradeComparar.addRow(linha, rotulo(rotulo), la, lb);
+    }
+
+    private static Label rotulo(String s) {
+        Label l = new Label(s);
+        l.getStyleClass().add("comparar-rotulo");
+        return l;
+    }
+
+    private static Label valor(String s) {
+        Label l = new Label(s);
+        l.getStyleClass().add("comparar-valor");
+        return l;
     }
 }

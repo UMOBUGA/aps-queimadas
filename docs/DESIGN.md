@@ -107,6 +107,10 @@ Todas as combinações de texto passam no **WCAG AA** (≥ 4,5:1), com contraste
 | `DonutChart`, `BarrasHorizontais`, `CalendarioHeatmap`, `MatrizCalor` | Gráficos próprios; o líder do Top 10 recebe a cor mais quente da escala |
 | `SortVisualizer` | Animação da ordenação sobre fundo térmico; as cores indicam comparando, trocando e ordenada |
 | `FilterBar`, `Chip`, `Toast`, `Dialogos`, `EmptyState`, `LoadingOverlay` | Filtros e feedback. As notificações (toasts) são escuras nos dois temas. |
+| `PaletaComandos` | Busca global (Ctrl+K): telas, ações, visões salvas, algoritmos e municípios, com busca aproximada por subsequência |
+| `Movimento` | Entrada escalonada dos cartões e contagem animada dos números (KPIs e manchete) |
+| `Logo` | Marca vetorial: chama em gradiente térmico com três barras de gráfico (menu, splash, ícone e Sobre) |
+| `ArvoreVisual` | Animação da árvore AVL com as rotações destacadas |
 
 **Estados dos controles:** hover, pressionado (escala 0,97), foco visível (anel brasa), desabilitado e selecionado (fundo em tinta cheia).
 
@@ -121,6 +125,8 @@ Segui a regra de animar pouco e com propósito (Emil Kowalski): um único moment
 | Primeira abertura da Visão geral | O número da manchete conta de 0 até o valor real (curva de desaceleração forte) | 900 ms, uma vez por sessão |
 | Faixa térmica | Os meses surgem da esquerda para a direita | 220 ms por mês, 18 ms de defasagem |
 | Troca de tela | Esmaecimento | 200 ms |
+| Primeira visita a cada tela | Cartões sobem 12 px e aparecem em sequência | 300 ms, 45 ms de defasagem |
+| Mudança de um KPI | O número conta do valor antigo ao novo | 450 ms |
 | Botões e itens do menu | Encolhem 3% ao pressionar | Imediato |
 
 Todas as animações podem ser desligadas em Configurações. Nada anima em atalhos de teclado.
@@ -133,7 +139,9 @@ Todas as animações podem ser desligadas em Configurações. Nada anima em atal
 
 | Atalho | Ação |
 |---|---|
-| Ctrl+1…6 | Telas |
+| Ctrl+K | Paleta de comandos |
+| Ctrl+1…7 | Telas |
+| F5 | Modo apresentação (setas navegam, Esc sai) |
 | Ctrl+O | Abrir CSV |
 | Ctrl+R | Recarregar |
 | Ctrl+E | Exportar |
@@ -141,7 +149,19 @@ Todas as animações podem ser desligadas em Configurações. Nada anima em atal
 | Ctrl+B | Menu |
 | F1 | Sobre |
 
-- **Preferências:** tema, animações e menu recolhido são persistidos com `java.util.prefs.Preferences`.
+- **Faixa térmica pelo teclado:** setas movem o cursor entre os meses, Enter seleciona e o leitor de tela anuncia mês e contagem.
+- **Preferências:** tema, animações, menu recolhido, densidade compacta, visões salvas e o tour já visto são persistidos com `java.util.prefs.Preferences`.
+
+## 7.1 Experiências de produto
+
+- **Paleta de comandos (Ctrl+K):** encontra qualquer tela, ação, algoritmo ou município digitando parte do nome; o trecho exato pontua mais que a subsequência e o início de palavra ganha bônus.
+- **Modo apresentação (F5):** sete telas em tela cheia com texto maior e um roteiro por slide (lido de `grupo.properties`, chaves `apresentacao.*`), terminando num slide de conclusão com a equipe.
+- **Tour guiado:** cinco passos na primeira abertura (menu, faixa térmica, filtros, exportação e atalhos); pode ser pulado e não volta a aparecer.
+- **Visões salvas:** a combinação atual de filtros vira uma visão com nome, reaplicada pelo menu "Visões" ou pela paleta.
+- **Comparar dois períodos:** na Visão geral, escolhem-se dois meses (padrão agosto de 2023 × agosto de 2024) e a tela mostra focos, municípios, dias e líderes lado a lado, com a variação.
+- **Pequenos múltiplos por bioma:** um gráfico por bioma com o mesmo eixo vertical, para comparar picos sem distorção.
+- **Escala linear ou log** no gráfico mensal: em log os meses calmos e o pico ficam legíveis juntos.
+- **Densidade compacta** (Configurações): reduz espaçamentos para telas pequenas.
 
 ---
 

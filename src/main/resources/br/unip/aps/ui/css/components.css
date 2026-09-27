@@ -5,7 +5,7 @@
     -fx-padding: 22 12 14 12;
 }
 .sidebar-brand { -fx-padding: 0 8 22 8; -fx-spacing: 10; -fx-alignment: center-left; }
-.brand-mark { -fx-alignment: center; -fx-min-width: 28; -fx-min-height: 28; -fx-max-width: 28; -fx-max-height: 28; }
+.brand-mark { -fx-alignment: center; -fx-min-width: 30; -fx-min-height: 30; -fx-max-width: 30; -fx-max-height: 30; }
 .brand-mark .ikonli-font-icon { -fx-icon-color: -aps-rail-accent; -fx-icon-size: 26; }
 .brand-title { -fx-font-family: "Big Shoulders Display Black"; -fx-font-size: 27px; -fx-text-fill: -aps-rail-text-1; }
 .brand-subtitle { -fx-font-family: "Inter Medium"; -fx-font-size: 11.5px; -fx-text-fill: -aps-rail-text-3; }
@@ -111,7 +111,7 @@
 
 .chip-filtro { -fx-padding: 2 4 2 9; -fx-spacing: 4; -fx-alignment: center-left; }
 .chip-filtro .chip-fechar {
-    -fx-background-color: transparent; -fx-padding: 2; -fx-background-radius: 2; -fx-cursor: hand; -fx-min-width: 18; -fx-min-height: 18;
+    -fx-background-color: transparent; -fx-padding: 4; -fx-background-radius: 3; -fx-cursor: hand; -fx-min-width: 24; -fx-min-height: 24;
 }
 .chip-filtro .chip-fechar:hover { -fx-background-color: -aps-accent-muted; }
 .chip-filtro .chip-fechar .ikonli-font-icon { -fx-icon-size: 13; -fx-icon-color: -aps-accent-text; }
@@ -234,11 +234,10 @@
 .segmented .toggle-button:focus-visible { -fx-border-color: -aps-focus-ring; -fx-border-width: 2; -fx-border-radius: 3; }
 
 .card, .panel-card {
-    -fx-background-color: -aps-surface;
-    -fx-background-radius: 6;
-    -fx-border-color: -aps-border;
-    -fx-border-radius: 6;
-    -fx-padding: 18 20 18 20;
+    -fx-background-color: transparent;
+    -fx-border-color: -aps-rule transparent transparent transparent;
+    -fx-border-width: 3 0 0 0;
+    -fx-padding: 12 0 4 0;
 }
 .panel-card { -fx-spacing: 12; }
 .card-title { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 25px; -fx-text-fill: -aps-text-1; }
@@ -546,3 +545,92 @@
 .tabela-leve-celula.destaque { -fx-font-family: "Inter SemiBold"; -fx-text-fill: -aps-accent-text; }
 
 .nota-metodo { -fx-font-size: 12.5px; -fx-text-fill: -aps-text-3; -fx-padding: 10 0 0 0; }
+
+.botao-busca {
+    -fx-background-color: -aps-surface; -fx-border-color: -aps-border-strong; -fx-border-radius: 5; -fx-background-radius: 5;
+    -fx-padding: 6 8 6 10; -fx-cursor: hand; -fx-text-fill: -aps-text-2; -fx-min-height: 34;
+}
+.botao-busca .label { -fx-text-fill: -aps-text-3; -fx-font-size: 12.5px; }
+.botao-busca .ikonli-font-icon { -fx-icon-color: -aps-text-3; }
+.botao-busca:hover { -fx-border-color: -aps-text-3; }
+.botao-busca:focus-visible { -fx-border-color: -aps-focus-ring; -fx-border-width: 2; }
+.atalho-busca {
+    -fx-background-color: -aps-surface-sunken; -fx-border-color: -aps-border; -fx-border-radius: 3; -fx-background-radius: 3;
+    -fx-padding: 1 6; -fx-font-size: 11px; -fx-text-fill: -aps-text-2;
+}
+
+.paleta-fundo { -fx-background-color: -aps-scrim; }
+.paleta-painel {
+    -fx-background-color: -aps-surface; -fx-background-radius: 8; -fx-border-color: -aps-border-strong; -fx-border-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 40, 0, 0, 16);
+}
+.paleta-campo { -fx-padding: 12 16; -fx-border-color: transparent transparent -aps-border transparent; -fx-border-width: 0 0 1 0; }
+.paleta-campo .ikonli-font-icon { -fx-icon-color: -aps-text-3; }
+.paleta-busca { -fx-background-color: transparent; -fx-border-width: 0; -fx-font-size: 16px; -fx-padding: 4 0; -fx-text-fill: -aps-text-1; }
+.paleta-lista { -fx-background-color: transparent; -fx-border-width: 0; -fx-padding: 6; }
+.paleta-lista .list-cell { -fx-background-color: transparent; -fx-background-radius: 5; -fx-padding: 8 10; }
+.paleta-lista .list-cell:filled:selected, .paleta-lista .list-cell:filled:hover { -fx-background-color: -aps-surface-hover; }
+.paleta-lista .list-cell:filled:selected .ikonli-font-icon { -fx-icon-color: -aps-accent-text; }
+.paleta-lista .list-cell .ikonli-font-icon { -fx-icon-color: -aps-text-3; }
+.paleta-titulo { -fx-font-family: "Inter Medium"; -fx-font-size: 13.5px; -fx-text-fill: -aps-text-1; }
+.paleta-detalhe { -fx-font-size: 12px; -fx-text-fill: -aps-text-3; }
+.paleta-categoria { -fx-font-size: 11.5px; -fx-text-fill: -aps-text-3; }
+.paleta-dica { -fx-font-size: 11.5px; -fx-text-fill: -aps-text-3; -fx-padding: 9 16; -fx-border-color: -aps-border transparent transparent transparent; -fx-border-width: 1 0 0 0; }
+
+.tour-camada { -fx-background-color: rgba(5, 3, 2, 0.45); }
+.tour-destaque { -fx-fill: transparent; -fx-stroke: -aps-accent; -fx-stroke-width: 2.5; }
+.tour-cartao {
+    -fx-background-color: -aps-surface; -fx-background-radius: 8; -fx-border-color: -aps-border-strong; -fx-border-radius: 8;
+    -fx-padding: 18 20; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 30, 0, 0, 10);
+}
+.tour-titulo { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 26px; -fx-text-fill: -aps-text-1; }
+.tour-texto { -fx-font-size: 13.5px; -fx-text-fill: -aps-text-2; -fx-line-spacing: 2; }
+.tour-contador { -fx-font-size: 12px; -fx-text-fill: -aps-text-3; }
+
+.apresentacao-barra {
+    -fx-background-color: rgba(10, 8, 7, 0.92); -fx-background-radius: 8; -fx-padding: 12 18;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 24, 0, 0, 8);
+}
+.apresentacao-titulo { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 24px; -fx-text-fill: #F6EEE7; }
+.apresentacao-roteiro { -fx-font-size: 14px; -fx-text-fill: #C4B3A7; }
+.apresentacao-integrante { -fx-font-family: "Inter SemiBold"; -fx-font-size: 14px; -fx-text-fill: #FF8C4A; -fx-graphic-text-gap: 6; }
+.apresentacao-integrante .ikonli-font-icon { -fx-icon-color: #FF8C4A; }
+.apresentacao-dica { -fx-font-size: 12px; -fx-text-fill: #8F7D71; }
+.apresentacao-ponto { -fx-min-width: 10; -fx-min-height: 10; -fx-max-width: 10; -fx-max-height: 10; -fx-background-radius: 5; -fx-background-color: #3F332D; }
+.apresentacao-ponto.feito { -fx-background-color: #8F7D71; }
+.apresentacao-ponto.atual { -fx-background-color: #FF6B1A; -fx-min-width: 26; -fx-max-width: 26; }
+.apresentacao-conclusao { -fx-background-color: -aps-bg-app; -fx-padding: 64 96 120 96; }
+.apresentacao-conclusao-titulo { -fx-font-family: "Big Shoulders Display Black"; -fx-font-size: 64px; -fx-text-fill: -aps-text-1; }
+.apresentacao-conclusao-item {
+    -fx-font-size: 24px; -fx-text-fill: -aps-text-1; -fx-padding: 14 0 14 0;
+    -fx-border-color: -aps-border-strong transparent transparent transparent; -fx-border-width: 1 0 0 0;
+}
+.modo-apresentacao .t-small, .modo-apresentacao .card-subtitle, .modo-apresentacao .kpi-contexto,
+.modo-apresentacao .destaque-rot, .modo-apresentacao .barra-rotulo, .modo-apresentacao .legenda-item { -fx-font-size: 15px; }
+.modo-apresentacao .card-title { -fx-font-size: 30px; }
+.modo-apresentacao .axis { -fx-tick-label-font-size: 14px; }
+.modo-apresentacao .data-table .table-cell { -fx-font-size: 15px; }
+.modo-apresentacao .filter-bar { -fx-padding: 6 32 10 32; }
+
+.faixa-termica:focused .faixa-trilho { -fx-border-color: -aps-focus-ring; -fx-border-width: 2; -fx-border-radius: 4; }
+.faixa-cursor { -fx-fill: transparent; -fx-stroke: #FFFFFF; -fx-stroke-width: 2; -fx-stroke-type: inside; }
+
+.compacto .page { -fx-padding: 14 24 28 24; -fx-spacing: 20; }
+.compacto .data-table .table-row-cell { -fx-cell-size: 28; }
+.compacto .kpi-valor { -fx-font-size: 40px; }
+.compacto .manchete-numero { -fx-font-size: 120px; }
+.compacto .chart-card { -fx-spacing: 6; }
+
+.brand-mark.marca-splash { -fx-min-width: 48; -fx-min-height: 48; -fx-max-width: 48; -fx-max-height: 48; }
+
+.multiplo-titulo { -fx-font-family: "Big Shoulders Display Bold"; -fx-font-size: 20px; -fx-text-fill: -aps-text-1; }
+.multiplo-total { -fx-font-family: "Inter Medium"; -fx-font-size: 12px; -fx-text-fill: -aps-text-3; }
+
+.grade-comparar { -fx-padding: 4 0 8 0; }
+.comparar-cabecalho { -fx-font-family: "Inter SemiBold"; -fx-font-size: 12px; -fx-text-fill: -aps-text-3; }
+.comparar-rotulo { -fx-font-family: "Inter Medium"; -fx-font-size: 13.5px; -fx-text-fill: -aps-text-2; }
+.comparar-valor { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 30px; -fx-text-fill: -aps-text-1; }
+.comparar-valor.texto { -fx-font-family: "Inter SemiBold"; -fx-font-size: 15px; }
+.comparar-variacao { -fx-font-family: "Big Shoulders Display Bold"; -fx-font-size: 22px; -fx-text-fill: -aps-text-2; }
+.comparar-variacao.alta { -fx-text-fill: -aps-accent; }
+.comparar-variacao.queda { -fx-text-fill: -aps-success; }

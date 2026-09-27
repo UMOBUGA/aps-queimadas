@@ -85,6 +85,10 @@ public class MainController {
     private Button btnRecolher;
     private EmptyState vazio;
     private Pagina exibida;
+    private br.unip.aps.ui.componentes.PaletaComandos paleta;
+    private ModoApresentacao apresentacao;
+    private TourGuiado tour;
+    private boolean tourAgendado;
     private final java.util.Set<Pagina> primeiraVez = java.util.EnumSet.allOf(Pagina.class);
 
     public MainController(UiContexto ctx) {
@@ -108,6 +112,20 @@ public class MainController {
                 botao("Baixar do INPE", Icones.BAIXAR, "btn-secondary", this::baixarInpe));
         LoadingOverlay overlay = new LoadingOverlay(ctx.ocupadoProperty(), ctx.statusProperty(), ctx.progressoProperty(), ctx::cancelar);
         conteudo.getChildren().addAll(vazio, overlay);
+        paleta = new br.unip.aps.ui.componentes.PaletaComandos(this::comandos);
+        raiz.getChildren().add(paleta);
+        apresentacao = new ModoApresentacao(this, ctx, raiz);
+        tour = new TourGuiado(raiz, List.of(
+                new TourGuiado.Passo(() -> sidebar, "Sete telas, uma pergunta cada",
+                        "Visão geral, Ordenação, Estruturas & Busca, Benchmark, Mapa, Machine Learning e Qualidade dos dados. Ctrl+1 a Ctrl+7 levam direto a cada uma."),
+                new TourGuiado.Passo(() -> faixa, "A temporada inteira numa faixa",
+                        "Cada retângulo é um mês, colorido pela quantidade de focos. Clique em um mês para filtrar todas as análises; Shift+clique estende o período."),
+                new TourGuiado.Passo(() -> filterBar, "Filtros que valem para tudo",
+                        "Bioma, ano, município e período. Guarde combinações em Visões para voltar a elas depois."),
+                new TourGuiado.Passo(() -> exportar, "Relatórios prontos para entregar",
+                        "Excel, PDF com gráficos e o relatório com as linhas de código pedido na APS."),
+                new TourGuiado.Passo(() -> null, "Atalhos para a apresentação",
+                        "Ctrl+K abre a busca de comandos (telas, municípios, algoritmos). F5 inicia o modo apresentação, com o roteiro de cada etapa.")));
 
         progressoTopo.progressProperty().bind(ctx.progressoProperty().map(p -> p.doubleValue() <= 0 ? -1.0 : p.doubleValue()));
         progressoTopo.visibleProperty().bind(ctx.ocupadoProperty());
@@ -121,6 +139,13 @@ public class MainController {
             filterBar.setOpcoes(b);
             if (b != null) faixa.setDados(new Estatisticas(b.getFocos()).serieMensal());
             preCalcularMl(b);
+            if (b != null && !tourAgendado && !TourGuiado.jaVisto() && System.getProperty("aps.capturas") == null
+                    && System.getProperty("aps.semTour") == null) {
+                tourAgendado = true;
+                javafx.animation.PauseTransition espera = new javafx.animation.PauseTransition(Duration.millis(900));
+                espera.setOnFinished(e -> tour.iniciar());
+                espera.play();
+            }
             atualizarChips(b);
             exibir(ctx.paginaProperty().get());
         });
@@ -139,7 +164,7 @@ public class MainController {
     }
 
     private void montarSidebar() {
-        StackPane marca = new StackPane(Icones.de(Icones.MARCA, 26));
+        StackPane marca = new StackPane(br.unip.aps.ui.componentes.Logo.criar(28));
         marca.getStyleClass().add("brand-mark");
         Label nome = new Label("QUEIMADAS");
         nome.getStyleClass().add("brand-title");
@@ -237,7 +262,20 @@ public class MainController {
         exportar.setPopupSide(Side.BOTTOM);
         exportar.setMinWidth(Region.USE_PREF_SIZE);
 
-        HBox acoes = new HBox(4, abrir, recarregar, baixar, btnTema, exportar);
+        Button busca = new Button("Buscar", Icones.de(Icones.BUSCA, 16));
+        Label atalhoBusca = new Label("Ctrl K");
+        atalhoBusca.getStyleClass().add("atalho-busca");
+        busca.setContentDisplay(javafx.scene.control.ContentDisplay.LEFT);
+        HBox rotuloBusca = new HBox(8, new Label("Buscar telas, municípios…"), atalhoBusca);
+        rotuloBusca.setAlignment(Pos.CENTER_LEFT);
+        busca.setText(null);
+        busca.setGraphic(new HBox(8, Icones.de(Icones.BUSCA, 16), rotuloBusca));
+        busca.getStyleClass().add("botao-busca");
+        busca.setAccessibleText("Abrir a busca de comandos (Ctrl+K)");
+        busca.setOnAction(e -> paleta.abrir());
+        Button apresentar = iconeAcao(Icones.APRESENTACAO, "Modo apresentação (F5)", () -> apresentacao.alternar());
+        HBox acoes = new HBox(4, busca, abrir, recarregar, baixar, apresentar, btnTema, exportar);
+        HBox.setMargin(busca, new javafx.geometry.Insets(0, 8, 0, 0));
         acoes.setAlignment(Pos.CENTER_RIGHT);
         acoes.setPadding(new javafx.geometry.Insets(0, 0, 10, 0));
         HBox barra = new HBox(12, textos, esp, acoes);
@@ -352,6 +390,8 @@ public class MainController {
         s.getAccelerators().put(new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN),
                 () -> GerenciadorTema.get().sidebarRecolhidaProperty().set(!GerenciadorTema.get().sidebarRecolhidaProperty().get()));
         s.getAccelerators().put(new KeyCodeCombination(KeyCode.F1), () -> ctx.navegar(Pagina.SOBRE));
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), () -> paleta.abrir());
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.F5), () -> apresentacao.alternar());
         KeyCode[] numeros = {KeyCode.DIGIT1, KeyCode.DIGIT2, KeyCode.DIGIT3, KeyCode.DIGIT4, KeyCode.DIGIT5, KeyCode.DIGIT6, KeyCode.DIGIT7};
         Pagina[] ps = Pagina.values();
         for (int i = 0; i < numeros.length; i++) {
@@ -476,6 +516,46 @@ public class MainController {
         } catch (IOException | UnsupportedOperationException e) {
             Feedback.info("Abra o arquivo manualmente", arquivo.toAbsolutePath().toString());
         }
+    }
+
+    private List<br.unip.aps.ui.componentes.PaletaComandos.Comando> comandos() {
+        List<br.unip.aps.ui.componentes.PaletaComandos.Comando> r = new ArrayList<>();
+        for (Pagina p : Pagina.values()) {
+            r.add(new br.unip.aps.ui.componentes.PaletaComandos.Comando(p.titulo(), p.descricao(), "Tela", p.icone(), () -> ctx.navegar(p)));
+        }
+        acao(r, "Abrir CSV do INPE", "Escolher os arquivos de focos (Ctrl+O)", Icones.ABRIR, this::abrirCsv);
+        acao(r, "Recarregar os dados", "Ler de novo a pasta data/raw (Ctrl+R)", Icones.RECARREGAR, this::recarregar);
+        acao(r, "Baixar do INPE", "Baixar os focos de outro estado ou ano", Icones.BAIXAR, this::baixarInpe);
+        acao(r, "Exportar relatório Excel", "Planilha com todas as análises", Icones.EXCEL, () -> exportarRelatorio("xlsx"));
+        acao(r, "Exportar relatório PDF", "Relatório com gráficos", Icones.PDF, () -> exportarRelatorio("pdf"));
+        acao(r, "Gerar relatório com as linhas de código", "Anexo exigido na entrega da APS", Icones.CODIGO, this::relatorioCodigo);
+        acao(r, "Alternar tema claro/escuro", "Ctrl+T", Icones.TEMA_ESCURO, () -> GerenciadorTema.get().alternar());
+        acao(r, "Iniciar o modo apresentação", "Tela cheia com o roteiro de cada etapa (F5)", Icones.APRESENTACAO, () -> apresentacao.alternar());
+        acao(r, "Rever o tour guiado", "Os cinco passos da primeira execução", Icones.GUIA, () -> tour.iniciar());
+        acao(r, "Limpar todos os filtros", "Voltar à base inteira", Icones.FECHAR, filterBar::limpar);
+        for (String v : filterBar.nomesVisoes()) {
+            r.add(new br.unip.aps.ui.componentes.PaletaComandos.Comando(v, "Reaplicar esta visão salva", "Visão", Icones.VISOES,
+                    () -> filterBar.abrirVisao(v)));
+        }
+        for (br.unip.aps.sorting.AlgoritmoTipo t : br.unip.aps.sorting.AlgoritmoTipo.values()) {
+            r.add(new br.unip.aps.ui.componentes.PaletaComandos.Comando("Ordenar com " + t.nome(), t.criar().complexidade().casoMedio()
+                    + " no caso médio", "Algoritmo", Icones.ORDENACAO, () -> {
+                ctx.navegar(Pagina.ORDENACAO);
+                if (controllerDe(Pagina.ORDENACAO) instanceof OrdenacaoController oc) oc.selecionarAlgoritmo(t);
+            }));
+        }
+        BaseDeFocos b = ctx.baseProperty().get();
+        if (b != null) {
+            for (String m : b.municipios()) {
+                r.add(new br.unip.aps.ui.componentes.PaletaComandos.Comando(VisaoGeralController.capitalizar(m), "Filtrar os focos deste município",
+                        "Município", Icones.MUNICIPIO, () -> filterBar.municipio(m)));
+            }
+        }
+        return r;
+    }
+
+    private static void acao(List<br.unip.aps.ui.componentes.PaletaComandos.Comando> r, String t, String d, String icone, Runnable a) {
+        r.add(new br.unip.aps.ui.componentes.PaletaComandos.Comando(t, d, "Ação", icone, a));
     }
 
     Node noDe(Pagina p) {

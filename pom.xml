@@ -153,7 +153,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.3</version>
                 <configuration>
-                    <argLine>@{argLine} -Xss8m -Dfile.encoding=UTF-8</argLine>
+                    <argLine>@{argLine} -Xss8m -Dfile.encoding=UTF-8 -Daps.semTour=true</argLine>
                     <workingDirectory>${project.basedir}</workingDirectory>
                 </configuration>
             </plugin>

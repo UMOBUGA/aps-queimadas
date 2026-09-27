@@ -82,8 +82,8 @@ public class DashboardApp extends Application {
     }
 
     private Stage splash(GerenciadorTema tema) {
-        StackPane marca = new StackPane(Icones.de(Icones.MARCA, 34));
-        marca.getStyleClass().add("brand-mark");
+        StackPane marca = new StackPane(br.unip.aps.ui.componentes.Logo.criar(44));
+        marca.getStyleClass().addAll("brand-mark", "marca-splash");
         Label nome = new Label("QUEIMADAS");
         nome.getStyleClass().add("splash-titulo");
         HBox titulo = new HBox(12, marca, nome);
@@ -121,7 +121,7 @@ public class DashboardApp extends Application {
     }
 
     static Image icone() {
-        StackPane p = new StackPane(Icones.de(Icones.MARCA, 40));
+        StackPane p = new StackPane(br.unip.aps.ui.componentes.Logo.criar(46));
         p.getStyleClass().setAll("icone-app");
         p.setMinSize(64, 64);
         p.setPrefSize(64, 64);

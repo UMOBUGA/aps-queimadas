@@ -42,6 +42,13 @@
                     </VBox>
                     <ToggleSwitch fx:id="swSidebar"/>
                 </HBox>
+                <HBox styleClass="config-linha">
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Densidade compacta" styleClass="t-h3"/>
+                        <Label text="Menos espaço entre seções e linhas de tabela mais baixas, para telas pequenas." styleClass="t-small" wrapText="true"/>
+                    </VBox>
+                    <ToggleSwitch fx:id="swCompacto"/>
+                </HBox>
                 <HBox spacing="8" styleClass="acoes-rodape">
                     <Region HBox.hgrow="ALWAYS"/>
                     <Button fx:id="btnRestaurar" text="Restaurar padrões" onAction="#restaurar" styleClass="btn-secondary"/>

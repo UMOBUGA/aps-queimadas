@@ -19,7 +19,7 @@ public class ConfiguracoesController implements Pagina.Controlador {
     private final UiContexto ctx;
 
     @FXML private ToggleButton tgClaro, tgEscuro;
-    @FXML private ToggleSwitch swAnimacoes, swSidebar;
+    @FXML private ToggleSwitch swAnimacoes, swSidebar, swCompacto;
     @FXML private Button btnRestaurar;
     @FXML private GridPane gridAtalhos, gridDados;
 
@@ -46,10 +46,13 @@ public class ConfiguracoesController implements Pagina.Controlador {
         });
         swAnimacoes.selectedProperty().bindBidirectional(t.animacoesProperty());
         swSidebar.selectedProperty().bindBidirectional(t.sidebarRecolhidaProperty());
+        swCompacto.selectedProperty().bindBidirectional(t.compactoProperty());
         btnRestaurar.setGraphic(Icones.de(Icones.RECARREGAR, 16));
 
         String[][] atalhos = {
+                {"Ctrl + K", "Buscar telas, ações, municípios e algoritmos"},
                 {"Ctrl + 1 … 7", "Ir para Visão geral, Ordenação, Estruturas, Benchmark, Mapa, ML, Qualidade"},
+                {"F5", "Modo apresentação (setas navegam, Esc sai)"},
                 {"Ctrl + O", "Abrir CSV"}, {"Ctrl + R", "Recarregar dados"}, {"Ctrl + E", "Exportar relatório"},
                 {"Ctrl + T", "Alternar tema claro/escuro"}, {"Ctrl + B", "Recolher/expandir menu"}, {"F1", "Sobre"},
                 {"Enter", "Ordenar (na tela de Ordenação)"}};

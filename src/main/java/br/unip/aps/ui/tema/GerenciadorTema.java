@@ -46,6 +46,7 @@ public final class GerenciadorTema {
     private final ObjectProperty<Tema> tema = new SimpleObjectProperty<>();
     private final BooleanProperty animacoes = new SimpleBooleanProperty();
     private final BooleanProperty sidebarRecolhida = new SimpleBooleanProperty();
+    private final BooleanProperty compacto = new SimpleBooleanProperty();
     private final List<Scene> cenas = new ArrayList<>();
 
     private GerenciadorTema(Preferences prefs) {
@@ -53,6 +54,11 @@ public final class GerenciadorTema {
         tema.set(lerTema());
         animacoes.set(prefs.getBoolean("animacoes", true));
         sidebarRecolhida.set(prefs.getBoolean("sidebarRecolhida", false));
+        compacto.set(prefs.getBoolean("compacto", false));
+        compacto.addListener((o, a, n) -> {
+            prefs.putBoolean("compacto", n);
+            for (Scene s : cenas) aplicarDensidade(s);
+        });
         tema.addListener((o, a, n) -> {
             prefs.put("tema", n.name());
             aplicarGlobal();
@@ -107,6 +113,7 @@ public final class GerenciadorTema {
     /** Registra uma cena para receber (e acompanhar) o tema atual. */
     public void registrar(Scene cena) {
         cena.getStylesheets().setAll(folhas());
+        aplicarDensidade(cena);
         if (!cenas.contains(cena)) cenas.add(cena);
     }
 
@@ -133,6 +140,14 @@ public final class GerenciadorTema {
         return tema.get() == Tema.ESCURO;
     }
 
+    private void aplicarDensidade(Scene cena) {
+        if (cena.getRoot() == null) return;
+        cena.getRoot().getStyleClass().remove("compacto");
+        if (compacto.get()) cena.getRoot().getStyleClass().add("compacto");
+    }
+
+    public BooleanProperty compactoProperty() { return compacto; }
+
     public ObjectProperty<Tema> temaProperty() { return tema; }
     public BooleanProperty animacoesProperty() { return animacoes; }
     public BooleanProperty sidebarRecolhidaProperty() { return sidebarRecolhida; }
@@ -142,5 +157,6 @@ public final class GerenciadorTema {
         tema.set(Tema.ESCURO);
         animacoes.set(true);
         sidebarRecolhida.set(false);
+        compacto.set(false);
     }
 }

@@ -39,6 +39,9 @@ public class FaixaTermica extends HBox {
     private final List<Rectangle> celulas = new ArrayList<>();
     private final List<Label> rotulos = new ArrayList<>();
     private final Rectangle selecao = new Rectangle();
+    private final Rectangle cursor = new Rectangle();
+    private int posCursor = -1;
+    private final List<Long> valores = new ArrayList<>();
     private BiConsumer<YearMonth, YearMonth> aoSelecionar;
     private YearMonth de, ate;
     private boolean revelada;
@@ -56,6 +59,39 @@ public class FaixaTermica extends HBox {
         selecao.setVisible(false);
         getChildren().addAll(trilho, legenda());
         setSpacing(18);
+        cursor.getStyleClass().add("faixa-cursor");
+        cursor.setManaged(false);
+        cursor.setMouseTransparent(true);
+        cursor.setVisible(false);
+        setFocusTraversable(true);
+        setAccessibleRole(javafx.scene.AccessibleRole.SLIDER);
+        setAccessibleText("Faixa térmica: focos por mês. Use as setas para escolher um mês e Enter para filtrar.");
+        focusedProperty().addListener((o, a, f) -> {
+            if (f && posCursor < 0 && !meses.isEmpty()) posCursor = meses.size() - 1;
+            cursor.setVisible(f && posCursor >= 0);
+            anunciar();
+            tira.requestLayout();
+        });
+        setOnKeyPressed(e -> {
+            if (meses.isEmpty()) return;
+            switch (e.getCode()) {
+                case LEFT -> posCursor = Math.max(0, posCursor - 1);
+                case RIGHT -> posCursor = Math.min(meses.size() - 1, posCursor + 1);
+                case HOME -> posCursor = 0;
+                case END -> posCursor = meses.size() - 1;
+                case ENTER, SPACE -> clicar(meses.get(posCursor), e.isShiftDown());
+                case ESCAPE -> {
+                    setSelecao(null, null);
+                    if (aoSelecionar != null) aoSelecionar.accept(null, null);
+                }
+                default -> {
+                    return;
+                }
+            }
+            e.consume();
+            anunciar();
+            tira.requestLayout();
+        });
     }
 
     private HBox legenda() {
@@ -80,6 +116,7 @@ public class FaixaTermica extends HBox {
     /** Recebe a serie mensal completa da base (em ordem cronologica). */
     public void setDados(Map<YearMonth, Long> serie) {
         meses.clear();
+        valores.clear();
         celulas.clear();
         rotulos.clear();
         tira.getChildren().clear();
@@ -99,6 +136,7 @@ public class FaixaTermica extends HBox {
             Tooltip.install(r, t);
             r.addEventHandler(MouseEvent.MOUSE_CLICKED, ev -> clicar(ym, ev.isShiftDown()));
             meses.add(ym);
+            valores.add(v);
             celulas.add(r);
             Label l = new Label(ym.getMonthValue() == 1 ? String.valueOf(ym.getYear()) : Estatisticas.MESES[ym.getMonthValue() - 1]);
             l.getStyleClass().add("faixa-rotulo");
@@ -108,7 +146,7 @@ public class FaixaTermica extends HBox {
         }
         tira.getChildren().addAll(celulas);
         tira.getChildren().addAll(rotulos);
-        tira.getChildren().add(selecao);
+        tira.getChildren().addAll(selecao, cursor);
         atualizarSelecao();
         if (!revelada && GerenciadorTema.get().animacoesProperty().get()) {
             for (int i = 0; i < celulas.size(); i++) {
@@ -122,6 +160,13 @@ public class FaixaTermica extends HBox {
         }
         revelada = true;
         tira.requestLayout();
+    }
+
+    private void anunciar() {
+        if (posCursor < 0 || posCursor >= meses.size()) return;
+        YearMonth ym = meses.get(posCursor);
+        setAccessibleText("Faixa térmica, " + Estatisticas.MESES[ym.getMonthValue() - 1] + " de " + ym.getYear() + ": "
+                + Formatos.inteiro(valores.get(posCursor)) + " focos. Enter filtra o mês; Shift+Enter estende; Esc limpa.");
     }
 
     /** Destaca o periodo filtrado (nulos removem o destaque). */
@@ -217,6 +262,12 @@ public class FaixaTermica extends HBox {
                     if (iDe < 0 && !ym.isBefore(de)) iDe = i;
                     if (!ym.isAfter(fim)) iAte = i;
                 }
+            }
+            if (posCursor >= 0 && posCursor < n) {
+                cursor.setX(posCursor * (w + GAP));
+                cursor.setY(0);
+                cursor.setWidth(Math.max(1, w));
+                cursor.setHeight(ALTURA);
             }
             if (iDe >= 0 && iAte >= iDe) {
                 selecao.setX(iDe * (w + GAP));

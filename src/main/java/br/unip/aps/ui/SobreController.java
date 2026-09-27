@@ -36,7 +36,7 @@ public class SobreController implements Pagina.Controlador {
 
     @FXML
     private void initialize() {
-        marca.getChildren().add(Icones.de(Icones.MARCA, 30));
+        marca.getChildren().add(br.unip.aps.ui.componentes.Logo.criar(56));
         chipsVersao.getChildren().addAll(Chip.de("Versão 1.0", Icones.CUBO, Chip.Variante.NEUTRO),
                 Chip.de("Java 21 · JavaFX 21", null, Chip.Variante.NEUTRO),
                 Chip.de("SP · 2023–2024", Icones.MUNICIPIO, Chip.Variante.DESTAQUE));

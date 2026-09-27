@@ -31,6 +31,10 @@
             <ChartCard fx:id="cBiomas" titulo="Em que bioma"
                        subtitulo="Participação de cada bioma do IBGE no total filtrado" prefHeight="440"/>
         </GradeResponsiva>
+        <ChartCard fx:id="cBiomasMes" titulo="Cada bioma, mês a mês"
+                   subtitulo="Pequenos múltiplos com o mesmo eixo vertical: dá para comparar a altura dos picos entre os biomas" prefHeight="340"/>
+        <ChartCard fx:id="cComparar" titulo="Comparar dois períodos"
+                   subtitulo="Escolha dois meses da base; os números usam a base inteira, sem os filtros acima"/>
         <ChartCard fx:id="cCalendario" titulo="Dia a dia"
                    subtitulo="Cada quadrado é um dia; quanto mais quente a cor, mais focos detectados"/>
         <ChartCard fx:id="cHoras" titulo="A que horas o satélite vê"

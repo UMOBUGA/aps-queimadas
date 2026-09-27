@@ -87,6 +87,8 @@ public class ChartCard extends VBox {
         corpo.setMinHeight(120);
 
         getChildren().addAll(header, legenda, corpo);
+        setAccessibleRole(javafx.scene.AccessibleRole.TEXT);
+        setAccessibleText(titulo + ". " + subtitulo + ". Use o menu de ações para ver os dados em tabela.");
         legenda.setVisible(false);
         legenda.setManaged(false);
     }
@@ -159,6 +161,7 @@ public class ChartCard extends VBox {
 
     public void setSubtitulo(String t) {
         subtitulo.setText(t);
+        setAccessibleText(titulo.getText() + ". " + t + ". Use o menu de ações para ver os dados em tabela.");
     }
 
     /** Define os dados exibidos em "Ver dados em tabela". */

@@ -9,6 +9,11 @@ public final class Icones {
     public static final String ORDENACAO = "mdi2s-sort-ascending";
     public static final String BENCHMARK = "mdi2s-speedometer";
     public static final String ESTRUTURAS = "mdi2f-file-tree-outline";
+    public static final String PESSOA = "mdi2a-account-outline";
+    public static final String APRESENTACAO = "mdi2p-presentation-play";
+    public static final String SALVAR = "mdi2c-content-save-outline";
+    public static final String VISOES = "mdi2b-bookmark-multiple-outline";
+    public static final String GUIA = "mdi2m-map-marker-path";
     public static final String MAPA = "mdi2m-map-outline";
     public static final String ML = "mdi2b-brain";
     public static final String QUALIDADE = "mdi2s-shield-check-outline";
@@ -80,7 +85,6 @@ public final class Icones {
     public static final String RELOGIO = "mdi2c-clock-outline";
     public static final String PALETA = "mdi2p-palette-outline";
     public static final String TEMA = "mdi2t-theme-light-dark";
-    public static final String TECLADO = "mdi2k-keyboard-outline";
     public static final String CUBO = "mdi2c-cube-outline";
     public static final String PERCENTUAL = "mdi2p-percent-outline";
     public static final String DISPERSAO = "mdi2c-chart-scatter-plot";

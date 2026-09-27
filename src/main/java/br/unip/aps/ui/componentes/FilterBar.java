@@ -128,7 +128,11 @@ public class FilterBar extends VBox {
         rotulo.getStyleClass().add("filtro-rotulo");
         HBox periodo = new HBox(6, cbDe, seta, cbAte);
         periodo.setAlignment(Pos.CENTER_LEFT);
-        HBox linha = new HBox(8, rotulo, mbBioma, mbAno, tfMunicipio, periodo, limpar, esp, contagem);
+        visoes.getStyleClass().add("btn-ghost");
+        visoes.setGraphic(Icones.de(Icones.VISOES, 15));
+        visoes.setTooltip(new Tooltip("Salvar a combinação atual de filtros ou reaplicar uma visão salva"));
+        visoes.setOnShowing(e -> montarMenuVisoes());
+        HBox linha = new HBox(8, rotulo, mbBioma, mbAno, tfMunicipio, periodo, limpar, visoes, esp, contagem);
         linha.setAlignment(Pos.CENTER_LEFT);
 
         chips.getStyleClass().add("filtros-ativos");
@@ -241,6 +245,84 @@ public class FilterBar extends VBox {
         checksAno.forEach(c -> c.setSelected(anos.contains(Integer.parseInt(c.getText()))));
         atualizando = false;
         aplicar();
+    }
+
+    private final MenuButton visoes = new MenuButton("Visões");
+    private final java.util.prefs.Preferences prefsVisoes = java.util.prefs.Preferences.userNodeForPackage(FilterBar.class).node("visoes");
+
+    private void montarMenuVisoes() {
+        visoes.getItems().clear();
+        MenuItem salvar = new MenuItem("Salvar a visão atual…", Icones.de(Icones.SALVAR, 15));
+        salvar.setOnAction(e -> salvarVisao());
+        visoes.getItems().add(salvar);
+        List<String> nomes = nomesVisoes();
+        if (!nomes.isEmpty()) visoes.getItems().add(new javafx.scene.control.SeparatorMenuItem());
+        for (String n : nomes) {
+            MenuItem it = new MenuItem(n);
+            it.setOnAction(e -> abrirVisao(n));
+            visoes.getItems().add(it);
+        }
+        if (!nomes.isEmpty()) {
+            MenuItem apagar = new MenuItem("Apagar as visões salvas", Icones.de(Icones.REMOVER, 15));
+            apagar.setOnAction(e -> {
+                try {
+                    prefsVisoes.clear();
+                } catch (java.util.prefs.BackingStoreException ex) {
+                    Feedback.erro("Não foi possível apagar as visões", ex.getMessage());
+                }
+            });
+            visoes.getItems().addAll(new javafx.scene.control.SeparatorMenuItem(), apagar);
+        }
+    }
+
+    private void salvarVisao() {
+        javafx.scene.control.TextInputDialog d = new javafx.scene.control.TextInputDialog(sugestaoNome());
+        d.setTitle("Salvar visão");
+        d.setHeaderText("Dê um nome para esta combinação de filtros");
+        d.setContentText("Nome:");
+        if (getScene() != null) d.initOwner(getScene().getWindow());
+        br.unip.aps.ui.tema.GerenciadorTema.get().aplicar(d.getDialogPane());
+        d.getDialogPane().getStyleClass().add("app-dialog");
+        d.showAndWait().map(String::strip).filter(n -> !n.isEmpty()).ifPresent(n -> {
+            prefsVisoes.put(n, serializar(filtro.get()));
+            Feedback.sucesso("Visão salva", n);
+        });
+    }
+
+    private String sugestaoNome() {
+        FiltroGlobal f = filtro.get();
+        return f == null || !f.ativo() ? "Tudo" : f.descricao();
+    }
+
+    /** Nomes das visoes salvas (preferencias do usuario). */
+    public List<String> nomesVisoes() {
+        try {
+            return new ArrayList<>(List.of(prefsVisoes.keys()));
+        } catch (java.util.prefs.BackingStoreException e) {
+            return List.of();
+        }
+    }
+
+    /** Reaplica uma visao salva pelo nome. */
+    public void abrirVisao(String nome) {
+        String v = prefsVisoes.get(nome, null);
+        if (v != null) aplicar(desserializar(v));
+    }
+
+    static String serializar(FiltroGlobal f) {
+        return String.join("|", String.join(",", f.anos().stream().map(String::valueOf).toList()), String.join(",", f.biomas()),
+                f.municipio() == null ? "" : f.municipio(), String.valueOf(f.exato()), f.de() == null ? "" : f.de().toString(),
+                f.ate() == null ? "" : f.ate().toString());
+    }
+
+    static FiltroGlobal desserializar(String s) {
+        String[] c = (s + "|||||").split("\\|", -1);
+        Set<Integer> anos = new LinkedHashSet<>();
+        for (String a : c[0].split(",")) if (!a.isBlank()) anos.add(Integer.parseInt(a.strip()));
+        Set<String> biomas = new LinkedHashSet<>();
+        for (String b : c[1].split(",")) if (!b.isBlank()) biomas.add(b.strip());
+        return new FiltroGlobal(anos, biomas, c[2].isBlank() ? null : c[2], Boolean.parseBoolean(c[3]),
+                c[4].isBlank() ? null : YearMonth.parse(c[4]), c[5].isBlank() ? null : YearMonth.parse(c[5]));
     }
 
     /** Filtra exatamente um municipio (paleta de comandos). */
