@@ -8,11 +8,21 @@ import br.unip.aps.ml.NivelAtividade;
 import br.unip.aps.ml.Preditor;
 import br.unip.aps.ml.PrevisaoFocos;
 import br.unip.aps.model.BaseDeFocos;
+import br.unip.aps.sorting.Ordenacoes;
+import br.unip.aps.ui.componentes.BarrasHorizontais;
+import br.unip.aps.ui.componentes.ChartCard;
+import br.unip.aps.ui.componentes.Chip;
+import br.unip.aps.ui.componentes.Feedback;
+import br.unip.aps.ui.componentes.Graficos;
+import br.unip.aps.ui.componentes.Icones;
+import br.unip.aps.ui.componentes.KpiCard;
+import br.unip.aps.ui.componentes.MatrizCalor;
 import br.unip.aps.util.Formatos;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -20,46 +30,43 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Aba "Machine Learning": previsao de focos (Random Forest de regressao), classificacao do nivel
- * de atividade (Random Forest de classificacao) e hotspots (DBSCAN / K-Means).
+ * Tela "Machine Learning": previsao de focos (Random Forest de regressao, treino fixo e janela
+ * expansivel), classificacao do nivel de atividade (Random Forest balanceado) e hotspots
+ * (DBSCAN / K-Means). As metricas sempre aparecem comparadas a um baseline.
  */
-public class MlController {
+public class MlController implements Pagina.Controlador {
 
     private final UiContexto ctx;
 
     @FXML private ComboBox<Integer> cbTreino, cbTeste;
     @FXML private Spinner<Integer> spArvores, spK, spMinPts;
     @FXML private Spinner<Double> spEps;
-    @FXML private Button btnMapa;
-    @FXML private Label lblPreparo, lblRegressao, lblClassificacao, lblClusters;
-    @FXML private TableView<LinhaMetrica> tabelaRegressao;
-    @FXML private TableView<PrevisaoFocos.ErroPrevisao> tabelaErros;
-    @FXML private LineChart<String, Number> graficoPrevisao;
-    @FXML private BarChart<Number, String> graficoImportancia;
-    @FXML private GridPane gridConfusao;
-    @FXML private TableView<LinhaClasse> tabelaClasses;
-    @FXML private ComboBox<String> cbMetodo;
-    @FXML private TableView<ClusterizacaoHotspots.Hotspot> tabelaHotspots;
-    @FXML private LineChart<Number, Number> graficoCotovelo;
+    @FXML private Button btnMapa, btnTreinar;
+    @FXML private Label lblPreparo;
+    @FXML private KpiCard kMae, kRmse, kR2, kAcuracia, kF1;
+    @FXML private ChartCard cPrevisao, cMatriz, cImportancia, cHotspots, cCotovelo;
     @FXML private TextFlow textoSobre;
 
+    private final LineChart<String, Number> grafPrevisao = new LineChart<>(new CategoryAxis(), new NumberAxis());
+    private final MatrizCalor matriz = new MatrizCalor();
+    private final BarrasHorizontais importancia = new BarrasHorizontais();
+    private final TableView<ClusterizacaoHotspots.Hotspot> tabHotspots = new TableView<>();
+    private final LineChart<Number, Number> grafCotovelo = new LineChart<>(new NumberAxis(), new NumberAxis());
+    private final ToggleGroup metodo = new ToggleGroup();
     private Preditor.ResultadoML resultado;
-
-    /** Linha da tabela de metricas de regressao. */
-    public record LinhaMetrica(String modelo, Metricas.Regressao m) { }
-
-    /** Linha da tabela de metricas por classe. */
-    public record LinhaClasse(String classe, double precisao, double revocacao, double f1, int suporte) { }
 
     /** @param ctx contexto injetado */
     public MlController(UiContexto ctx) {
@@ -71,13 +78,53 @@ public class MlController {
         spArvores.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(10, 1000, 200, 50));
         spK.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, 30, 8));
         spEps.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(1, 50, 10, 1));
-        spMinPts.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, 200, 30));
-        cbMetodo.valueProperty().addListener((o, a, n) -> exibirHotspots());
-        configurarTabelas();
+        spMinPts.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, 200, 30, 5));
+        btnTreinar.setGraphic(Icones.de(Icones.ML, 16));
+        btnMapa.setGraphic(Icones.de(Icones.MAPA, 16));
+
+        for (LineChart<?, ?> g : List.of(grafPrevisao, grafCotovelo)) {
+            g.setLegendVisible(false);
+            g.setAnimated(false);
+            g.setVerticalGridLinesVisible(false);
+            g.setCreateSymbols(true);
+        }
+        Graficos.eixoLog((NumberAxis) grafPrevisao.getYAxis(), false);
+        NumberAxis kx = (NumberAxis) grafCotovelo.getXAxis();
+        kx.setLabel("k (número de grupos)");
+        kx.setTickUnit(1);
+        kx.setMinorTickVisible(false);
+        kx.setForceZeroInRange(false);
+        kx.setAutoRanging(false);
+        kx.setLowerBound(1);
+        kx.setUpperBound(10);
+        cPrevisao.conteudo(grafPrevisao);
+        cMatriz.conteudo(matriz);
+        cImportancia.conteudo(importancia);
+        cHotspots.conteudo(tabHotspots);
+        cCotovelo.conteudo(grafCotovelo);
+        for (ChartCard c : List.of(cPrevisao, cMatriz, cImportancia, cHotspots, cCotovelo)) c.estado(ChartCard.Estado.VAZIO);
+        ctx.registrarGrafico("ML: focos reais x previstos", cPrevisao);
+        ctx.registrarGrafico("ML: matriz de confusão", cMatriz);
+        ctx.registrarGrafico("ML: importância das variáveis", cImportancia);
+
+        HBox seg = new HBox();
+        seg.getStyleClass().add("segmented");
+        for (String m : List.of("DBSCAN", "K-Means")) {
+            ToggleButton t = new ToggleButton(m);
+            t.setUserData(m);
+            t.setToggleGroup(metodo);
+            seg.getChildren().add(t);
+        }
+        metodo.selectToggle(metodo.getToggles().get(0));
+        metodo.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) a.setSelected(true);
+            else exibirHotspots();
+        });
+        cHotspots.setExtra(seg);
+        configurarTabela();
+        for (KpiCard k : List.of(kMae, kRmse, kR2, kAcuracia, kF1)) k.valor("—").contexto("treine os modelos", KpiCard.Tendencia.NEUTRA);
         escreverSobre();
-        ctx.registrarGrafico("ML: focos reais x previstos", graficoPrevisao);
-        ctx.registrarGrafico("ML: importancia das variaveis", graficoImportancia);
-        ctx.registrarGrafico("ML: metodo do cotovelo", graficoCotovelo);
+
         ctx.baseProperty().addListener((o, a, b) -> {
             resultado = null;
             ctx.mlProperty().set(null);
@@ -90,51 +137,38 @@ public class MlController {
                 cbTeste.getSelectionModel().select(anos.size() - 1);
             }
         });
+        BaseDeFocos atual = ctx.baseProperty().get();
+        if (atual != null && atual.anos().size() >= 2) {
+            List<Integer> anos = atual.anos();
+            cbTreino.setItems(FXCollections.observableArrayList(anos));
+            cbTeste.setItems(FXCollections.observableArrayList(anos));
+            cbTreino.getSelectionModel().select(anos.size() - 2);
+            cbTeste.getSelectionModel().select(anos.size() - 1);
+        }
     }
 
-    private void configurarTabelas() {
-        tabelaRegressao.getColumns().add(Tabelas.coluna("Modelo", LinhaMetrica::modelo, 260));
-        tabelaRegressao.getColumns().add(Tabelas.numero("MAE (focos)", (LinhaMetrica l) -> l.m().mae(), v -> Formatos.decimal(v, 3), 110));
-        tabelaRegressao.getColumns().add(Tabelas.numero("RMSE (focos)", (LinhaMetrica l) -> l.m().rmse(), v -> Formatos.decimal(v, 3), 110));
-        tabelaRegressao.getColumns().add(Tabelas.numero("R²", (LinhaMetrica l) -> l.m().r2(), v -> Formatos.decimal(v, 3), 90));
-
-        tabelaErros.getColumns().add(Tabelas.coluna("Município", PrevisaoFocos.ErroPrevisao::municipio, 240));
-        tabelaErros.getColumns().add(Tabelas.coluna("Mês", (PrevisaoFocos.ErroPrevisao e) -> e.mes().toString(), 90));
-        tabelaErros.getColumns().add(Tabelas.numero("Real", PrevisaoFocos.ErroPrevisao::real, String::valueOf, 80));
-        tabelaErros.getColumns().add(Tabelas.numero("Previsto", PrevisaoFocos.ErroPrevisao::previsto, v -> Formatos.decimal(v, 1), 90));
-        tabelaErros.getColumns().add(Tabelas.numero("Erro abs.", PrevisaoFocos.ErroPrevisao::erroAbsoluto, v -> Formatos.decimal(v, 1), 90));
-
-        tabelaClasses.getColumns().add(Tabelas.coluna("Classe", LinhaClasse::classe, 200));
-        tabelaClasses.getColumns().add(Tabelas.numero("Precisão", LinhaClasse::precisao, v -> Formatos.decimal(v, 3), 100));
-        tabelaClasses.getColumns().add(Tabelas.numero("Revocação", LinhaClasse::revocacao, v -> Formatos.decimal(v, 3), 100));
-        tabelaClasses.getColumns().add(Tabelas.numero("F1", LinhaClasse::f1, v -> Formatos.decimal(v, 3), 90));
-        tabelaClasses.getColumns().add(Tabelas.numero("Suporte (teste)", LinhaClasse::suporte, v -> Formatos.inteiro(v), 120));
-
-        tabelaHotspots.getColumns().add(Tabelas.numero("#", ClusterizacaoHotspots.Hotspot::id, String::valueOf, 50));
-        tabelaHotspots.getColumns().add(Tabelas.numero("Focos", ClusterizacaoHotspots.Hotspot::focos, v -> Formatos.inteiro(v), 80));
-        tabelaHotspots.getColumns().add(Tabelas.numero("Latitude", ClusterizacaoHotspots.Hotspot::latitude, v -> Formatos.decimal(v, 4), 95));
-        tabelaHotspots.getColumns().add(Tabelas.numero("Longitude", ClusterizacaoHotspots.Hotspot::longitude, v -> Formatos.decimal(v, 4), 95));
-        tabelaHotspots.getColumns().add(Tabelas.numero("Raio (km)", ClusterizacaoHotspots.Hotspot::raioKm, v -> Formatos.decimal(v, 1), 85));
-        tabelaHotspots.getColumns().add(Tabelas.coluna("Município principal", ClusterizacaoHotspots.Hotspot::municipioPrincipal, 220));
-        tabelaHotspots.getColumns().add(Tabelas.coluna("Bioma", ClusterizacaoHotspots.Hotspot::biomaPredominante, 120));
-        tabelaHotspots.getColumns().add(Tabelas.coluna("Focos por ano", (ClusterizacaoHotspots.Hotspot h) -> h.focosPorAno().toString(), 180));
+    private void configurarTabela() {
+        Tabelas.preparar(tabHotspots, "Treine os modelos para ver os hotspots.");
+        tabHotspots.getColumns().add(Tabelas.numero("#", ClusterizacaoHotspots.Hotspot::id, String::valueOf, 44));
+        tabHotspots.getColumns().add(Tabelas.numero("Focos", ClusterizacaoHotspots.Hotspot::focos, v -> Formatos.inteiro(v), 70));
+        tabHotspots.getColumns().add(Tabelas.coluna("Município principal", h -> VisaoGeralController.capitalizar(h.municipioPrincipal()), 170));
+        tabHotspots.getColumns().add(Tabelas.bioma("Bioma", ClusterizacaoHotspots.Hotspot::biomaPredominante, 150));
+        tabHotspots.getColumns().add(Tabelas.numero("Raio (km)", ClusterizacaoHotspots.Hotspot::raioKm, v -> Formatos.decimal(v, 1), 80));
     }
 
     @FXML
     private void executar() {
         BaseDeFocos b = ctx.baseProperty().get();
         if (b == null) {
-            ctx.aviso("Sem dados", "Carregue os CSVs do INPE primeiro.");
+            Feedback.alerta("Sem dados", "Carregue os CSVs do INPE primeiro.");
             return;
         }
         Integer treino = cbTreino.getValue(), teste = cbTeste.getValue();
         if (treino == null || teste == null || treino >= teste) {
-            ctx.aviso("Anos inválidos", "Escolha um ano de treino ANTERIOR ao ano de teste (validação temporal: "
-                    + "o modelo não pode aprender com o futuro).");
+            ctx.aviso("Anos inválidos", "Escolha um ano de treino ANTERIOR ao ano de teste (validação temporal: o modelo não pode aprender com o futuro).");
             return;
         }
-        Preditor.Parametros p = new Preditor.Parametros(treino, teste, spArvores.getValue(), spK.getValue(),
-                spEps.getValue(), spMinPts.getValue(), 42L);
+        Preditor.Parametros p = new Preditor.Parametros(treino, teste, spArvores.getValue(), spK.getValue(), spEps.getValue(), spMinPts.getValue(), 42L);
         ctx.executar("Treinando modelos de ML", () -> new Preditor().executar(b.getFocos(), p), this::exibir);
     }
 
@@ -143,130 +177,153 @@ public class MlController {
         ctx.sessao().setUltimoMl(r);
         ctx.mlProperty().set(r);
         btnMapa.setDisable(false);
-        lblPreparo.setText("Pré-processamento: " + Formatos.inteiro(r.municipios()) + " municípios; ordenação município → data com Merge Sort: "
-                + Formatos.inteiro(r.ordenacaoPreparo().comparacoes()) + " comparações em " + Formatos.duracao(r.ordenacaoPreparo().nanos()) + ".");
-        exibirRegressao(r.regressao());
-        exibirClassificacao(r.classificacao());
-        cbMetodo.setItems(FXCollections.observableArrayList(r.dbscan().metodo(), r.kMeans().metodo()));
-        cbMetodo.getSelectionModel().selectFirst();
-        graficoCotovelo.getData().clear();
-        XYChart.Series<Number, Number> s = new XYChart.Series<>();
-        for (int k = 1; k <= r.cotovelo().length; k++) s.getData().add(new XYChart.Data<>(k, r.cotovelo()[k - 1]));
-        graficoCotovelo.getData().add(s);
+        lblPreparo.setText("Pré-processamento: " + Formatos.inteiro(r.municipios()) + " municípios; ordenação município → data com Merge Sort ("
+                + Formatos.inteiro(r.ordenacaoPreparo().comparacoes()) + " comparações em " + Formatos.duracao(r.ordenacaoPreparo().nanos())
+                + "). Treino " + r.parametros().anoTreino() + " → teste " + r.parametros().anoTeste() + ".");
+        exibirMetricas(r);
+        exibirPrevisao(r.regressao());
+        exibirMatriz(r.classificacao());
+        exibirImportancia(r.regressao());
+        exibirHotspots();
+        exibirCotovelo(r.cotovelo());
+        Feedback.sucesso("Modelos treinados", "Concluído em " + Formatos.inteiro(r.duracaoMs()) + " ms");
     }
 
-    private void exibirRegressao(PrevisaoFocos.Resultado r) {
-        boolean melhor = r.modelo().mae() < r.persistencia().mae();
-        lblRegressao.setText("Random Forest treinado em " + r.anoTreino() + " (" + Formatos.inteiro(r.linhasTreino())
-                + " município-mês) e testado em " + r.anoTeste() + " (" + Formatos.inteiro(r.linhasTeste()) + "). "
-                + (melhor ? "O modelo superou o baseline de persistência no MAE." : "O modelo NÃO superou a persistência no MAE — discuta na dissertação."));
-        tabelaRegressao.setItems(FXCollections.observableArrayList(
-                new LinhaMetrica("Random Forest (treino fixo em " + r.anoTreino() + ")", r.modelo()),
-                new LinhaMetrica("Random Forest (janela expansível, re-treino mensal)", r.janelaExpansivel()),
-                new LinhaMetrica("Baseline: persistência (mês anterior)", r.persistencia()),
-                new LinhaMetrica("Baseline: média histórica do município", r.mediaHistorica())));
-        graficoPrevisao.getData().clear();
-        XYChart.Series<String, Number> real = new XYChart.Series<>(), prev = new XYChart.Series<>(), janela = new XYChart.Series<>();
-        real.setName("Real");
-        prev.setName("RF treino fixo");
-        janela.setName("RF janela expansível");
-        r.realPorMes().forEach((m, v) -> {
-            real.getData().add(new XYChart.Data<>(m.toString(), v));
-            prev.getData().add(new XYChart.Data<>(m.toString(), r.previstoPorMes().get(m)));
-            janela.getData().add(new XYChart.Data<>(m.toString(), r.previstoJanelaPorMes().getOrDefault(m, 0.0)));
-        });
-        graficoPrevisao.getData().add(real);
-        graficoPrevisao.getData().add(prev);
-        graficoPrevisao.getData().add(janela);
+    private void exibirMetricas(Preditor.ResultadoML r) {
+        PrevisaoFocos.Resultado reg = r.regressao();
+        double ganho = (reg.persistencia().mae() - reg.modelo().mae()) / reg.persistencia().mae() * 100;
+        kMae.valor(Formatos.decimal(reg.modelo().mae(), 3))
+                .contexto((ganho >= 0 ? "−" : "+") + Formatos.decimal(Math.abs(ganho), 1) + "% vs persistência",
+                        ganho >= 0 ? KpiCard.Tendencia.BOA : KpiCard.Tendencia.ALERTA)
+                .icone(KpiCard.EstiloIcone.DESTAQUE)
+                .dica("Erro absoluto médio em focos por município/mês. Persistência (repetir o mês anterior): "
+                        + Formatos.decimal(reg.persistencia().mae(), 3));
+        kRmse.valor(Formatos.decimal(reg.modelo().rmse(), 3))
+                .contexto("janela expansível: " + Formatos.decimal(reg.janelaExpansivel().rmse(), 3), KpiCard.Tendencia.NEUTRA);
+        kR2.valor(Formatos.decimal(reg.modelo().r2(), 3))
+                .contexto(reg.modelo().r2() < 0.1 ? "picos fora do ano de treino" : "variância explicada", KpiCard.Tendencia.NEUTRA)
+                .dica("R² perto de zero: o modelo não explica os picos extremos de 2024 (crise de agosto), ausentes no ano de treino.");
+        ClassificadorNivel.Resultado cls = r.classificacao();
+        kAcuracia.valor(Formatos.decimal(cls.metricas().acuracia(), 3))
+                .contexto("baseline: " + Formatos.decimal(cls.baselineAcuracia(), 3), KpiCard.Tendencia.NEUTRA)
+                .dica("A acurácia cai em relação ao baseline porque o modelo deixa de prever sempre a classe majoritária.");
+        double dF1 = cls.metricas().f1Macro() - cls.baselineF1Macro();
+        kF1.valor(Formatos.decimal(cls.metricas().f1Macro(), 3))
+                .contexto((dF1 >= 0 ? "+" : "") + Formatos.decimal(dF1, 3) + " vs baseline", dF1 >= 0 ? KpiCard.Tendencia.BOA : KpiCard.Tendencia.ALERTA)
+                .icone(KpiCard.EstiloIcone.DESTAQUE);
+    }
 
-        graficoImportancia.getData().clear();
-        XYChart.Series<Number, String> imp = new XYChart.Series<>();
-        for (int i = BaseMensal.VARIAVEIS.length - 1; i >= 0; i--) {
-            imp.getData().add(new XYChart.Data<>(r.importancia()[i], BaseMensal.VARIAVEIS[i]));
+    private void exibirPrevisao(PrevisaoFocos.Resultado r) {
+        grafPrevisao.getData().clear();
+        cPrevisao.limparLegenda();
+        XYChart.Series<String, Number> real = new XYChart.Series<>(), fixo = new XYChart.Series<>(), janela = new XYChart.Series<>();
+        List<String[]> linhas = new ArrayList<>();
+        for (Map.Entry<YearMonth, Double> e : r.realPorMes().entrySet()) {
+            String m = br.unip.aps.analysis.Estatisticas.MESES[e.getKey().getMonthValue() - 1];
+            double f = r.previstoPorMes().getOrDefault(e.getKey(), 0.0), j = r.previstoJanelaPorMes().getOrDefault(e.getKey(), 0.0);
+            real.getData().add(new XYChart.Data<>(m, e.getValue()));
+            fixo.getData().add(new XYChart.Data<>(m, f));
+            janela.getData().add(new XYChart.Data<>(m, j));
+            linhas.add(new String[]{m, Formatos.inteiro(Math.round(e.getValue())), Formatos.decimal(f, 1), Formatos.decimal(j, 1)});
         }
-        graficoImportancia.getData().add(imp);
-        tabelaErros.setItems(FXCollections.observableArrayList(r.maioresErros()));
+        Map<XYChart.Series<String, Number>, String[]> meta = new LinkedHashMap<>();
+        meta.put(real, new String[]{"Real", "serie-neutra"});
+        meta.put(fixo, new String[]{"RF treino fixo (" + r.anoTreino() + ")", "serie-1"});
+        meta.put(janela, new String[]{"RF janela expansível", "serie-3"});
+        for (Map.Entry<XYChart.Series<String, Number>, String[]> e : meta.entrySet()) {
+            grafPrevisao.getData().add(e.getKey());
+            Graficos.classe(e.getKey(), e.getValue()[1]);
+            cPrevisao.adicionarLegenda(e.getValue()[0], e.getValue()[1], "linha");
+            String nome = e.getValue()[0];
+            Graficos.tooltips(e.getKey(), d -> nome + " · " + d.getXValue() + ": " + Formatos.decimal(d.getYValue().doubleValue(), 1) + " focos");
+        }
+        cPrevisao.setDados(new String[]{"Mês", "Real", "RF fixo", "RF janela"}, () -> linhas);
+        cPrevisao.estado(ChartCard.Estado.CONTEUDO);
     }
 
-    private void exibirClassificacao(ClassificadorNivel.Resultado r) {
+    private void exibirMatriz(ClassificadorNivel.Resultado r) {
+        NivelAtividade[] n = NivelAtividade.values();
+        String[] rotulos = new String[n.length];
+        for (int i = 0; i < n.length; i++) rotulos[i] = n[i].toString();
+        matriz.setDados(rotulos, r.metricas().matriz());
         Metricas.Classificacao m = r.metricas();
-        lblClassificacao.setText(String.format("Acurácia %s (baseline classe majoritária %s) · F1 macro %s (baseline %s)",
-                Formatos.decimal(m.acuracia(), 3), Formatos.decimal(r.baselineAcuracia(), 3),
-                Formatos.decimal(m.f1Macro(), 3), Formatos.decimal(r.baselineF1Macro(), 3)));
-        gridConfusao.getChildren().clear();
-        NivelAtividade[] niveis = NivelAtividade.values();
-        int max = 1;
-        for (int[] linha : m.matriz()) for (int v : linha) max = Math.max(max, v);
-        gridConfusao.add(celula("real \\ previsto", "cabecalho-matriz"), 0, 0);
-        for (int j = 0; j < niveis.length; j++) gridConfusao.add(celula(niveis[j].toString(), "cabecalho-matriz"), j + 1, 0);
-        for (int i = 0; i < niveis.length; i++) {
-            gridConfusao.add(celula(niveis[i].toString(), "cabecalho-matriz"), 0, i + 1);
-            for (int j = 0; j < niveis.length; j++) {
-                Label c = celula(Formatos.inteiro(m.matriz()[i][j]), i == j ? "celula-acerto" : "celula-erro");
-                double intensidade = 0.15 + 0.85 * m.matriz()[i][j] / (double) max;
-                c.setOpacity(Math.max(0.35, intensidade));
-                gridConfusao.add(c, j + 1, i + 1);
-            }
+        List<String[]> linhas = new ArrayList<>();
+        for (int i = 0; i < n.length; i++) {
+            linhas.add(new String[]{rotulos[i], Formatos.decimal(m.precisao()[i], 3), Formatos.decimal(m.revocacao()[i], 3),
+                    Formatos.decimal(m.f1()[i], 3), Formatos.inteiro(r.distribuicaoTeste()[i])});
         }
-        List<LinhaClasse> linhas = new java.util.ArrayList<>();
-        for (int i = 0; i < niveis.length; i++) {
-            linhas.add(new LinhaClasse(niveis[i].toString(), m.precisao()[i], m.revocacao()[i], m.f1()[i], r.distribuicaoTeste()[i]));
-        }
-        tabelaClasses.setItems(FXCollections.observableArrayList(linhas));
+        cMatriz.setDados(new String[]{"Classe", "Precisão", "Revocação", "F1", "Suporte"}, () -> linhas);
+        cMatriz.setExtra(Chip.de("F1 macro " + Formatos.decimal(m.f1Macro(), 3), Icones.GRADE, Chip.Variante.DESTAQUE));
+        cMatriz.estado(ChartCard.Estado.CONTEUDO);
     }
 
-    private static Label celula(String texto, String estilo) {
-        Label l = new Label(texto);
-        l.getStyleClass().add(estilo);
-        l.setMinSize(150, 34);
-        return l;
+    private void exibirImportancia(PrevisaoFocos.Resultado r) {
+        double[] imp = r.importancia();
+        double soma = 0;
+        for (double v : imp) soma += v;
+        List<Integer> idx = new ArrayList<>();
+        for (int i = 0; i < imp.length; i++) idx.add(i);
+        Ordenacoes.ordenar(idx, (a, b) -> Double.compare(imp[b], imp[a]));
+        List<BarrasHorizontais.Item> itens = new ArrayList<>();
+        List<String[]> linhas = new ArrayList<>();
+        for (int k = 0; k < idx.size(); k++) {
+            int i = idx.get(k);
+            double pct = soma == 0 ? 0 : 100 * imp[i] / soma;
+            itens.add(new BarrasHorizontais.Item(BaseMensal.VARIAVEIS[i], pct, Formatos.decimal(pct, 1) + "%", k == 0 ? "" : "suave", k == 0,
+                    BaseMensal.VARIAVEIS[i] + ": " + Formatos.decimal(pct, 1) + "% da importância total"));
+            linhas.add(new String[]{BaseMensal.VARIAVEIS[i], Formatos.decimal(pct, 2) + "%"});
+        }
+        importancia.setItens(itens);
+        cImportancia.setDados(new String[]{"Variável", "Importância"}, () -> linhas);
+        cImportancia.estado(ChartCard.Estado.CONTEUDO);
     }
 
     private void exibirHotspots() {
-        if (resultado == null || cbMetodo.getValue() == null) return;
-        ClusterizacaoHotspots.Resultado c = cbMetodo.getValue().equals(resultado.dbscan().metodo()) ? resultado.dbscan() : resultado.kMeans();
-        tabelaHotspots.setItems(FXCollections.observableArrayList(c.hotspots()));
-        lblClusters.setText(c.hotspots().size() + " grupos" + (c.ruido() > 0 ? " · " + Formatos.inteiro(c.ruido()) + " focos isolados (ruído)" : ""));
+        if (resultado == null) return;
+        boolean db = "DBSCAN".equals(metodo.getSelectedToggle().getUserData());
+        ClusterizacaoHotspots.Resultado c = db ? resultado.dbscan() : resultado.kMeans();
+        tabHotspots.setItems(FXCollections.observableArrayList(c.hotspots()));
+        cHotspots.setSubtitulo(c.metodo() + " · " + c.hotspots().size() + " grupos"
+                + (c.ruido() > 0 ? " · " + Formatos.inteiro(c.ruido()) + " focos isolados (ruído)" : ""));
+        cHotspots.estado(ChartCard.Estado.CONTEUDO);
+    }
+
+    private void exibirCotovelo(double[] wcss) {
+        grafCotovelo.getData().clear();
+        XYChart.Series<Number, Number> s = new XYChart.Series<>();
+        for (int k = 1; k <= wcss.length; k++) s.getData().add(new XYChart.Data<>(k, wcss[k - 1]));
+        ((NumberAxis) grafCotovelo.getXAxis()).setUpperBound(Math.max(2, wcss.length));
+        grafCotovelo.getData().add(s);
+        Graficos.classe(s, "serie-ano-recente");
+        Graficos.tooltips(s, d -> "k = " + d.getXValue() + ": " + Formatos.decimal(d.getYValue().doubleValue(), 1) + " km²");
+        cCotovelo.estado(ChartCard.Estado.CONTEUDO);
     }
 
     @FXML
     private void verNoMapa() {
-        ctx.selecionarAba("mapa");
+        ctx.navegar(Pagina.MAPA);
     }
 
     private void escreverSobre() {
-        Map<String, String> secoes = new java.util.LinkedHashMap<>();
-        secoes.put("Por que ordenar antes de aprender?",
-                "Os focos são ordenados por município → data (Merge Sort, estável). Com a base ordenada, a agregação em séries "
-                        + "município × mês é uma única varredura linear (control break), sem estruturas auxiliares — é a etapa de "
-                        + "pré-processamento que prepara os dados para os modelos.");
-        secoes.put("Random Forest (Breiman, 2001)",
-                "Conjunto de árvores de decisão treinadas em amostras bootstrap, sorteando variáveis a cada divisão; a previsão "
-                        + "é a média (regressão) ou o voto (classificação) das árvores. Reduz a variância de uma árvore única e "
-                        + "fornece a importância de cada variável.");
-        secoes.put("Validação temporal",
-                "Treino em um ano e teste no seguinte, prevendo cada mês só com informação até o mês anterior. Embaralhar séries "
-                        + "temporais vazaria o futuro para o treino. Comparamos com baselines (persistência e média histórica): um "
-                        + "modelo só tem valor se superá-los. Métricas: MAE, RMSE e R² (regressão); acurácia, precisão, revocação e "
-                        + "F1 macro (classificação).");
-        secoes.put("DBSCAN e K-Means",
-                "O DBSCAN (Ester et al., 1996) agrupa focos densos (≥ minPts vizinhos em raio eps), descobre o número de grupos e "
-                        + "isola ruído — adequado a hotspots de formato irregular. O K-Means exige k (método do cotovelo) e forma "
-                        + "grupos esféricos. As coordenadas são projetadas em km antes do agrupamento.");
-        secoes.put("Deep Learning aplicado a imagens de satélite (fundamentação)",
-                "Redes neurais convolucionais (CNNs) aprendem filtros que detectam bordas, texturas e padrões espectrais em imagens. "
-                        + "Para classificar áreas desmatadas ou queimadas, usam-se imagens multiespectrais (Landsat-8/9, Sentinel-2, "
-                        + "CBERS-4A) recortadas em blocos (patches) e rotuladas com mapas de referência (PRODES/DETER/MapBiomas). "
-                        + "Arquiteturas de segmentação semântica como a U-Net classificam cada pixel (floresta, desmatamento, cicatriz "
-                        + "de queimada); bandas como NIR e SWIR e índices (NDVI, NBR) realçam a vegetação queimada. Os focos do INPE, "
-                        + "ordenados e agregados por este sistema, podem servir de rótulos fracos e de variáveis temporais para "
-                        + "modelos híbridos (CNN + LSTM) que prevejam a evolução de queimadas.");
-        for (Map.Entry<String, String> e : secoes.entrySet()) {
-            Text t = new Text(e.getKey() + "\n");
-            t.setFont(Font.font("System", FontWeight.BOLD, 14));
-            Text c = new Text(e.getValue() + "\n\n");
-            c.setFont(Font.font("System", 13));
+        String[][] secoes = {
+                {"Da ordenação ao aprendizado. ", "A base é ordenada por município → data (Merge Sort, estável) e agregada numa única varredura linear (control break) em séries município × mês."},
+                {"Random Forest. ", "Conjunto de árvores treinadas em amostras bootstrap; prevê pela média (regressão) ou voto (classificação). Comparado a baselines: persistência e média histórica."},
+                {"Classes desbalanceadas. ", "88% dos município-mês de treino não têm focos; o classificador usa amostragem balanceada, trocando acurácia por F1 macro."},
+                {"DBSCAN. ", "Agrupa focos densos (≥ minPts vizinhos num raio eps, em km) e isola ruído; o K-Means exige escolher k (método do cotovelo)."},
+                {"Deep Learning (trabalho futuro). ", "CNNs de segmentação (U-Net) sobre imagens Sentinel-2/Landsat, com índices NBR/NDVI, poderiam mapear cicatrizes de queimada usando estes focos como rótulos fracos."}
+        };
+        for (String[] s : secoes) {
+            Text t = new Text(s[0]);
+            t.getStyleClass().add("texto-destaque");
+            Text c = new Text(s[1] + "\n\n");
+            c.getStyleClass().add("texto-corpo");
             textoSobre.getChildren().addAll(t, c);
         }
+    }
+
+    @Override
+    public void demonstrar(Runnable concluido) {
+        if (resultado == null) executar();
+        concluido.run();
     }
 }

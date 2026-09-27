@@ -3,7 +3,7 @@
 [![CI](https://github.com/UMOBUGA/aps-queimadas/actions/workflows/ci.yml/badge.svg)](https://github.com/UMOBUGA/aps-queimadas/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-21-blue)
-![Testes](https://img.shields.io/badge/testes-189-brightgreen)
+![Testes](https://img.shields.io/badge/testes-199-brightgreen)
 
 **APS — Atividades Práticas Supervisionadas · Ciência da Computação · UNIP · Estrutura de Dados**
 
@@ -16,7 +16,9 @@ Além da ordenação, o sistema:
 - executa um **benchmark** com metodologia adequada à JVM;
 - estima empiricamente a complexidade;
 - aplica **Machine Learning** (Random Forest e DBSCAN/K-Means) sobre os dados ordenados;
-- apresenta tudo em um **dashboard JavaFX** com mapa Leaflet/OpenStreetMap e relatórios Excel/PDF.
+- apresenta tudo em um **dashboard JavaFX** com design system próprio (temas claro e escuro), mapa Leaflet e relatórios Excel/PDF.
+
+![Visão geral do dashboard](docs/prints/01-visao-geral-claro.png)
 
 > Grupo, RAs e dados da capa: [`docs/GRUPO.md`](docs/GRUPO.md) (a preencher).
 
@@ -26,12 +28,13 @@ Além da ordenação, o sistema:
 
 1. [Início rápido](#início-rápido)
 2. [Funcionalidades × enunciado](#funcionalidades--enunciado)
-3. [Modos de execução](#modos-de-execução)
-4. [Algoritmos](#algoritmos)
-5. [Arquitetura](#arquitetura)
-6. [Testes e qualidade](#testes-e-qualidade)
-7. [Documentação](#documentação)
-8. [Tecnologias e créditos](#tecnologias-e-créditos)
+3. [Interface](#interface)
+4. [Modos de execução](#modos-de-execução)
+5. [Algoritmos](#algoritmos)
+6. [Arquitetura](#arquitetura)
+7. [Testes e qualidade](#testes-e-qualidade)
+8. [Documentação](#documentação)
+9. [Tecnologias e créditos](#tecnologias-e-créditos)
 
 ---
 
@@ -50,7 +53,7 @@ cd aps-queimadas
 
 | Tarefa | Windows | Linux / macOS |
 |---|---|---|
-| Compilar + 189 testes + cobertura | `mvnw.cmd clean verify` | `./mvnw clean verify` |
+| Compilar + 199 testes + cobertura | `mvnw.cmd clean verify` | `./mvnw clean verify` |
 | Abrir o **dashboard** | `mvnw.cmd javafx:run` | `./mvnw javafx:run` |
 | Menu no terminal | `mvnw.cmd -q exec:java -Dexec.args="cli"` | `./mvnw -q exec:java -Dexec.args="cli"` |
 | Gerar o **JAR executável** | `mvnw.cmd -DskipTests package` | `./mvnw -DskipTests package` |
@@ -88,8 +91,33 @@ Os **dados reais** de SP 2023/2024 já estão em `data/raw/`. Para outro estado 
 | Relatórios adicionais | Excel (8 abas), PDF com gráficos, CSV, relatório de qualidade dos dados, **relatório com as linhas de código** |
 | Benchmark (tamanhos crescentes; aleatório, ordenado e inverso) | Aba **Benchmark**, modo `benchmark` · [docs/BENCHMARK.md](docs/BENCHMARK.md) |
 | ML / análise preditiva | Previsão (Random Forest), classificação do nível de atividade, hotspots (DBSCAN/K-Means) · [docs/ML.md](docs/ML.md) |
-| Dashboard interativo | JavaFX: Visão geral, Ordenação, Benchmark, **Mapa** (Leaflet/OSM), ML, Qualidade dos dados |
+| Dashboard interativo | JavaFX: Visão geral, Ordenação (com visualização animada), Benchmark, **Mapa** (pontos, agrupado, calor), ML, Qualidade dos dados · [docs/DESIGN.md](docs/DESIGN.md) |
 | Modelagem robusta e documentada | UML (Mermaid), padrões de projeto, Javadoc · [docs/ARQUITETURA.md](docs/ARQUITETURA.md) |
+
+---
+
+## Interface
+
+Painel de monitoramento com **sidebar**, barra de filtros global (bioma, ano, município com autocompletar, período) e tema **claro/escuro** (Ctrl+T), persistido entre execuções. O design system (tokens CSS, componentes, paleta validada para daltonismo, contraste WCAG AA) está documentado em [docs/DESIGN.md](docs/DESIGN.md).
+
+| Claro | Escuro |
+|---|---|
+| ![Ordenação](docs/prints/02-ordenacao-claro.png) | ![Benchmark](docs/prints/11-benchmark-escuro.png) |
+| ![Mapa](docs/prints/04-mapa-claro.png) | ![ML](docs/prints/13-ml-escuro.png) |
+
+**Atalhos:**
+
+| Atalho | Ação |
+|---|---|
+| Ctrl+1…6 | Telas |
+| Ctrl+O | Abrir CSV |
+| Ctrl+R | Recarregar |
+| Ctrl+E | Exportar |
+| Ctrl+T | Tema |
+| Ctrl+B | Recolher o menu |
+| F1 | Sobre |
+
+Todos os prints em [`docs/prints/`](docs/prints/) (páginas inteiras em `completa/`). Para regenerá-los, use o modo `capturas`.
 
 ---
 
@@ -108,6 +136,7 @@ Uso geral: `java -jar target/aps-queimadas-1.0.0-all.jar <modo> [opções]`. Tam
 | `resultados [--rapido]` | Comparativo + benchmark + ML + relatórios (os números da dissertação) |
 | `relatorio-codigo` | `relatorios/codigo-fonte.pdf` e `.txt` |
 | `baixar --uf SP --anos 2023,2024` | Baixa e extrai os CSVs do INPE para `data/raw/` |
+| `capturas [--saida docs/prints]` | Abre o dashboard, captura todas as telas nos dois temas e fecha |
 | `help` | Ajuda |
 
 **Exemplo real:**
@@ -179,7 +208,7 @@ br.unip.aps
 ## Testes e qualidade
 
 ```bash
-./mvnw clean verify     # 189 testes · cobertura em target/site/jacoco/index.html
+./mvnw clean verify     # 199 testes · cobertura em target/site/jacoco/index.html
 ```
 
 | Suíte | O que garante |
@@ -190,7 +219,8 @@ br.unip.aps
 | `ArquiteturaTest` | **Falha o build** se o código de produção usar `Collections.sort`, `Arrays.sort`, `List.sort`, `sorted()`, `TreeMap`/`TreeSet` |
 | `DadosReaisTest` | Base real do INPE: 10.378 focos; todos os algoritmos × data/bioma/município |
 | `BenchmarkRunnerTest`, `PreditorTest`, `ReportExporterTest`, `EstatisticasTest`, `CriteriosTest` | Benchmark e expoente empírico, ML, relatórios, estatísticas, colação pt-BR |
-| `DashboardSmokeTest` | Carrega todas as telas FXML com seus controllers (ignorado em CI sem interface gráfica) |
+| `DashboardSmokeTest` | Monta o shell, navega pelas 8 telas nos dois temas e aplica um filtro global (ignorado em CI sem interface gráfica) |
+| `OuvinteArrayTest` | O ouvinte da visualização animada não altera o resultado nem a contagem, e os eventos reconstroem a ordenação |
 
 O **CI** (GitHub Actions) roda o build e os testes a cada push e publica o JAR, a cobertura e o `codigo-fonte.pdf` como artefatos.
 
@@ -205,6 +235,7 @@ O **CI** (GitHub Actions) roda o build e os testes a cada push e publica o JAR, 
 | [docs/ALGORITMOS.md](docs/ALGORITMOS.md) | Fase 3: algoritmos, critérios, modelo de custo, decisões (pivô, estabilidade, Collator) |
 | [docs/BENCHMARK.md](docs/BENCHMARK.md) | Fase 4: metodologia JVM e resultados reais |
 | [docs/ML.md](docs/ML.md) | Fase 5: modelos, validação, resultados, Deep Learning (fundamentação) |
+| [docs/DESIGN.md](docs/DESIGN.md) | Design system, decisões de UX, acessibilidade, texto para a dissertação e prints recomendados |
 | [docs/resultados/](docs/resultados/) | Saídas reais (CSV/Excel/PDF) usadas na dissertação |
 | [docs/GRUPO.md](docs/GRUPO.md) | Capa, integrantes e ficha de APS (a preencher) |
 | [docs/ENTREGA.md](docs/ENTREGA.md) | Próximas fases (dissertação, apresentação) e checklist de entrega |
@@ -217,7 +248,8 @@ O **CI** (GitHub Actions) roda o build e os testes a cada push e publica o JAR, 
 | Área | Tecnologias |
 |---|---|
 | Plataforma e build | Java 21 (LTS), Maven (+ Wrapper), Shade (fat JAR), JaCoCo, GitHub Actions |
-| Interface | JavaFX 21 (FXML, CSS, Charts, WebView), Leaflet 1.9 + OpenStreetMap/CARTO |
+| Interface | JavaFX 21 (FXML, CSS, Charts, WebView), [AtlantaFX](https://github.com/mkpaz/atlantafx) 2.1, [Ikonli](https://kordamp.org/ikonli/) (Material Design Icons), fonte [Inter](https://rsms.me/inter/) (OFL) |
+| Mapa | Leaflet 1.9 + markercluster, mapas-base Esri World Light/Dark Gray Canvas, dados © colaboradores do OpenStreetMap |
 | Machine Learning | [Smile](https://haifengl.github.io/) 4.4 (Random Forest, K-Means, DBSCAN) |
 | Relatórios | Apache POI (Excel), OpenPDF (PDF) |
 | Testes e logs | JUnit 5; `java.util.logging` (+ ponte SLF4J/Log4j) |

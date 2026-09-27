@@ -63,13 +63,16 @@ aps-queimadas/
     │   │                           Metricas, NivelAtividade, SmileAdapter, Preditor (fachada)
     │   ├── report/                 ReportExporter, ContextoRelatorio, CodigoFonteReport
     │   ├── cli/                    MenuConsole, ConsoleIO, TabelaConsole
-    │   ├── ui/                     DashboardApp, UiContexto, MainController, VisaoGeral-, Ordenacao-,
-    │   │                           Benchmark-, Mapa-, Ml-, QualidadeController, Tabelas
+    │   ├── ui/                     DashboardApp, UiContexto, MainController, Pagina, FiltroGlobal,
+    │   │                           VisaoGeral-, Ordenacao-, Benchmark-, Mapa-, Ml-, Qualidade-,
+    │   │                           Configuracoes-, SobreController, Tabelas, CapturaTelas
+    │   │   ├── componentes/        KpiCard, ChartCard, FilterBar, DonutChart, SortVisualizer, Toast… (ver DESIGN.md)
+    │   │   └── tema/               GerenciadorTema (claro/escuro, preferências)
     │   ├── config/                 AppConfig, LogConfig
     │   └── util/                   Textos (Collator pt-BR), Formatos, Json
     ├── main/resources/             application.properties, logging.properties,
-    │   └── br/unip/aps/ui/         main.fxml + 6 telas FXML, dashboard.css, mapa.html (Leaflet)
-    └── test/java/br/unip/aps/      189 testes JUnit 5
+    │   └── br/unip/aps/ui/         main.fxml + 8 telas FXML, css/ (tokens, temas, componentes, gráficos), mapa.html
+    └── test/java/br/unip/aps/      199 testes JUnit 5
 ```
 
 ## 3. Diagrama de classes — núcleo de ordenação
@@ -270,6 +273,7 @@ sequenceDiagram
 | **Strategy** | `SortAlgorithm` + 10 implementações | Trocar de algoritmo sem mudar quem o usa; o benchmark itera sobre as estratégias. |
 | **Factory** | `SortAlgorithmFactory` / `AlgoritmoTipo` | Centraliza a criação; o console e o dashboard escolhem pelo nome ou tipo. |
 | **Decorator** | `InstrumentedArray` | Acrescenta contagem a um array comum sem poluir os algoritmos; impede "esquecer" de contar. |
+| **Observer** | `InstrumentedArray.Ouvinte` | Opcional: a visualização animada assiste às comparações, trocas e atribuições sem alterar o algoritmo nem a contagem. |
 | **Builder** | `FocoIncendio.Builder`, `ContextoRelatorio` | Muitos campos opcionais, com objeto final imutável. |
 | **MVC** | `ui` (FXML = View, Controllers, Sessao/domínio = Model) | Separa a interface da lógica; os controllers recebem dependências por injeção (*controller factory*). |
 | **Facade** | `Preditor` | Uma chamada executa todo o pipeline de ML. |

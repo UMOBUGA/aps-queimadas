@@ -1,56 +1,48 @@
 package br.unip.aps.ui;
 
-import br.unip.aps.analysis.FiltroFocos;
 import br.unip.aps.ml.ClusterizacaoHotspots;
 import br.unip.aps.ml.Preditor;
 import br.unip.aps.model.BaseDeFocos;
 import br.unip.aps.model.FocoIncendio;
+import br.unip.aps.ui.componentes.Icones;
+import br.unip.aps.ui.tema.GerenciadorTema;
 import br.unip.aps.util.Formatos;
 import br.unip.aps.util.Json;
-import javafx.collections.FXCollections;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * Aba "Mapa": focos sobre mapa Leaflet/OpenStreetMap (WebView), com filtros por ano, bioma,
- * municipio e periodo, e sobreposicao dos hotspots encontrados pelo DBSCAN.
+ * Tela "Mapa": focos sobre mapa Leaflet (WebView) com mapas-base CARTO claro/escuro que
+ * acompanham o tema, modos Pontos / Agrupado (cluster) / Calor (heatmap), cor por bioma ou ano e
+ * sobreposicao dos hotspots do DBSCAN. Os focos exibidos seguem o filtro global.
  *
- * <p>Comunicacao Java → JavaScript: os focos filtrados sao serializados em JSON e passados a
- * {@code window.APS.setFocos(...)} via {@link WebEngine#executeScript}.</p>
+ * <p>Comunicacao Java → JavaScript via {@link WebEngine#executeScript} ({@code window.APS}).</p>
  */
-public class MapaController {
+public class MapaController implements Pagina.Controlador {
 
     private static final Logger LOG = Logger.getLogger(MapaController.class.getName());
-    private static final String TODOS = "(todos)";
 
     private final UiContexto ctx;
 
-    @FXML private HBox boxAnos;
-    @FXML private ComboBox<String> cbBioma;
-    @FXML private TextField tfMunicipio;
-    @FXML private DatePicker dpInicio, dpFim;
-    @FXML private CheckBox chkHotspots;
+    @FXML private ToggleButton tgPontos, tgCluster, tgCalor, tgBioma, tgAno, tgHotspots;
     @FXML private Label lblContagem;
+    @FXML private StackPane moldura;
     @FXML private WebView webView;
 
     private WebEngine engine;
     private boolean paginaPronta;
-    private String pendente;
-    private final List<CheckBox> chkAnos = new ArrayList<>();
+    private boolean pendente = true;
+    private boolean visivel;
 
     /** @param ctx contexto injetado */
     public MapaController(UiContexto ctx) {
@@ -59,93 +51,95 @@ public class MapaController {
 
     @FXML
     private void initialize() {
+        moldura.getStyleClass().add("map-frame");
+        Rectangle clip = new Rectangle();
+        clip.setArcWidth(28);
+        clip.setArcHeight(28);
+        clip.widthProperty().bind(moldura.widthProperty());
+        clip.heightProperty().bind(moldura.heightProperty());
+        moldura.setClip(clip);
+
+        ToggleGroup modo = new ToggleGroup(), cor = new ToggleGroup();
+        for (ToggleButton t : List.of(tgPontos, tgCluster, tgCalor)) t.setToggleGroup(modo);
+        for (ToggleButton t : List.of(tgBioma, tgAno)) t.setToggleGroup(cor);
+        tgPontos.setGraphic(Icones.de(Icones.PONTOS, 15));
+        tgCluster.setGraphic(Icones.de(Icones.CAMADAS, 15));
+        tgCalor.setGraphic(Icones.de(Icones.MARCA, 15));
+        tgHotspots.setGraphic(Icones.de(Icones.ALVO, 15));
+        lblContagem.setGraphic(Icones.de(Icones.MARCA, 14));
+        modo.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) a.setSelected(true);
+            else js("APS.setModo('" + (n == tgCluster ? "cluster" : n == tgCalor ? "calor" : "pontos") + "')");
+        });
+        cor.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) a.setSelected(true);
+            else js("APS.setCorPor('" + (n == tgAno ? "ano" : "bioma") + "')");
+        });
+
         engine = webView.getEngine();
         engine.setUserAgent(engine.getUserAgent() + " APS-Queimadas-UNIP/1.0");
         engine.setOnAlert(e -> LOG.info("mapa: " + e.getData()));
         engine.getLoadWorker().stateProperty().addListener((o, a, s) -> {
             if (s == Worker.State.SUCCEEDED) {
                 paginaPronta = true;
-                if (pendente != null) {
-                    executarJs(pendente);
-                    pendente = null;
-                }
+                aplicarTema();
+                if (visivel) enviarFocos();
                 enviarHotspots();
             } else if (s == Worker.State.FAILED) {
-                lblContagem.setText("Falha ao carregar o mapa (sem internet?)");
+                lblContagem.setText("Mapa indisponível (sem internet?)");
             }
         });
         engine.load(getClass().getResource("/br/unip/aps/ui/mapa.html").toExternalForm());
 
-        ctx.baseProperty().addListener((o, a, b) -> prepararFiltros(b));
+        ctx.focosFiltradosProperty().addListener((o, a, n) -> {
+            pendente = true;
+            if (visivel) enviarFocos();
+        });
         ctx.mlProperty().addListener((o, a, r) -> {
-            chkHotspots.setDisable(r == null);
-            chkHotspots.setSelected(r != null);
+            tgHotspots.setDisable(r == null);
+            tgHotspots.setSelected(r != null);
             enviarHotspots();
         });
-        chkHotspots.selectedProperty().addListener((o, a, n) -> enviarHotspots());
+        tgHotspots.selectedProperty().addListener((o, a, n) -> enviarHotspots());
+        GerenciadorTema.get().temaProperty().addListener((o, a, n) -> aplicarTema());
     }
 
-    private void prepararFiltros(BaseDeFocos b) {
-        boxAnos.getChildren().clear();
-        chkAnos.clear();
-        List<String> biomas = new ArrayList<>(List.of(TODOS));
-        if (b != null) {
-            for (Integer ano : b.anos()) {
-                CheckBox c = new CheckBox(String.valueOf(ano));
-                c.setSelected(true);
-                chkAnos.add(c);
-                boxAnos.getChildren().add(c);
-            }
-            biomas.addAll(b.biomas());
-        }
-        cbBioma.setItems(FXCollections.observableArrayList(biomas));
-        cbBioma.getSelectionModel().selectFirst();
-        aplicar();
+    @Override
+    public void aoExibir() {
+        visivel = true;
+        if (pendente) enviarFocos();
     }
 
-    @FXML
-    private void limpar() {
-        chkAnos.forEach(c -> c.setSelected(true));
-        cbBioma.getSelectionModel().selectFirst();
-        tfMunicipio.clear();
-        dpInicio.setValue(null);
-        dpFim.setValue(null);
-        aplicar();
+    @Override
+    public void aoOcultar() {
+        visivel = false;
     }
 
-    @FXML
-    private void aplicar() {
+    /**
+     * @param modo "pontos", "cluster" ou "calor" (demonstracoes e capturas)
+     */
+    void modo(String modo) {
+        (modo.equals("cluster") ? tgCluster : modo.equals("calor") ? tgCalor : tgPontos).setSelected(true);
+    }
+
+    private void aplicarTema() {
+        js("APS.setTema(" + GerenciadorTema.get().escuro() + ")");
+    }
+
+    private void enviarFocos() {
+        if (!paginaPronta) return;
+        pendente = false;
         BaseDeFocos b = ctx.baseProperty().get();
-        if (b == null) return;
-        FiltroFocos filtro;
-        try {
-            Set<Integer> anos = new HashSet<>();
-            for (CheckBox c : chkAnos) if (c.isSelected()) anos.add(Integer.parseInt(c.getText()));
-            if (anos.isEmpty()) {
-                ctx.aviso("Filtro vazio", "Selecione ao menos um ano.");
-                return;
-            }
-            String bioma = cbBioma.getValue();
-            filtro = new FiltroFocos(anos, bioma == null || bioma.equals(TODOS) ? Set.of() : Set.of(bioma),
-                    tfMunicipio.getText(), dpInicio.getValue(), dpFim.getValue());
-        } catch (IllegalArgumentException e) {
-            ctx.erro("Filtro inválido", e);
-            return;
-        }
-        List<FocoIncendio> focos = b.filtrar(filtro);
+        List<FocoIncendio> focos = ctx.focosFiltradosProperty().get();
         lblContagem.setText(Formatos.inteiro(focos.size()) + " focos no mapa");
-        if (focos.isEmpty()) {
-            ctx.aviso("Filtro vazio", "Nenhum foco atende ao filtro: " + filtro.descricao());
-        }
-        enviar("window.APS && APS.setFocos(" + json(b.biomas(), focos) + ");");
-        if (!paginaPronta && engine.getLoadWorker().getState() == Worker.State.FAILED) {
-            engine.reload();
-        }
+        if (b == null) return;
+        List<Integer> anos = b.anos();
+        js("APS.setFocos(" + json(b.biomas(), focos, anos.isEmpty() ? 0 : anos.get(anos.size() - 1)) + ")");
     }
 
-    private static String json(List<String> biomas, List<FocoIncendio> focos) {
-        StringBuilder sb = new StringBuilder(focos.size() * 70 + 100);
-        sb.append("{\"biomas\":[");
+    private static String json(List<String> biomas, List<FocoIncendio> focos, int anoRecente) {
+        StringBuilder sb = new StringBuilder(focos.size() * 72 + 120);
+        sb.append("{\"anoRecente\":").append(anoRecente).append(",\"biomas\":[");
         for (int i = 0; i < biomas.size(); i++) sb.append(i > 0 ? "," : "").append(Json.texto(biomas.get(i)));
         sb.append("],\"focos\":[");
         boolean primeiro = true;
@@ -155,7 +149,8 @@ public class MapaController {
             sb.append('[').append(Json.numero(f.getLatitude(), 5)).append(',').append(Json.numero(f.getLongitude(), 5))
                     .append(',').append(Math.max(0, biomas.indexOf(f.getBioma())))
                     .append(',').append(Json.texto(f.getMunicipio()))
-                    .append(',').append(Json.texto(f.getDataHora().format(Formatos.DATA_HORA))).append(']');
+                    .append(',').append(Json.texto(f.getDataHora().format(Formatos.DATA_HORA)))
+                    .append(',').append(f.getAno()).append(']');
         }
         return sb.append("]}").toString();
     }
@@ -163,8 +158,8 @@ public class MapaController {
     private void enviarHotspots() {
         if (!paginaPronta) return;
         Preditor.ResultadoML r = ctx.mlProperty().get();
-        if (r == null || !chkHotspots.isSelected()) {
-            executarJs("window.APS && APS.setHotspots([]);");
+        if (r == null || !tgHotspots.isSelected()) {
+            js("APS.setHotspots([])");
             return;
         }
         StringBuilder sb = new StringBuilder("[");
@@ -176,20 +171,16 @@ public class MapaController {
                     .append(h.focos()).append(',').append(Json.numero(h.raioKm(), 2)).append(',').append(h.id()).append(',')
                     .append(Json.texto(h.municipioPrincipal())).append(',').append(Json.texto(h.biomaPredominante())).append(']');
         }
-        executarJs("window.APS && APS.setHotspots(" + sb.append(']') + ");");
+        js("APS.setHotspots(" + sb.append(']') + ")");
     }
 
-    private void enviar(String js) {
-        if (paginaPronta) executarJs(js);
-        else pendente = js;
-    }
-
-    private void executarJs(String js) {
+    private void js(String codigo) {
+        if (!paginaPronta) return;
         try {
-            engine.executeScript(js);
+            engine.executeScript("window.APS && " + codigo + ";");
         } catch (RuntimeException e) {
             LOG.warning("Falha ao executar script no mapa: " + e.getMessage());
-            lblContagem.setText("Mapa indisponível (verifique a conexão com a internet)");
+            lblContagem.setText("Mapa indisponível (verifique a internet)");
         }
     }
 }

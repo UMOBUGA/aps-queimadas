@@ -1,111 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.BarChart?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.NumberAxis?>
+<?import br.unip.aps.ui.componentes.ChartCard?>
+<?import br.unip.aps.ui.componentes.GradeResponsiva?>
+<?import br.unip.aps.ui.componentes.KpiCard?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.TextFlow?>
 
-<SplitPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="br.unip.aps.ui.MlController" dividerPositions="0.2" styleClass="aba">
-    <ScrollPane fitToWidth="true" minWidth="250" maxWidth="340">
-        <VBox spacing="8" styleClass="painel-lateral">
-            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
-            <Label text="Validação temporal" styleClass="secao"/>
-            <GridPane hgap="6" vgap="6">
-                <Label text="Ano de treino:" GridPane.rowIndex="0"/>
-                <ComboBox fx:id="cbTreino" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="95"/>
-                <Label text="Ano de teste:" GridPane.rowIndex="1"/>
-                <ComboBox fx:id="cbTeste" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="95"/>
-                <Label text="Árvores (RF):" GridPane.rowIndex="2"/>
-                <Spinner fx:id="spArvores" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="95"/>
-            </GridPane>
-            <Separator/>
-            <Label text="Clusterização" styleClass="secao"/>
-            <GridPane hgap="6" vgap="6">
-                <Label text="K-Means: k" GridPane.rowIndex="0"/>
-                <Spinner fx:id="spK" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="95"/>
-                <Label text="DBSCAN: eps (km)" GridPane.rowIndex="1"/>
-                <Spinner fx:id="spEps" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="95"/>
-                <Label text="DBSCAN: minPts" GridPane.rowIndex="2"/>
-                <Spinner fx:id="spMinPts" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="95"/>
-            </GridPane>
-            <Separator/>
-            <Button text="Treinar e avaliar" onAction="#executar" maxWidth="Infinity" styleClass="botao-primario"/>
-            <Button fx:id="btnMapa" text="Ver hotspots no mapa" onAction="#verNoMapa" maxWidth="Infinity" disable="true"/>
-            <Label fx:id="lblPreparo" wrapText="true" styleClass="texto-suave"
-                   text="Entrada: focos ordenados por município → data (Merge Sort) e agregados por município/mês."/>
-        </VBox>
-    </ScrollPane>
-
-    <TabPane tabClosingPolicy="UNAVAILABLE">
-        <Tab text="Previsão de focos (regressão)">
-            <ScrollPane fitToWidth="true">
-                <VBox spacing="8">
-                    <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
-                    <Label fx:id="lblRegressao" styleClass="secao" wrapText="true" text="Execute o treinamento para ver os resultados."/>
-                    <TableView fx:id="tabelaRegressao" prefHeight="120"/>
-                    <HBox spacing="8">
-                        <LineChart fx:id="graficoPrevisao" title="Focos no estado por mês: real × previsto" animated="false" HBox.hgrow="ALWAYS" prefHeight="330">
-                            <xAxis><CategoryAxis/></xAxis>
-                            <yAxis><NumberAxis label="Focos"/></yAxis>
-                        </LineChart>
-                        <BarChart fx:id="graficoImportancia" title="Importância das variáveis" animated="false" legendVisible="false" HBox.hgrow="ALWAYS" prefHeight="330">
-                            <xAxis><NumberAxis/></xAxis>
-                            <yAxis><CategoryAxis/></yAxis>
-                        </BarChart>
-                    </HBox>
-                    <Label text="Maiores erros (município/mês)" styleClass="secao"/>
-                    <TableView fx:id="tabelaErros" prefHeight="260"/>
+<!-- Machine Learning: parametros, metricas, previsao, matriz de confusao, importancia, hotspots -->
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="br.unip.aps.ui.MlController" fitToWidth="true">
+    <VBox styleClass="page">
+        <VBox styleClass="panel-card" spacing="10">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label text="Validação temporal" styleClass="card-title"/>
+                    <Label fx:id="lblPreparo" text="Os focos são ordenados por município → data (Merge Sort) e agregados por município/mês. Treino em um ano, teste no seguinte. Usa a base completa."
+                           styleClass="card-subtitle" wrapText="true"/>
                 </VBox>
-            </ScrollPane>
-        </Tab>
-        <Tab text="Nível de atividade (classificação)">
-            <VBox spacing="10">
-                <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-                <Label fx:id="lblClassificacao" styleClass="secao" wrapText="true" text="Execute o treinamento para ver os resultados."/>
-                <Label text="Matriz de confusão (linhas = real, colunas = previsto)" styleClass="secao"/>
-                <GridPane fx:id="gridConfusao" hgap="2" vgap="2" styleClass="matriz-confusao"/>
-                <TableView fx:id="tabelaClasses" prefHeight="150"/>
-                <Label wrapText="true" styleClass="texto-suave"
-                       text="Os CSVs EstadosBr_sat_ref não trazem precipitação, dias sem chuva nem FRP; por isso o 'risco' foi modelado como nível de atividade esperado (0 / 1–4 / 5+ focos no mês), a partir de histórico, sazonalidade, localização e bioma."/>
+                <Button fx:id="btnMapa" text="Ver hotspots no mapa" onAction="#verNoMapa" styleClass="btn-secondary" disable="true"/>
+                <Button fx:id="btnTreinar" text="Treinar e avaliar" onAction="#executar" styleClass="btn-primary"/>
+            </HBox>
+            <FlowPane hgap="14" vgap="8">
+                <HBox spacing="6" alignment="CENTER_LEFT"><Label text="Treino" styleClass="field-label"/><ComboBox fx:id="cbTreino" prefWidth="90"/></HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT"><Label text="Teste" styleClass="field-label"/><ComboBox fx:id="cbTeste" prefWidth="90"/></HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT"><Label text="Árvores (RF)" styleClass="field-label"/><Spinner fx:id="spArvores" prefWidth="96"/></HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT"><Label text="K-Means k" styleClass="field-label"/><Spinner fx:id="spK" prefWidth="80"/></HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT"><Label text="DBSCAN eps (km)" styleClass="field-label"/><Spinner fx:id="spEps" prefWidth="86"/></HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT"><Label text="minPts" styleClass="field-label"/><Spinner fx:id="spMinPts" prefWidth="86"/></HBox>
+            </FlowPane>
+        </VBox>
+
+        <GradeResponsiva larguraMinima="200" maxColunas="5" gap="12">
+            <KpiCard fx:id="kMae" titulo="MAE · Random Forest" icone="mdi2t-target"/>
+            <KpiCard fx:id="kRmse" titulo="RMSE" icone="mdi2s-sigma"/>
+            <KpiCard fx:id="kR2" titulo="R²" icone="mdi2c-chart-scatter-plot"/>
+            <KpiCard fx:id="kAcuracia" titulo="Acurácia" icone="mdi2c-check-circle-outline"/>
+            <KpiCard fx:id="kF1" titulo="F1 macro" icone="mdi2g-grid"/>
+        </GradeResponsiva>
+
+        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="16">
+            <ChartCard fx:id="cPrevisao" titulo="Focos no estado por mês: real × previsto" subtitulo="Soma das previsões por município no ano de teste" prefHeight="400"/>
+            <ChartCard fx:id="cMatriz" titulo="Nível de atividade: matriz de confusão" subtitulo="Linhas = classe real; cor = % da classe real prevista em cada coluna" prefHeight="400"/>
+            <ChartCard fx:id="cImportancia" titulo="Importância das variáveis" subtitulo="Redução de impureza média nas árvores (regressão)" prefHeight="400"/>
+            <ChartCard fx:id="cHotspots" titulo="Hotspots geográficos" subtitulo="Grupos de focos encontrados pela clusterização" prefHeight="400"/>
+        </GradeResponsiva>
+
+        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="16">
+            <ChartCard fx:id="cCotovelo" titulo="Método do cotovelo (K-Means)" subtitulo="Distorção média (km²) × k: o 'cotovelo' sugere um k adequado" prefHeight="300"/>
+            <VBox styleClass="panel-card" spacing="8">
+                <Label text="Sobre os modelos" styleClass="card-title"/>
+                <TextFlow fx:id="textoSobre" styleClass="texto-sobre"/>
             </VBox>
-        </Tab>
-        <Tab text="Hotspots (clusterização)">
-            <VBox spacing="8">
-                <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="Método:"/>
-                    <ComboBox fx:id="cbMetodo" prefWidth="260"/>
-                    <Label fx:id="lblClusters" styleClass="texto-suave"/>
-                </HBox>
-                <TableView fx:id="tabelaHotspots" VBox.vgrow="ALWAYS"/>
-                <LineChart fx:id="graficoCotovelo" title="Método do cotovelo (K-Means): distorção média × k" animated="false" prefHeight="240" legendVisible="false">
-                    <xAxis><NumberAxis label="k"/></xAxis>
-                    <yAxis><NumberAxis label="WCSS médio por foco (km²)"/></yAxis>
-                </LineChart>
-            </VBox>
-        </Tab>
-        <Tab text="Sobre os modelos e Deep Learning">
-            <ScrollPane fitToWidth="true">
-                <TextFlow fx:id="textoSobre" styleClass="texto-sobre">
-                    <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
-                </TextFlow>
-            </ScrollPane>
-        </Tab>
-    </TabPane>
-</SplitPane>
+        </GradeResponsiva>
+    </VBox>
+</ScrollPane>

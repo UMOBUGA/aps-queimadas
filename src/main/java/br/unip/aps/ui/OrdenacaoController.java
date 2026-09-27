@@ -1,7 +1,6 @@
 package br.unip.aps.ui;
 
 import br.unip.aps.ApsException;
-import br.unip.aps.analysis.FiltroFocos;
 import br.unip.aps.model.BaseDeFocos;
 import br.unip.aps.model.FocoIncendio;
 import br.unip.aps.sorting.AlgoritmoTipo;
@@ -10,54 +9,95 @@ import br.unip.aps.sorting.Complexidade;
 import br.unip.aps.sorting.CriterioOrdenacao;
 import br.unip.aps.sorting.Criterios;
 import br.unip.aps.sorting.Ordem;
+import br.unip.aps.sorting.Ordenacoes;
 import br.unip.aps.sorting.ResultadoOrdenacao;
 import br.unip.aps.sorting.ServicoOrdenacao;
+import br.unip.aps.ui.componentes.BarrasHorizontais;
+import br.unip.aps.ui.componentes.ChartCard;
+import br.unip.aps.ui.componentes.Chip;
+import br.unip.aps.ui.componentes.Feedback;
+import br.unip.aps.ui.componentes.Icones;
+import br.unip.aps.ui.componentes.KpiCard;
+import br.unip.aps.ui.componentes.SortVisualizer;
 import br.unip.aps.util.Formatos;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.XYChart;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.util.StringConverter;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
- * Aba "Ordenacao": atende a solicitacao central do enunciado — ordenar e exibir os focos por
+ * Tela "Ordenacao": atende a solicitacao central do enunciado — ordenar e exibir os focos por
  * data, bioma, municipio (e extras), informando o numero de operacoes realizadas.
  */
-public class OrdenacaoController {
+public class OrdenacaoController implements Pagina.Controlador {
 
-    private static final String NENHUM = "(nenhum)";
-    private static final String TODOS = "(todos)";
+    private static final DataFormat FORMATO_INDICE = new DataFormat("application/x-aps-nivel");
+
+    /** Nivel editavel da lista de criterios. */
+    static final class NivelEditavel {
+        final ObjectProperty<CriterioOrdenacao> criterio = new SimpleObjectProperty<>();
+        final ObjectProperty<Ordem> ordem = new SimpleObjectProperty<>(Ordem.CRESCENTE);
+
+        NivelEditavel(CriterioOrdenacao c, Ordem o) {
+            criterio.set(c);
+            ordem.set(o);
+        }
+    }
 
     private final UiContexto ctx;
 
-    @FXML private ComboBox<String> cbCriterio1, cbCriterio2, cbCriterio3;
-    @FXML private ComboBox<Ordem> cbOrdem1, cbOrdem2, cbOrdem3;
+    @FXML private ListView<NivelEditavel> lvCriterios;
+    @FXML private Button btnAdicionar, btnOrdenar, btnComparar, btnCsv;
     @FXML private ComboBox<AlgoritmoTipo> cbAlgoritmo;
-    @FXML private Label lblAlgoritmo, lblAmostra, lblResumo;
-    @FXML private TextField tfAmostra, tfMunicipio;
-    @FXML private CheckBox chkAleatoria, chkLog;
+    @FXML private FlowPane chipsAlgoritmo;
+    @FXML private Label lblDescricao, lblTitulo, lblResumo, lblBanner;
+    @FXML private TextField tfAmostra;
+    @FXML private ToggleButton tg1000, tg5000, tgTodos, tgDados, tgComparativo, tgVisualizar;
+    @FXML private CheckBox chkAleatoria;
     @FXML private ComboBox<CenarioEntrada> cbCenario;
-    @FXML private ComboBox<String> cbAno, cbBioma, cbMetrica;
-    @FXML private Label lblComparacoes, lblTrocas, lblAtribuicoes, lblAcessos, lblTempo, lblVerificacao;
-    @FXML private TabPane abasResultado;
-    @FXML private Tab abaComparativo;
+    @FXML private HBox chipsResultado, banner;
+    @FXML private KpiCard mComparacoes, mTrocas, mAcessos, mTempo;
     @FXML private TableView<FocoIncendio> tabela;
-    @FXML private TableView<ResultadoOrdenacao<FocoIncendio>> tabelaComparativo;
-    @FXML private BarChart<String, Number> graficoComparativo;
+    @FXML private VBox painelComparativo, painelVisualizacao;
+    @FXML private javafx.scene.layout.StackPane areaVisoes;
 
+    private final ObservableList<NivelEditavel> niveis = FXCollections.observableArrayList();
+    private final List<CriterioOrdenacao> disponiveis = new ArrayList<>();
+    private final BarrasHorizontais barrasComparativo = new BarrasHorizontais();
+    private final TableView<ResultadoOrdenacao<FocoIncendio>> tabelaComparativo = new TableView<>();
+    private final ToggleGroup metrica = new ToggleGroup();
+    private final SortVisualizer visualizador = new SortVisualizer();
+    private final Label lblVisualAlg = new Label();
+    private ChartCard cardComparativo;
     private List<ResultadoOrdenacao<FocoIncendio>> comparativo = List.of();
 
     /** @param ctx contexto injetado */
@@ -67,109 +107,245 @@ public class OrdenacaoController {
 
     @FXML
     private void initialize() {
-        for (ComboBox<Ordem> c : List.of(cbOrdem1, cbOrdem2, cbOrdem3)) {
-            c.setItems(FXCollections.observableArrayList(Ordem.values()));
-            c.getSelectionModel().selectFirst();
-        }
+        configurarCriterios(null);
+        lvCriterios.setItems(niveis);
+        lvCriterios.setCellFactory(lv -> new CelulaNivel());
+        lvCriterios.setFocusTraversable(false);
+        lvCriterios.setFixedCellSize(52);
+        niveis.addListener((javafx.collections.ListChangeListener<NivelEditavel>) c -> {
+            btnAdicionar.setDisable(niveis.size() >= 3);
+            lvCriterios.setPrefHeight(Math.max(1, niveis.size()) * 52 + 6);
+            lvCriterios.setMinHeight(Math.max(1, niveis.size()) * 52 + 6);
+            atualizarAviso();
+        });
+        niveis.add(new NivelEditavel(CriterioOrdenacao.DATA, Ordem.CRESCENTE));
+        btnAdicionar.setGraphic(Icones.de(Icones.ADICIONAR, 16));
+
         cbAlgoritmo.setItems(FXCollections.observableArrayList(AlgoritmoTipo.values()));
+        cbAlgoritmo.setCellFactory(lv -> new CelulaAlgoritmo());
+        cbAlgoritmo.setButtonCell(new CelulaAlgoritmo());
         cbAlgoritmo.getSelectionModel().select(AlgoritmoTipo.MERGE);
-        cbAlgoritmo.valueProperty().addListener((o, a, n) -> descreverAlgoritmo());
+        cbAlgoritmo.valueProperty().addListener((o, a, n) -> {
+            descreverAlgoritmo();
+            atualizarAviso();
+            visualizador.setAlgoritmo(n == AlgoritmoTipo.RADIX ? AlgoritmoTipo.RADIX : n);
+            lblVisualAlg.setText(n.nome());
+        });
         cbCenario.setItems(FXCollections.observableArrayList(CenarioEntrada.values()));
         cbCenario.getSelectionModel().selectFirst();
-        cbMetrica.setItems(FXCollections.observableArrayList("Comparações", "Trocas", "Atribuições", "Acessos", "Tempo (ms)"));
-        cbMetrica.getSelectionModel().selectFirst();
-        cbMetrica.valueProperty().addListener((o, a, n) -> desenharComparativo());
-        chkLog.selectedProperty().addListener((o, a, n) -> desenharComparativo());
-        configurarCriterios(null);
+
+        ToggleGroup rapidos = new ToggleGroup();
+        for (ToggleButton t : List.of(tg1000, tg5000, tgTodos)) t.setToggleGroup(rapidos);
+        tg1000.setOnAction(e -> tfAmostra.setText("1000"));
+        tg5000.setOnAction(e -> tfAmostra.setText("5000"));
+        tgTodos.setOnAction(e -> tfAmostra.setText("0"));
+        tfAmostra.textProperty().addListener((o, a, n) -> {
+            String s = n == null ? "" : n.replace(".", "").strip();
+            tg1000.setSelected(s.equals("1000"));
+            tg5000.setSelected(s.equals("5000"));
+            tgTodos.setSelected(s.equals("0") || s.isEmpty());
+            atualizarAviso();
+        });
+
+        btnOrdenar.setGraphic(Icones.de(Icones.EXECUTAR, 16));
+        btnComparar.setGraphic(Icones.de(Icones.COMPARAR, 16));
+        btnCsv.setGraphic(Icones.de(Icones.CSV, 16));
+        lblBanner.setGraphic(Icones.de(Icones.ALERTA, 18));
+
+        configurarVisoes();
+        javafx.scene.shape.Rectangle recorte = new javafx.scene.shape.Rectangle();
+        recorte.widthProperty().bind(areaVisoes.widthProperty());
+        recorte.heightProperty().bind(areaVisoes.heightProperty());
+        areaVisoes.setClip(recorte);
         configurarTabelas();
+        configurarMetricas();
         descreverAlgoritmo();
-        ctx.registrarGrafico("Comparativo de algoritmos", graficoComparativo);
 
         ctx.baseProperty().addListener((o, a, b) -> {
             configurarCriterios(b);
-            List<String> anos = new ArrayList<>(List.of(TODOS));
-            List<String> biomas = new ArrayList<>(List.of(TODOS));
-            if (b != null) {
-                b.anos().forEach(x -> anos.add(String.valueOf(x)));
-                biomas.addAll(b.biomas());
-                lblAmostra.setText("Base: " + Formatos.inteiro(b.tamanho()) + " focos");
-            }
-            cbAno.setItems(FXCollections.observableArrayList(anos));
-            cbAno.getSelectionModel().selectFirst();
-            cbBioma.setItems(FXCollections.observableArrayList(biomas));
-            cbBioma.getSelectionModel().selectFirst();
             tabela.getItems().clear();
-            tabelaComparativo.getItems().clear();
-            graficoComparativo.getData().clear();
+            comparativo = List.of();
+            atualizarComparativo();
         });
+        ctx.focosFiltradosProperty().addListener((o, a, n) -> atualizarAviso());
     }
+
+    @Override
+    public void aoOcultar() {
+        visualizador.parar();
+    }
+
+    // ------------------------------------------------------------------ criterios
 
     private void configurarCriterios(BaseDeFocos b) {
-        List<String> nomes = new ArrayList<>();
+        disponiveis.clear();
         for (CriterioOrdenacao c : CriterioOrdenacao.values()) {
-            if (!c.opcional() || (b != null && b.possuiCampo(c::valor))) nomes.add(c.rotulo());
+            if (!c.opcional() || (b != null && b.possuiCampo(c::valor))) disponiveis.add(c);
         }
-        List<String> comNenhum = new ArrayList<>(List.of(NENHUM));
-        comNenhum.addAll(nomes);
-        cbCriterio1.setItems(FXCollections.observableArrayList(nomes));
-        cbCriterio1.getSelectionModel().select(CriterioOrdenacao.DATA.rotulo());
-        cbCriterio2.setItems(FXCollections.observableArrayList(comNenhum));
-        cbCriterio2.getSelectionModel().selectFirst();
-        cbCriterio3.setItems(FXCollections.observableArrayList(comNenhum));
-        cbCriterio3.getSelectionModel().selectFirst();
+        niveis.removeIf(n -> !disponiveis.contains(n.criterio.get()));
+        if (niveis.isEmpty()) niveis.add(new NivelEditavel(CriterioOrdenacao.DATA, Ordem.CRESCENTE));
+        lvCriterios.refresh();
     }
 
-    private void configurarTabelas() {
-        tabela.getColumns().add(Tabelas.indice());
-        tabela.getColumns().add(Tabelas.coluna("Data/hora (GMT)", (FocoIncendio f) -> f.getDataHora().format(Formatos.DATA_HORA), 130));
-        tabela.getColumns().add(Tabelas.coluna("Município", FocoIncendio::getMunicipio, 230));
-        tabela.getColumns().add(Tabelas.coluna("Bioma", FocoIncendio::getBioma, 120));
-        tabela.getColumns().add(Tabelas.numero("Latitude", FocoIncendio::getLatitude, v -> Formatos.decimal(v, 5), 95));
-        tabela.getColumns().add(Tabelas.numero("Longitude", FocoIncendio::getLongitude, v -> Formatos.decimal(v, 5), 95));
-        tabela.getColumns().add(Tabelas.numero("id_bdq", FocoIncendio::getIdBdq, String::valueOf, 110));
-        tabela.getColumns().add(Tabelas.coluna("foco_id", FocoIncendio::getFocoId, 260));
-        tabela.setPlaceholder(new Label("Nenhum resultado ainda."));
+    @FXML
+    private void adicionarCriterio() {
+        if (niveis.size() >= 3) return;
+        for (CriterioOrdenacao c : List.of(CriterioOrdenacao.BIOMA, CriterioOrdenacao.MUNICIPIO, CriterioOrdenacao.DATA)) {
+            boolean usado = niveis.stream().anyMatch(n -> n.criterio.get() == c);
+            if (!usado) {
+                niveis.add(new NivelEditavel(c, Ordem.CRESCENTE));
+                return;
+            }
+        }
+        niveis.add(new NivelEditavel(disponiveis.get(0), Ordem.CRESCENTE));
+    }
 
-        tabelaComparativo.getColumns().add(Tabelas.coluna("Algoritmo", (ResultadoOrdenacao<FocoIncendio> r) -> r.algoritmo(), 170));
-        tabelaComparativo.getColumns().add(Tabelas.numero("Comparações", r -> r.metricas().comparacoes(), Formatos::inteiro, 120));
-        tabelaComparativo.getColumns().add(Tabelas.numero("Trocas", r -> r.metricas().trocas(), Formatos::inteiro, 110));
-        tabelaComparativo.getColumns().add(Tabelas.numero("Atribuições", r -> r.metricas().atribuicoes(), Formatos::inteiro, 120));
-        tabelaComparativo.getColumns().add(Tabelas.numero("Acessos", r -> r.metricas().acessos(), Formatos::inteiro, 120));
-        tabelaComparativo.getColumns().add(Tabelas.numero("Tempo (ms)", r -> r.metricas().millis(), v -> Formatos.decimal(v, 3), 100));
-        tabelaComparativo.getColumns().add(Tabelas.coluna("Estável", r -> SortInfo.estavel(r.algoritmo()), 70));
-        tabelaComparativo.getColumns().add(Tabelas.coluna("Verificado", r -> r.verificado() ? "✔" : "FALHA", 80));
+    /** Celula da lista de criterios: alca de arraste, numero, criterio, ordem e remover. */
+    private final class CelulaNivel extends ListCell<NivelEditavel> {
+        private final Label alca = new Label(null, Icones.de(Icones.ARRASTAR, 18));
+        private final Label numero = new Label();
+        private final ComboBox<CriterioOrdenacao> combo = new ComboBox<>();
+        private final Button ordem = new Button();
+        private final Button remover = new Button(null, Icones.de(Icones.REMOVER, 16));
+        private final HBox linha;
+
+        CelulaNivel() {
+            alca.getStyleClass().add("alca-arraste");
+            alca.setTooltip(new Tooltip("Arraste para mudar a prioridade"));
+            numero.getStyleClass().add("numero-nivel");
+            combo.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(combo, Priority.ALWAYS);
+            combo.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(CriterioOrdenacao c) {
+                    return c == null ? "" : c.rotulo();
+                }
+
+                @Override
+                public CriterioOrdenacao fromString(String s) {
+                    return null;
+                }
+            });
+            ordem.getStyleClass().add("btn-icon");
+            remover.getStyleClass().add("btn-icon");
+            remover.setTooltip(new Tooltip("Remover critério"));
+            linha = new HBox(6, alca, numero, combo, ordem, remover);
+            linha.getStyleClass().add("criterio-linha");
+            linha.setAlignment(Pos.CENTER_LEFT);
+
+            setOnDragDetected(e -> {
+                if (getItem() == null) return;
+                Dragboard db = startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent cc = new ClipboardContent();
+                cc.put(FORMATO_INDICE, getIndex());
+                db.setContent(cc);
+                db.setDragView(linha.snapshot(null, null));
+                linha.getStyleClass().add("arrastando");
+                e.consume();
+            });
+            setOnDragOver(e -> {
+                if (e.getGestureSource() != this && e.getDragboard().hasContent(FORMATO_INDICE)) {
+                    e.acceptTransferModes(TransferMode.MOVE);
+                }
+                e.consume();
+            });
+            setOnDragEntered(e -> {
+                if (getItem() != null && e.getGestureSource() != this) linha.getStyleClass().add("alvo-drop");
+            });
+            setOnDragExited(e -> linha.getStyleClass().remove("alvo-drop"));
+            setOnDragDropped(e -> {
+                Object v = e.getDragboard().getContent(FORMATO_INDICE);
+                boolean ok = false;
+                if (v instanceof Integer origem && origem >= 0 && origem < niveis.size()) {
+                    int destino = getItem() == null ? niveis.size() - 1 : getIndex();
+                    NivelEditavel n = niveis.remove((int) origem);
+                    niveis.add(Math.min(destino, niveis.size()), n);
+                    ok = true;
+                }
+                e.setDropCompleted(ok);
+                e.consume();
+            });
+            setOnDragDone(e -> linha.getStyleClass().remove("arrastando"));
+        }
+
+        @Override
+        protected void updateItem(NivelEditavel n, boolean vazio) {
+            super.updateItem(n, vazio);
+            if (vazio || n == null) {
+                setGraphic(null);
+                return;
+            }
+            numero.setText(String.valueOf(getIndex() + 1));
+            combo.setItems(FXCollections.observableArrayList(disponiveis));
+            combo.setOnAction(null);
+            combo.setValue(n.criterio.get());
+            combo.setOnAction(e -> {
+                n.criterio.set(combo.getValue());
+                atualizarAviso();
+            });
+            atualizarOrdem(n);
+            ordem.setOnAction(e -> {
+                n.ordem.set(n.ordem.get() == Ordem.CRESCENTE ? Ordem.DECRESCENTE : Ordem.CRESCENTE);
+                atualizarOrdem(n);
+            });
+            remover.setDisable(niveis.size() <= 1);
+            remover.setOnAction(e -> niveis.remove(n));
+            setGraphic(linha);
+        }
+
+        private void atualizarOrdem(NivelEditavel n) {
+            boolean cresc = n.ordem.get() == Ordem.CRESCENTE;
+            ordem.setGraphic(Icones.de(cresc ? Icones.CRESCENTE : Icones.DECRESCENTE, 16));
+            ordem.setTooltip(new Tooltip(cresc ? "Crescente (clique para decrescente)" : "Decrescente (clique para crescente)"));
+            ordem.setAccessibleText(cresc ? "Ordem crescente" : "Ordem decrescente");
+        }
+    }
+
+    private Criterios criterios() {
+        List<Criterios.Nivel> r = new ArrayList<>();
+        for (NivelEditavel n : niveis) r.add(new Criterios.Nivel(n.criterio.get(), n.ordem.get()));
+        return Criterios.composto(r);
+    }
+
+    // ------------------------------------------------------------------ algoritmo
+
+    /** Celula do combo de algoritmos: nome + complexidade media. */
+    private static final class CelulaAlgoritmo extends ListCell<AlgoritmoTipo> {
+        @Override
+        protected void updateItem(AlgoritmoTipo t, boolean vazio) {
+            super.updateItem(t, vazio);
+            if (vazio || t == null) {
+                setText(null);
+                setGraphic(null);
+                return;
+            }
+            setText(t.nome());
+            Label c = Chip.de(t.complexidade().casoMedio(), null, t.quadratico() ? Chip.Variante.ALERTA : Chip.Variante.NEUTRO);
+            c.getStyleClass().add("chip-mono");
+            setGraphic(c);
+            setContentDisplay(javafx.scene.control.ContentDisplay.RIGHT);
+            setGraphicTextGap(10);
+        }
     }
 
     private void descreverAlgoritmo() {
         AlgoritmoTipo t = cbAlgoritmo.getValue();
         if (t == null) return;
         Complexidade c = t.complexidade();
-        lblAlgoritmo.setText(t.criar().descricao() + "\n\nMelhor: " + c.melhorCaso() + " · Médio: " + c.casoMedio()
-                + " · Pior: " + c.piorCaso() + "\nEspaço: " + c.espaco() + " · Estável: " + (c.estavel() ? "sim" : "não")
-                + (t.exigeChaveNumerica() ? "\nSó para critério numérico único (data, lat/lon, id)." : ""));
+        chipsAlgoritmo.getChildren().setAll(
+                chipMono("Médio " + c.casoMedio(), t.quadratico() ? Chip.Variante.ALERTA : Chip.Variante.DESTAQUE),
+                chipMono("Melhor " + c.melhorCaso(), Chip.Variante.NEUTRO),
+                chipMono("Pior " + c.piorCaso(), Chip.Variante.NEUTRO),
+                chipMono("Espaço " + c.espaco(), Chip.Variante.NEUTRO),
+                Chip.de(c.estavel() ? "Estável" : "Instável", c.estavel() ? Icones.SUCESSO : Icones.ALERTA,
+                        c.estavel() ? Chip.Variante.SUCESSO : Chip.Variante.NEUTRO));
+        lblDescricao.setText(DescricoesAlgoritmos.de(t) + (t.exigeChaveNumerica() ? " Só para um critério numérico (data, latitude, longitude, id)." : ""));
     }
 
-    private Criterios criterios() {
-        List<Criterios.Nivel> niveis = new ArrayList<>();
-        niveis.add(new Criterios.Nivel(porRotulo(cbCriterio1.getValue()), cbOrdem1.getValue()));
-        if (!NENHUM.equals(cbCriterio2.getValue())) niveis.add(new Criterios.Nivel(porRotulo(cbCriterio2.getValue()), cbOrdem2.getValue()));
-        if (!NENHUM.equals(cbCriterio3.getValue())) niveis.add(new Criterios.Nivel(porRotulo(cbCriterio3.getValue()), cbOrdem3.getValue()));
-        return Criterios.composto(niveis);
-    }
-
-    private static CriterioOrdenacao porRotulo(String r) {
-        for (CriterioOrdenacao c : CriterioOrdenacao.values()) if (c.rotulo().equals(r)) return c;
-        throw new IllegalArgumentException("Selecione um criterio de ordenacao.");
-    }
-
-    private List<FocoIncendio> dadosFiltrados() throws ApsException {
-        BaseDeFocos b = ctx.sessao().exigirBase();
-        String ano = cbAno.getValue(), bioma = cbBioma.getValue();
-        FiltroFocos f = new FiltroFocos(ano == null || ano.equals(TODOS) ? Set.of() : Set.of(Integer.parseInt(ano)),
-                bioma == null || bioma.equals(TODOS) ? Set.of() : Set.of(bioma), tfMunicipio.getText(), null, null);
-        List<FocoIncendio> r = b.filtrar(f);
-        if (r.isEmpty()) throw new ApsException("Nenhum foco atende ao filtro (" + f.descricao() + "). Ajuste os filtros.");
-        return r;
+    private static Label chipMono(String texto, Chip.Variante v) {
+        Label l = Chip.de(texto, null, v);
+        l.getStyleClass().add("chip-mono");
+        return l;
     }
 
     private int amostra() {
@@ -180,22 +356,55 @@ public class OrdenacaoController {
             if (n < 0) throw new NumberFormatException();
             return n;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Tamanho da amostra invalido: '" + tfAmostra.getText() + "'. Use um inteiro >= 0.");
+            throw new IllegalArgumentException("Tamanho da amostra inválido: '" + tfAmostra.getText() + "'. Use um inteiro ≥ 0 (0 = todos).");
         }
+    }
+
+    private void atualizarAviso() {
+        AlgoritmoTipo alg = cbAlgoritmo.getValue();
+        int total = ctx.focosFiltradosProperty().get().size();
+        String msg = null;
+        try {
+            int n = amostra();
+            int efetivo = n == 0 ? total : Math.min(n, total);
+            if (alg != null && alg.exigeChaveNumerica() && niveis.size() == 1 && !niveis.get(0).criterio.get().temChaveNumerica()
+                    || alg != null && alg.exigeChaveNumerica() && niveis.size() > 1) {
+                msg = alg.nome() + " não compara elementos: só ordena por UM critério numérico (Data/hora, Latitude, Longitude ou ID).";
+            } else if (alg != null) {
+                msg = ctx.sessao().servicoOrdenacao().avisoDesempenho(alg, efetivo);
+                if (msg == null && alg.quadratico() && efetivo > 5_000) {
+                    msg = alg.nome() + " é O(n²): com n = " + Formatos.inteiro(efetivo) + " fará cerca de "
+                            + Formatos.inteiro((long) efetivo * (efetivo - 1) / 2) + " comparações e pode levar alguns segundos. "
+                            + "É possível cancelar durante a execução.";
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            msg = e.getMessage();
+        }
+        banner.setVisible(msg != null);
+        banner.setManaged(msg != null);
+        lblBanner.setText(msg);
+    }
+
+    // ------------------------------------------------------------------ execucao
+
+    private List<FocoIncendio> dados() throws ApsException {
+        ctx.sessao().exigirBase();
+        List<FocoIncendio> r = ctx.focosFiltradosProperty().get();
+        if (r.isEmpty()) throw new ApsException("Nenhum foco atende aos filtros atuais. Remova algum filtro na barra acima.");
+        return r;
     }
 
     @FXML
     private void ordenar() {
         try {
-            List<FocoIncendio> dados = dadosFiltrados();
+            List<FocoIncendio> dados = dados();
             AlgoritmoTipo alg = cbAlgoritmo.getValue();
             Criterios crit = criterios();
             int n = amostra();
             int efetivo = n == 0 ? dados.size() : Math.min(n, dados.size());
             String aviso = ctx.sessao().servicoOrdenacao().avisoDesempenho(alg, efetivo);
-            if (aviso != null && !ctx.confirmar("Algoritmo quadrático", aviso + "\n\nDeseja continuar? (é possível cancelar durante a execução)")) {
-                return;
-            }
+            if (aviso != null && !ctx.confirmar("Algoritmo quadrático em amostra grande", aviso + "\n\nDeseja continuar?")) return;
             ServicoOrdenacao.Solicitacao s = new ServicoOrdenacao.Solicitacao(alg, crit, n, chkAleatoria.isSelected(),
                     cbCenario.getValue(), 42L);
             ctx.executar("Ordenando " + Formatos.inteiro(efetivo) + " focos com " + alg.nome(),
@@ -209,25 +418,38 @@ public class OrdenacaoController {
         ctx.sessao().setUltimaOrdenacao(r);
         tabela.setItems(FXCollections.observableArrayList(r.dados()));
         tabela.scrollTo(0);
-        lblResumo.setText(r.algoritmo() + " · " + r.criterio() + " · " + r.cenario() + " · n = " + Formatos.inteiro(r.tamanho()));
-        lblComparacoes.setText(Formatos.inteiro(r.metricas().comparacoes()));
-        lblTrocas.setText(Formatos.inteiro(r.metricas().trocas()));
-        lblAtribuicoes.setText(Formatos.inteiro(r.metricas().atribuicoes()));
-        lblAcessos.setText(Formatos.inteiro(r.metricas().acessos()));
-        lblTempo.setText(Formatos.duracao(r.metricas().nanos()));
-        lblVerificacao.setText(r.verificado() ? "✔ ordenado" : "✘ falhou");
-        abasResultado.getSelectionModel().selectFirst();
+        lblTitulo.setText(r.algoritmo());
+        lblResumo.setText(r.criterio() + "  ·  " + r.cenario() + "  ·  n = " + Formatos.inteiro(r.tamanho()) + " focos");
+        AlgoritmoTipo t = cbAlgoritmo.getValue();
+        chipsResultado.getChildren().setAll(
+                chipMono(t.complexidade().casoMedio(), t.quadratico() ? Chip.Variante.ALERTA : Chip.Variante.DESTAQUE),
+                r.verificado() ? Chip.de("Ordenação verificada", Icones.VERIFICADO, Chip.Variante.SUCESSO)
+                        : Chip.de("Falha na verificação", Icones.ERRO, Chip.Variante.PERIGO));
+        long n = r.tamanho();
+        mComparacoes.valor(Formatos.inteiro(r.metricas().comparacoes()))
+                .contexto(n < 2 ? "—" : Formatos.decimal(r.metricas().comparacoes() / (n * Math.log(n) / Math.log(2)), 2) + " × n·log₂n",
+                        KpiCard.Tendencia.NEUTRA);
+        mTrocas.valor(Formatos.inteiro(r.metricas().trocas()))
+                .contexto(Formatos.inteiro(r.metricas().atribuicoes()) + " atribuições", KpiCard.Tendencia.NEUTRA);
+        mAcessos.valor(Formatos.inteiro(r.metricas().acessos()))
+                .contexto(Formatos.inteiro(r.metricas().leituras()) + " leituras", KpiCard.Tendencia.NEUTRA);
+        mTempo.valor(Formatos.duracao(r.metricas().nanos()))
+                .contexto("execução única", KpiCard.Tendencia.NEUTRA)
+                .dica("Uma execução, sem aquecimento do JIT; para medições rigorosas use a tela Benchmark.");
+        tgDados.setSelected(true);
+        mostrarVisao();
+        Feedback.sucesso("Ordenação concluída", r.algoritmo() + " · " + Formatos.inteiro(r.metricas().comparacoes()) + " comparações");
     }
 
     @FXML
     private void compararTodos() {
         try {
-            List<FocoIncendio> dados = dadosFiltrados();
+            List<FocoIncendio> dados = dados();
             Criterios crit = criterios();
             int n = amostra();
             CenarioEntrada cen = cbCenario.getValue();
             boolean aleatoria = chkAleatoria.isSelected();
-            ctx.executar("Comparando todos os algoritmos", (progresso) -> {
+            ctx.executar("Comparando todos os algoritmos", progresso -> {
                 List<ResultadoOrdenacao<FocoIncendio>> r = new ArrayList<>();
                 AlgoritmoTipo[] tipos = AlgoritmoTipo.values();
                 for (int i = 0; i < tipos.length; i++) {
@@ -235,51 +457,163 @@ public class OrdenacaoController {
                     AlgoritmoTipo t = tipos[i];
                     progresso.accept((double) i / tipos.length, t.nome());
                     if (t.exigeChaveNumerica() && crit.chaveNumerica() == null) continue;
-                    r.add(ctx.sessao().servicoOrdenacao().ordenar(dados,
-                            new ServicoOrdenacao.Solicitacao(t, crit, n, aleatoria, cen, 42L)));
+                    r.add(ctx.sessao().servicoOrdenacao().ordenar(dados, new ServicoOrdenacao.Solicitacao(t, crit, n, aleatoria, cen, 42L)));
                 }
                 return r;
             }, r -> {
                 comparativo = r;
                 ctx.sessao().setUltimoComparativo(r);
                 tabelaComparativo.setItems(FXCollections.observableArrayList(r));
-                desenharComparativo();
-                abasResultado.getSelectionModel().select(abaComparativo);
-                if (!r.isEmpty()) {
-                    lblResumo.setText("Comparativo · " + r.get(0).criterio() + " · " + r.get(0).cenario() + " · n = "
-                            + Formatos.inteiro(r.get(0).tamanho()) + " (execução única, sem aquecimento do JIT)");
-                }
+                atualizarComparativo();
+                tgComparativo.setSelected(true);
+                mostrarVisao();
+                Feedback.sucesso("Comparativo concluído", r.size() + " algoritmos sobre a mesma entrada");
             });
         } catch (ApsException | IllegalArgumentException e) {
             ctx.erro("Não foi possível comparar", e);
         }
     }
 
-    private void desenharComparativo() {
-        graficoComparativo.getData().clear();
-        if (comparativo.isEmpty()) return;
-        String m = cbMetrica.getValue();
-        boolean log = chkLog.isSelected();
-        XYChart.Series<String, Number> s = new XYChart.Series<>();
-        for (ResultadoOrdenacao<FocoIncendio> r : comparativo) {
-            double v = switch (m) {
-                case "Trocas" -> r.metricas().trocas();
-                case "Atribuições" -> r.metricas().atribuicoes();
-                case "Acessos" -> r.metricas().acessos();
-                case "Tempo (ms)" -> r.metricas().millis();
-                default -> r.metricas().comparacoes();
-            };
-            s.getData().add(new XYChart.Data<>(r.algoritmo(), log ? Math.log10(Math.max(1, v)) : v));
+    // ------------------------------------------------------------------ visoes
+
+    private void configurarVisoes() {
+        ToggleGroup g = new ToggleGroup();
+        for (ToggleButton t : List.of(tgDados, tgComparativo, tgVisualizar)) t.setToggleGroup(g);
+        tgDados.setGraphic(Icones.de(Icones.TABELA, 15));
+        tgComparativo.setGraphic(Icones.de(Icones.COMPARAR, 15));
+        tgVisualizar.setGraphic(Icones.de(Icones.ANIMAR, 15));
+        g.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) a.setSelected(true);
+            else mostrarVisao();
+        });
+
+        cardComparativo = new ChartCard("Comparativo de algoritmos", "Mesma entrada para todos; menor é melhor. Execução única, sem aquecimento do JIT.");
+        HBox seg = new HBox();
+        seg.getStyleClass().add("segmented");
+        for (String m : List.of("Comparações", "Trocas", "Acessos", "Tempo")) {
+            ToggleButton t = new ToggleButton(m);
+            t.setToggleGroup(metrica);
+            t.setUserData(m);
+            seg.getChildren().add(t);
         }
-        graficoComparativo.setTitle(m + (log ? " (log10)" : ""));
-        graficoComparativo.getData().add(s);
+        metrica.getToggles().get(0).setSelected(true);
+        metrica.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) a.setSelected(true);
+            else atualizarComparativo();
+        });
+        cardComparativo.setExtra(seg);
+        cardComparativo.conteudo(barrasComparativo);
+        cardComparativo.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+        tabelaComparativo.setMinHeight(160);
+        cardComparativo.estado(ChartCard.Estado.VAZIO);
+        ctx.registrarGrafico("Comparativo de algoritmos", cardComparativo);
+        tabelaComparativo.setPrefHeight(300);
+        VBox.setVgrow(tabelaComparativo, Priority.ALWAYS);
+        painelComparativo.getChildren().addAll(cardComparativo, tabelaComparativo);
+
+        Label t = new Label("Visualização animada");
+        t.getStyleClass().add("card-title");
+        Label s = new Label("32 valores aleatórios ordenados pelo algoritmo escolhido. Cada passo é uma operação registrada pelo "
+                + "InstrumentedArray: azul = comparação, brasa = troca/escrita, verde = concluído.");
+        s.getStyleClass().add("card-subtitle");
+        s.setWrapText(true);
+        lblVisualAlg.getStyleClass().addAll("chip", "chip-accent");
+        lblVisualAlg.setText(cbAlgoritmo.getValue().nome());
+        Region esp = new Region();
+        HBox.setHgrow(esp, Priority.ALWAYS);
+        HBox cab = new HBox(10, new VBox(2, t, s), esp, lblVisualAlg);
+        VBox.setVgrow(visualizador, Priority.ALWAYS);
+        painelVisualizacao.getChildren().addAll(cab, visualizador);
+        visualizador.setAlgoritmo(cbAlgoritmo.getValue());
+    }
+
+    private void mostrarVisao() {
+        tabela.setVisible(tgDados.isSelected());
+        painelComparativo.setVisible(tgComparativo.isSelected());
+        painelVisualizacao.setVisible(tgVisualizar.isSelected());
+        if (!tgVisualizar.isSelected()) visualizador.parar();
+    }
+
+    private void atualizarComparativo() {
+        if (comparativo.isEmpty()) {
+            barrasComparativo.getChildren().clear();
+            cardComparativo.estado(ChartCard.Estado.VAZIO);
+            return;
+        }
+        String m = (String) metrica.getSelectedToggle().getUserData();
+        List<ResultadoOrdenacao<FocoIncendio>> ord = new ArrayList<>(comparativo);
+        Ordenacoes.ordenar(ord, (a, b) -> Double.compare(valor(a, m), valor(b, m)));
+        List<BarrasHorizontais.Item> itens = new ArrayList<>();
+        for (int i = 0; i < ord.size(); i++) {
+            ResultadoOrdenacao<FocoIncendio> r = ord.get(i);
+            double v = valor(r, m);
+            String txt = m.equals("Tempo") ? Formatos.duracao(r.metricas().nanos()) : Formatos.inteiro((long) v);
+            itens.add(new BarrasHorizontais.Item(r.algoritmo(), v, txt, i == 0 ? "" : "suave", i == 0,
+                    r.algoritmo() + " — " + m.toLowerCase() + ": " + txt + (i == 0 ? " (melhor)" : "")));
+        }
+        barrasComparativo.setItens(itens);
+        cardComparativo.setSubtitulo(ord.get(0).criterio() + " · " + ord.get(0).cenario() + " · n = "
+                + Formatos.inteiro(ord.get(0).tamanho()) + " · menor é melhor (destaque = vencedor)");
+        List<String[]> linhas = new ArrayList<>();
+        for (ResultadoOrdenacao<FocoIncendio> r : ord) {
+            linhas.add(new String[]{r.algoritmo(), Formatos.inteiro(r.metricas().comparacoes()), Formatos.inteiro(r.metricas().trocas()),
+                    Formatos.inteiro(r.metricas().acessos()), Formatos.duracao(r.metricas().nanos())});
+        }
+        cardComparativo.setDados(new String[]{"Algoritmo", "Comparações", "Trocas", "Acessos", "Tempo"}, () -> linhas);
+        cardComparativo.estado(ChartCard.Estado.CONTEUDO);
+    }
+
+    private static double valor(ResultadoOrdenacao<FocoIncendio> r, String m) {
+        return switch (m) {
+            case "Trocas" -> r.metricas().trocas();
+            case "Acessos" -> r.metricas().acessos();
+            case "Tempo" -> r.metricas().nanos();
+            default -> r.metricas().comparacoes();
+        };
+    }
+
+    // ------------------------------------------------------------------ tabelas
+
+    private void configurarTabelas() {
+        Tabelas.preparar(tabela, "Execute uma ordenação para ver os focos ordenados aqui.");
+        tabela.getColumns().add(Tabelas.indice());
+        var colData = Tabelas.coluna("Data/hora (GMT)", (FocoIncendio f) -> f.getDataHora().format(Formatos.DATA_HORA), 150);
+        colData.setMinWidth(150);
+        tabela.getColumns().add(colData);
+        tabela.getColumns().add(Tabelas.coluna("Município", FocoIncendio::getMunicipio, 200));
+        tabela.getColumns().add(Tabelas.bioma("Bioma", FocoIncendio::getBioma, 160));
+        tabela.getColumns().add(Tabelas.numero("Latitude", FocoIncendio::getLatitude, v -> Formatos.decimal(v, 5), 105));
+        tabela.getColumns().add(Tabelas.numero("Longitude", FocoIncendio::getLongitude, v -> Formatos.decimal(v, 5), 105));
+        tabela.getColumns().add(Tabelas.numero("id_bdq", FocoIncendio::getIdBdq, String::valueOf, 115));
+
+        Tabelas.preparar(tabelaComparativo, "Clique em \"Comparar todos os algoritmos\".");
+        tabelaComparativo.getColumns().add(Tabelas.coluna("Algoritmo", (ResultadoOrdenacao<FocoIncendio> r) -> r.algoritmo(), 180));
+        tabelaComparativo.getColumns().add(Tabelas.numero("Comparações", r -> r.metricas().comparacoes(), Formatos::inteiro, 120));
+        tabelaComparativo.getColumns().add(Tabelas.numero("Trocas", r -> r.metricas().trocas(), Formatos::inteiro, 110));
+        tabelaComparativo.getColumns().add(Tabelas.numero("Atribuições", r -> r.metricas().atribuicoes(), Formatos::inteiro, 120));
+        tabelaComparativo.getColumns().add(Tabelas.numero("Acessos", r -> r.metricas().acessos(), Formatos::inteiro, 120));
+        tabelaComparativo.getColumns().add(Tabelas.numero("Tempo (ms)", r -> r.metricas().millis(), v -> Formatos.decimal(v, 3), 100));
+        tabelaComparativo.getColumns().add(Tabelas.coluna("Estável", r -> estavel(r.algoritmo()), 80));
+        tabelaComparativo.getColumns().add(Tabelas.coluna("Verificado", r -> r.verificado() ? "✔ sim" : "✘ falha", 90));
+    }
+
+    private void configurarMetricas() {
+        for (KpiCard k : List.of(mComparacoes, mTrocas, mAcessos, mTempo)) k.valor("—").contexto("aguardando execução", KpiCard.Tendencia.NEUTRA);
+        mComparacoes.icone(KpiCard.EstiloIcone.DESTAQUE);
+    }
+
+    private static String estavel(String nome) {
+        for (AlgoritmoTipo t : AlgoritmoTipo.values()) {
+            if (t.nome().equals(nome)) return t.complexidade().estavel() ? "sim" : "não";
+        }
+        return "?";
     }
 
     @FXML
     private void exportarCsv() {
         ResultadoOrdenacao<FocoIncendio> r = ctx.sessao().ultimaOrdenacao();
         if (r == null) {
-            ctx.aviso("Nada para exportar", "Execute uma ordenação primeiro.");
+            Feedback.alerta("Nada para exportar", "Execute uma ordenação primeiro.");
             return;
         }
         FileChooser fc = new FileChooser();
@@ -291,18 +625,31 @@ public class OrdenacaoController {
         File f = fc.showSaveDialog(ctx.stage());
         if (f == null) return;
         ctx.executar("Exportando CSV", () -> ctx.sessao().exporter().exportarFocosCsv(r.dados(), f.toPath()),
-                p -> ctx.info("CSV gravado", p.toAbsolutePath().toString()));
+                p -> Feedback.sucesso("CSV exportado", p.getFileName().toString()));
     }
 
-    /** Consulta de propriedades por nome de algoritmo (para a tabela comparativa). */
-    static final class SortInfo {
-        private SortInfo() { }
+    @Override
+    public void demonstrar(Runnable concluido) {
+        niveis.setAll(new NivelEditavel(CriterioOrdenacao.BIOMA, Ordem.CRESCENTE),
+                new NivelEditavel(CriterioOrdenacao.MUNICIPIO, Ordem.CRESCENTE),
+                new NivelEditavel(CriterioOrdenacao.DATA, Ordem.DECRESCENTE));
+        cbAlgoritmo.getSelectionModel().select(AlgoritmoTipo.QUICK_3WAY);
+        ordenar();
+        concluido.run();
+    }
 
-        static String estavel(String nome) {
-            for (AlgoritmoTipo t : AlgoritmoTipo.values()) {
-                if (t.nome().equals(nome)) return t.complexidade().estavel() ? "sim" : "não";
-            }
-            return "?";
-        }
+    /** Usado pela captura de telas para mostrar o comparativo. */
+    void demonstrarComparativo(Runnable concluido) {
+        compararTodos();
+        concluido.run();
+    }
+
+    /** Usado pela captura de telas: abre a visualizacao animada e inicia a reproducao. */
+    void demonstrarVisualizacao() {
+        cbAlgoritmo.getSelectionModel().select(AlgoritmoTipo.QUICK);
+        tgVisualizar.setSelected(true);
+        mostrarVisao();
+        visualizador.setAlgoritmo(AlgoritmoTipo.QUICK);
+        visualizador.reproduzir();
     }
 }

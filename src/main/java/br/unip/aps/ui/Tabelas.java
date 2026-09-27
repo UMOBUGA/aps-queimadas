@@ -1,18 +1,41 @@
 package br.unip.aps.ui;
 
+import br.unip.aps.ui.componentes.Graficos;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.Region;
 
 import java.util.function.Function;
 
 /**
- * Atalhos para montar colunas de {@link TableView} por codigo.
+ * Fabrica de colunas para as tabelas do design system ({@code .data-table}): numeros alinhados a
+ * direita em pt-BR, coluna de indice, badges de bioma e tabelas com estado vazio amigavel.
+ *
+ * <p>A ordenacao por clique no cabecalho fica desabilitada: o {@code TableView} ordena com
+ * {@code FXCollections.sort} (Collections.sort) internamente; toda ordenacao exibida vem dos
+ * algoritmos do projeto.</p>
  */
 final class Tabelas {
 
     private Tabelas() { }
+
+    /**
+     * Prepara uma tabela no estilo do design system.
+     *
+     * @param t           tabela
+     * @param placeholder texto quando vazia
+     * @param <S>         tipo das linhas
+     */
+    static <S> void preparar(TableView<S> t, String placeholder) {
+        if (!t.getStyleClass().contains("data-table")) t.getStyleClass().add("data-table");
+        Label l = new Label(placeholder);
+        l.getStyleClass().add("t-subtle");
+        t.setPlaceholder(l);
+        t.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_SUBSEQUENT_COLUMNS);
+    }
 
     /**
      * @param titulo  cabecalho
@@ -26,39 +49,44 @@ final class Tabelas {
         TableColumn<S, T> c = new TableColumn<>(titulo);
         c.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue() == null ? null : valor.apply(cd.getValue())));
         c.setPrefWidth(largura);
-        // A ordenacao por clique no cabecalho do TableView usa FXCollections.sort (Collections.sort) internamente;
-        // fica desabilitada para que toda ordenacao exibida venha dos algoritmos do projeto.
+        c.setMinWidth(largura * 0.85);
         c.setSortable(false);
+        c.setReorderable(false);
         return c;
     }
 
     /**
-     * Coluna numerica alinhada a direita com formatacao propria (ordenavel pelo valor numerico).
+     * Coluna numerica alinhada a direita com formatacao propria.
      *
-     * @param titulo    cabecalho
-     * @param valor     extrator
-     * @param formatar  formatacao do texto
-     * @param largura   largura
-     * @param <S>       tipo da linha
-     * @param <T>       tipo numerico
+     * @param titulo   cabecalho
+     * @param valor    extrator
+     * @param formatar formatacao do texto
+     * @param largura  largura
+     * @param <S>      tipo da linha
+     * @param <T>      tipo numerico
      * @return coluna
      */
     static <S, T extends Number> TableColumn<S, T> numero(String titulo, Function<S, T> valor,
                                                            Function<T, String> formatar, double largura) {
         TableColumn<S, T> c = coluna(titulo, valor, largura);
+        c.setMinWidth(largura * 0.9);
+        c.getStyleClass().add("numerica");
         c.setCellFactory(col -> new TableCell<>() {
+            {
+                getStyleClass().add("numerica");
+            }
+
             @Override
             protected void updateItem(T item, boolean vazio) {
                 super.updateItem(item, vazio);
                 setText(vazio || item == null ? null : formatar.apply(item));
             }
         });
-        c.setStyle("-fx-alignment: CENTER-RIGHT;");
         return c;
     }
 
     /**
-     * Coluna com a posicao (1, 2, 3...) da linha na tabela.
+     * Coluna com a posicao (1, 2, 3...) da linha.
      *
      * @param <S> tipo da linha
      * @return coluna de indice
@@ -66,15 +94,52 @@ final class Tabelas {
     static <S> TableColumn<S, Void> indice() {
         TableColumn<S, Void> c = new TableColumn<>("#");
         c.setSortable(false);
+        c.setReorderable(false);
         c.setPrefWidth(64);
+        c.setMaxWidth(90);
+        c.getStyleClass().add("numerica");
         c.setCellFactory(col -> new TableCell<>() {
+            {
+                getStyleClass().add("indice");
+            }
+
             @Override
             protected void updateItem(Void item, boolean vazio) {
                 super.updateItem(item, vazio);
-                setText(vazio ? null : String.valueOf(getIndex() + 1));
+                setText(vazio ? null : br.unip.aps.util.Formatos.inteiro(getIndex() + 1));
             }
         });
-        c.setStyle("-fx-alignment: CENTER-RIGHT;");
+        return c;
+    }
+
+    /**
+     * Coluna de bioma exibida como badge com ponto colorido (cor fixa do bioma).
+     *
+     * @param titulo  cabecalho
+     * @param valor   extrator do nome do bioma
+     * @param largura largura
+     * @param <S>     tipo da linha
+     * @return coluna
+     */
+    static <S> TableColumn<S, String> bioma(String titulo, Function<S, String> valor, double largura) {
+        TableColumn<S, String> c = coluna(titulo, valor, largura);
+        c.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean vazio) {
+                super.updateItem(item, vazio);
+                if (vazio || item == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                Region ponto = new Region();
+                ponto.getStyleClass().addAll("ponto-bioma", Graficos.classeBioma(item));
+                Label l = new Label(item, ponto);
+                l.getStyleClass().addAll("badge", "badge-bioma");
+                setGraphic(l);
+                setText(null);
+            }
+        });
         return c;
     }
 }

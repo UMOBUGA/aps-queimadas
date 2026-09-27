@@ -1,107 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import br.unip.aps.ui.componentes.GradeResponsiva?>
+<?import br.unip.aps.ui.componentes.KpiCard?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.BarChart?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<SplitPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="br.unip.aps.ui.OrdenacaoController" dividerPositions="0.25" styleClass="aba">
-    <ScrollPane fitToWidth="true" minWidth="300" maxWidth="420">
-        <VBox spacing="8" styleClass="painel-lateral">
-            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
-            <Label text="Critério de ordenação" styleClass="secao"/>
-            <GridPane hgap="6" vgap="6">
-                <Label text="1º" GridPane.rowIndex="0"/>
-                <ComboBox fx:id="cbCriterio1" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="170"/>
-                <ComboBox fx:id="cbOrdem1" GridPane.columnIndex="2" GridPane.rowIndex="0" prefWidth="110"/>
-                <Label text="2º" GridPane.rowIndex="1"/>
-                <ComboBox fx:id="cbCriterio2" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="170"/>
-                <ComboBox fx:id="cbOrdem2" GridPane.columnIndex="2" GridPane.rowIndex="1" prefWidth="110"/>
-                <Label text="3º" GridPane.rowIndex="2"/>
-                <ComboBox fx:id="cbCriterio3" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="170"/>
-                <ComboBox fx:id="cbOrdem3" GridPane.columnIndex="2" GridPane.rowIndex="2" prefWidth="110"/>
-            </GridPane>
-            <Label text="O 2º e o 3º critérios só desempatam o anterior (thenComparing)." wrapText="true" styleClass="texto-suave"/>
+<!-- Ordenacao: configuracao a esquerda, resultado a direita -->
+<HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="br.unip.aps.ui.OrdenacaoController" spacing="16" styleClass="page">
 
+    <ScrollPane fitToWidth="true" minWidth="340" prefWidth="360" maxWidth="380" hbarPolicy="NEVER">
+        <VBox styleClass="panel-card" spacing="14">
+            <VBox spacing="2">
+                <Label text="Configuração" styleClass="card-title"/>
+                <Label text="Os filtros globais acima também se aplicam aos dados ordenados." styleClass="card-subtitle" wrapText="true"/>
+            </VBox>
             <Separator/>
-            <Label text="Algoritmo" styleClass="secao"/>
+
+            <Label text="CRITÉRIOS (ARRASTE PARA REORDENAR)" styleClass="section-label"/>
+            <ListView fx:id="lvCriterios" styleClass="lista-criterios" prefHeight="136" minHeight="60"/>
+            <Button fx:id="btnAdicionar" text="Adicionar critério" onAction="#adicionarCriterio" styleClass="btn-ghost"/>
+            <Label text="O 2º e o 3º critérios apenas desempatam o anterior (thenComparing)." styleClass="t-caption" wrapText="true"/>
+            <Separator/>
+
+            <Label text="ALGORITMO" styleClass="section-label"/>
             <ComboBox fx:id="cbAlgoritmo" maxWidth="Infinity"/>
-            <Label fx:id="lblAlgoritmo" wrapText="true" styleClass="info-algoritmo"/>
-
+            <FlowPane fx:id="chipsAlgoritmo" hgap="6" vgap="6"/>
+            <Label fx:id="lblDescricao" styleClass="t-small" wrapText="true"/>
             <Separator/>
-            <Label text="Entrada" styleClass="secao"/>
-            <HBox spacing="6" alignment="CENTER_LEFT">
-                <Label text="Tamanho (0 = todos):"/>
-                <TextField fx:id="tfAmostra" text="0" prefWidth="90"/>
+
+            <Label text="ENTRADA" styleClass="section-label"/>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Tamanho da amostra" styleClass="field-label"/>
+                <TextField fx:id="tfAmostra" text="0" prefWidth="96" promptText="0 = todos"/>
             </HBox>
-            <CheckBox fx:id="chkAleatoria" text="Sortear amostra (semente fixa)" selected="true"/>
-            <Label fx:id="lblAmostra" styleClass="texto-suave"/>
-            <Label text="Disposição inicial:"/>
+            <HBox spacing="6">
+                <ToggleButton fx:id="tg1000" text="1.000" styleClass="chip-toggle"/>
+                <ToggleButton fx:id="tg5000" text="5.000" styleClass="chip-toggle"/>
+                <ToggleButton fx:id="tgTodos" text="Todos" styleClass="chip-toggle" selected="true"/>
+            </HBox>
+            <CheckBox fx:id="chkAleatoria" text="Sortear a amostra (semente fixa 42)" selected="true"/>
+            <Label text="Disposição inicial" styleClass="field-label"/>
             <ComboBox fx:id="cbCenario" maxWidth="Infinity"/>
-
             <Separator/>
-            <Label text="Filtros (aplicados antes de ordenar)" styleClass="secao"/>
-            <HBox spacing="6" alignment="CENTER_LEFT">
-                <Label text="Ano:"/>
-                <ComboBox fx:id="cbAno" prefWidth="100"/>
-                <Label text="Bioma:"/>
-                <ComboBox fx:id="cbBioma" prefWidth="130"/>
-            </HBox>
-            <TextField fx:id="tfMunicipio" promptText="Município contém…"/>
-
-            <Separator/>
-            <Button text="Ordenar e exibir" onAction="#ordenar" maxWidth="Infinity" styleClass="botao-primario" defaultButton="true"/>
-            <Button text="Comparar todos os algoritmos" onAction="#compararTodos" maxWidth="Infinity"/>
-            <Button text="Exportar dados ordenados (CSV)" onAction="#exportarCsv" maxWidth="Infinity"/>
+            <Button text="Ordenar e exibir" onAction="#ordenar" maxWidth="Infinity" styleClass="btn-primary" defaultButton="true" fx:id="btnOrdenar"/>
+            <Button text="Comparar todos os algoritmos" onAction="#compararTodos" maxWidth="Infinity" styleClass="btn-secondary" fx:id="btnComparar"/>
+            <Button text="Exportar dados ordenados (CSV)" onAction="#exportarCsv" maxWidth="Infinity" styleClass="btn-ghost" fx:id="btnCsv"/>
         </VBox>
     </ScrollPane>
 
-    <VBox spacing="8">
-        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-        <Label fx:id="lblResumo" styleClass="secao" wrapText="true" text="Escolha critério e algoritmo e clique em &quot;Ordenar e exibir&quot;."/>
-        <FlowPane hgap="8" vgap="8">
-            <VBox styleClass="kpi"><Label text="Comparações" styleClass="kpi-titulo"/><Label fx:id="lblComparacoes" text="—" styleClass="kpi-valor"/></VBox>
-            <VBox styleClass="kpi"><Label text="Trocas" styleClass="kpi-titulo"/><Label fx:id="lblTrocas" text="—" styleClass="kpi-valor"/></VBox>
-            <VBox styleClass="kpi"><Label text="Atribuições" styleClass="kpi-titulo"/><Label fx:id="lblAtribuicoes" text="—" styleClass="kpi-valor"/></VBox>
-            <VBox styleClass="kpi"><Label text="Acessos ao array" styleClass="kpi-titulo"/><Label fx:id="lblAcessos" text="—" styleClass="kpi-valor"/></VBox>
-            <VBox styleClass="kpi"><Label text="Tempo" styleClass="kpi-titulo"/><Label fx:id="lblTempo" text="—" styleClass="kpi-valor"/></VBox>
-            <VBox styleClass="kpi"><Label text="Verificação" styleClass="kpi-titulo"/><Label fx:id="lblVerificacao" text="—" styleClass="kpi-valor"/></VBox>
-        </FlowPane>
-        <TabPane fx:id="abasResultado" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-            <Tab text="Dados ordenados">
-                <TableView fx:id="tabela"/>
-            </Tab>
-            <Tab fx:id="abaComparativo" text="Comparativo de algoritmos">
-                <VBox spacing="6">
-                    <padding><Insets top="6" right="6" bottom="6" left="6"/></padding>
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Métrica do gráfico:"/>
-                        <ComboBox fx:id="cbMetrica"/>
-                        <CheckBox fx:id="chkLog" text="Escala log10"/>
-                    </HBox>
-                    <BarChart fx:id="graficoComparativo" animated="false" legendVisible="false" prefHeight="300" VBox.vgrow="ALWAYS">
-                        <xAxis><CategoryAxis/></xAxis>
-                        <yAxis><NumberAxis/></yAxis>
-                    </BarChart>
-                    <TableView fx:id="tabelaComparativo" prefHeight="260"/>
-                </VBox>
-            </Tab>
-        </TabPane>
+    <VBox spacing="14" HBox.hgrow="ALWAYS">
+        <VBox styleClass="panel-card" spacing="8">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label fx:id="lblTitulo" text="Nenhuma ordenação executada" styleClass="card-title"/>
+                <HBox fx:id="chipsResultado" spacing="6" alignment="CENTER_LEFT"/>
+            </HBox>
+            <Label fx:id="lblResumo" text="Escolha critério e algoritmo e clique em &quot;Ordenar e exibir&quot;." styleClass="card-subtitle" wrapText="true"/>
+            <HBox fx:id="banner" styleClass="banner, banner-warning" visible="false" managed="false">
+                <Label fx:id="lblBanner" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            </HBox>
+        </VBox>
+
+        <GradeResponsiva larguraMinima="170" maxColunas="4" gap="12">
+            <KpiCard fx:id="mComparacoes" titulo="Comparações" icone="mdi2c-counter"/>
+            <KpiCard fx:id="mTrocas" titulo="Trocas" icone="mdi2s-swap-horizontal"/>
+            <KpiCard fx:id="mAcessos" titulo="Acessos" icone="mdi2d-database-outline"/>
+            <KpiCard fx:id="mTempo" titulo="Tempo" icone="mdi2t-timer-outline"/>
+        </GradeResponsiva>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <HBox styleClass="segmented" fx:id="segVisoes">
+                <ToggleButton fx:id="tgDados" text="Dados ordenados" selected="true"/>
+                <ToggleButton fx:id="tgComparativo" text="Comparativo"/>
+                <ToggleButton fx:id="tgVisualizar" text="Visualização animada"/>
+            </HBox>
+        </HBox>
+
+        <StackPane fx:id="areaVisoes" VBox.vgrow="ALWAYS" minHeight="320" alignment="TOP_LEFT">
+            <TableView fx:id="tabela"/>
+            <VBox fx:id="painelComparativo" spacing="12" visible="false"/>
+            <VBox fx:id="painelVisualizacao" spacing="12" visible="false" styleClass="chart-card"/>
+        </StackPane>
     </VBox>
-</SplitPane>
+</HBox>

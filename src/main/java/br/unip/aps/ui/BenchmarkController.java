@@ -4,57 +4,81 @@ import br.unip.aps.benchmark.AnaliseComplexidade;
 import br.unip.aps.benchmark.BenchmarkConfig;
 import br.unip.aps.benchmark.BenchmarkResult;
 import br.unip.aps.benchmark.BenchmarkRunner;
+import br.unip.aps.io.CsvParser;
 import br.unip.aps.model.BaseDeFocos;
 import br.unip.aps.sorting.AlgoritmoTipo;
 import br.unip.aps.sorting.CenarioEntrada;
 import br.unip.aps.sorting.CriterioOrdenacao;
 import br.unip.aps.sorting.Ordenacoes;
+import br.unip.aps.ui.componentes.ChartCard;
+import br.unip.aps.ui.componentes.Feedback;
+import br.unip.aps.ui.componentes.Graficos;
+import br.unip.aps.ui.componentes.Icones;
 import br.unip.aps.util.Formatos;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Aba "Benchmark": configura e executa a bateria de medicoes e exibe custo x n por algoritmo,
- * com curvas teoricas n²/2 e n·log2(n) e a estimativa empirica do expoente de crescimento.
+ * Tela "Benchmark": configura e executa a bateria de medicoes e mostra custo x n em dois graficos
+ * (O(n²) e O(n log n)/lineares), com escala linear/log, curvas teoricas tracejadas, vencedores
+ * por criterio/cenario e a complexidade empirica. Tambem abre resultados salvos em CSV.
  */
-public class BenchmarkController {
+public class BenchmarkController implements Pagina.Controlador {
+
+    /** Cor fixa (classe .serie-N) de cada algoritmo dentro do seu grafico. */
+    private static final Map<AlgoritmoTipo, String> SERIE = new EnumMap<>(Map.of(
+            AlgoritmoTipo.BUBBLE, "serie-1", AlgoritmoTipo.SELECTION, "serie-2", AlgoritmoTipo.INSERTION, "serie-3",
+            AlgoritmoTipo.SHELL, "serie-1", AlgoritmoTipo.MERGE, "serie-2", AlgoritmoTipo.QUICK, "serie-3",
+            AlgoritmoTipo.QUICK_3WAY, "serie-4", AlgoritmoTipo.HEAP, "serie-5", AlgoritmoTipo.TIM, "serie-6",
+            AlgoritmoTipo.RADIX, "serie-7"));
+
+    /** Linha da tabela de vencedores. */
+    public record Vencedor(String criterio, String cenario, int n, String algoritmo, double mediaMs, String segundo, String ultimo) { }
 
     private final UiContexto ctx;
 
-    @FXML private VBox boxAlgoritmos, boxCriterios, boxCenarios;
+    @FXML private FlowPane fpAlgoritmos, fpCriterios, fpCenarios;
     @FXML private TextField tfTamanhos;
     @FXML private Spinner<Integer> spAquecimentos, spRepeticoes;
-    @FXML private ComboBox<CriterioOrdenacao> cbCriterio;
-    @FXML private ComboBox<CenarioEntrada> cbCenario;
-    @FXML private ComboBox<String> cbMetrica;
-    @FXML private CheckBox chkLog, chkTeoricas;
-    @FXML private LineChart<Number, Number> grafico;
-    @FXML private NumberAxis eixoY;
+    @FXML private Button btnSalvos, btnRapida, btnExecutar;
+    @FXML private HBox segCriterio, segCenario, segMetrica, segEscala;
+    @FXML private ChartCard cQuadraticos, cLogLineares, cVencedores, cComplexidade;
     @FXML private TableView<BenchmarkResult> tabela;
-    @FXML private TableView<AnaliseComplexidade.Estimativa> tabelaComplexidade;
 
-    private final Map<AlgoritmoTipo, CheckBox> chkAlgoritmos = new LinkedHashMap<>();
-    private final Map<CriterioOrdenacao, CheckBox> chkCriterios = new LinkedHashMap<>();
-    private final Map<CenarioEntrada, CheckBox> chkCenarios = new LinkedHashMap<>();
+    private final Map<AlgoritmoTipo, ToggleButton> tgAlgoritmos = new EnumMap<>(AlgoritmoTipo.class);
+    private final Map<CriterioOrdenacao, ToggleButton> tgCriterios = new EnumMap<>(CriterioOrdenacao.class);
+    private final Map<CenarioEntrada, ToggleButton> tgCenarios = new EnumMap<>(CenarioEntrada.class);
+    private final ToggleGroup gCriterio = new ToggleGroup(), gCenario = new ToggleGroup(), gMetrica = new ToggleGroup(), gEscala = new ToggleGroup();
+    private final LineChart<Number, Number> grafQuad = grafico();
+    private final LineChart<Number, Number> grafLog = grafico();
+    private final TableView<Vencedor> tabVencedores = new TableView<>();
+    private final TableView<AnaliseComplexidade.Estimativa> tabComplexidade = new TableView<>();
     private List<BenchmarkResult> resultados = List.of();
 
     /** @param ctx contexto injetado */
@@ -62,83 +86,100 @@ public class BenchmarkController {
         this.ctx = ctx;
     }
 
+    private static LineChart<Number, Number> grafico() {
+        NumberAxis x = new NumberAxis();
+        x.setLabel("n (tamanho da entrada)");
+        x.setForceZeroInRange(false);
+        NumberAxis y = new NumberAxis();
+        y.setForceZeroInRange(false);
+        LineChart<Number, Number> c = new LineChart<>(x, y);
+        c.setLegendVisible(false);
+        c.setAnimated(false);
+        c.setCreateSymbols(true);
+        c.setVerticalGridLinesVisible(false);
+        Graficos.eixoLog(x, false);
+        return c;
+    }
+
     @FXML
     private void initialize() {
         for (AlgoritmoTipo t : AlgoritmoTipo.values()) {
-            CheckBox c = new CheckBox(t.nome() + (t.quadratico() ? "  (O(n²))" : ""));
-            c.setSelected(true);
-            chkAlgoritmos.put(t, c);
-            boxAlgoritmos.getChildren().add(c);
+            ToggleButton b = chip(t.nome() + (t.quadratico() ? "  · O(n²)" : ""), true);
+            tgAlgoritmos.put(t, b);
+            fpAlgoritmos.getChildren().add(b);
         }
-        for (CriterioOrdenacao c : List.of(CriterioOrdenacao.DATA, CriterioOrdenacao.BIOMA, CriterioOrdenacao.MUNICIPIO,
-                CriterioOrdenacao.LATITUDE)) {
-            CheckBox cb = new CheckBox(c.rotulo());
-            cb.setSelected(c != CriterioOrdenacao.LATITUDE);
-            chkCriterios.put(c, cb);
-            boxCriterios.getChildren().add(cb);
+        for (CriterioOrdenacao c : List.of(CriterioOrdenacao.DATA, CriterioOrdenacao.BIOMA, CriterioOrdenacao.MUNICIPIO, CriterioOrdenacao.LATITUDE)) {
+            ToggleButton b = chip(c.rotulo(), c != CriterioOrdenacao.LATITUDE);
+            tgCriterios.put(c, b);
+            fpCriterios.getChildren().add(b);
         }
         for (CenarioEntrada c : CenarioEntrada.values()) {
-            CheckBox cb = new CheckBox(c.toString());
-            cb.setSelected(c == CenarioEntrada.ALEATORIO || c == CenarioEntrada.ORDENADO || c == CenarioEntrada.INVERSO);
-            chkCenarios.put(c, cb);
-            boxCenarios.getChildren().add(cb);
+            ToggleButton b = chip(c.toString(), c == CenarioEntrada.ALEATORIO || c == CenarioEntrada.ORDENADO || c == CenarioEntrada.INVERSO);
+            tgCenarios.put(c, b);
+            fpCenarios.getChildren().add(b);
         }
         spAquecimentos.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20, 2));
         spRepeticoes.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 50, 5));
-        cbMetrica.setItems(FXCollections.observableArrayList("Tempo médio (ms)", "Tempo mínimo (ms)", "Comparações", "Trocas", "Acessos"));
-        cbMetrica.getSelectionModel().select("Comparações");
-        cbCriterio.valueProperty().addListener((o, a, n) -> desenhar());
-        cbCenario.valueProperty().addListener((o, a, n) -> desenhar());
-        cbMetrica.valueProperty().addListener((o, a, n) -> desenhar());
-        chkLog.selectedProperty().addListener((o, a, n) -> desenhar());
-        chkTeoricas.selectedProperty().addListener((o, a, n) -> desenhar());
+        btnExecutar.setGraphic(Icones.de(Icones.EXECUTAR, 16));
+        btnRapida.setGraphic(Icones.de(Icones.EXPERIMENTO, 16));
+        btnSalvos.setGraphic(Icones.de(Icones.ABRIR, 16));
+
+        segmento(segMetrica, gMetrica, "Tempo médio", "Comparações", "Trocas", "Acessos");
+        segmento(segEscala, gEscala, "Linear", "Log");
+        gMetrica.selectToggle(gMetrica.getToggles().get(1));
+        gEscala.selectToggle(gEscala.getToggles().get(1));
+        for (ToggleGroup g : List.of(gCriterio, gCenario, gMetrica, gEscala)) {
+            g.selectedToggleProperty().addListener((o, a, n) -> {
+                if (n == null && a != null) a.setSelected(true);
+                else desenhar();
+            });
+        }
+
+        cQuadraticos.conteudo(grafQuad);
+        cLogLineares.conteudo(grafLog);
+        cVencedores.conteudo(tabVencedores);
+        cComplexidade.conteudo(tabComplexidade);
+        for (ChartCard c : List.of(cQuadraticos, cLogLineares, cVencedores, cComplexidade)) c.estado(ChartCard.Estado.VAZIO);
+        ctx.registrarGrafico("Benchmark: algoritmos O(n²)", cQuadraticos);
+        ctx.registrarGrafico("Benchmark: algoritmos O(n log n) e lineares", cLogLineares);
         configurarTabelas();
-        ctx.registrarGrafico("Benchmark: custo x n", grafico);
-        ctx.baseProperty().addListener((o, a, b) -> {
-            resultados = List.of();
-            tabela.getItems().clear();
-            tabelaComplexidade.getItems().clear();
-            grafico.getData().clear();
-        });
+        ctx.baseProperty().addListener((o, a, b) -> aplicar(List.of()));
     }
 
-    private void configurarTabelas() {
-        tabela.getColumns().add(Tabelas.coluna("Algoritmo", BenchmarkResult::algoritmo, 160));
-        tabela.getColumns().add(Tabelas.coluna("Critério", (BenchmarkResult r) -> r.criterio().rotulo(), 90));
-        tabela.getColumns().add(Tabelas.coluna("Cenário", (BenchmarkResult r) -> r.cenario().toString(), 150));
-        tabela.getColumns().add(Tabelas.numero("n", BenchmarkResult::n, v -> Formatos.inteiro(v), 70));
-        tabela.getColumns().add(Tabelas.numero("Média (ms)", BenchmarkResult::mediaMs, v -> Formatos.decimal(v, 3), 90));
-        tabela.getColumns().add(Tabelas.numero("Desvio (ms)", BenchmarkResult::desvioMs, v -> Formatos.decimal(v, 3), 90));
-        tabela.getColumns().add(Tabelas.numero("Mín (ms)", (BenchmarkResult r) -> r.minNs() / 1e6, v -> Formatos.decimal(v, 3), 85));
-        tabela.getColumns().add(Tabelas.numero("Comparações", BenchmarkResult::comparacoes, Formatos::inteiro, 115));
-        tabela.getColumns().add(Tabelas.numero("Trocas", BenchmarkResult::trocas, Formatos::inteiro, 105));
-        tabela.getColumns().add(Tabelas.numero("Acessos", BenchmarkResult::acessos, Formatos::inteiro, 115));
-        tabela.getColumns().add(Tabelas.coluna("OK", (BenchmarkResult r) -> r.verificado() ? "✔" : "FALHA", 45));
-
-        tabelaComplexidade.getColumns().add(Tabelas.coluna("Algoritmo", AnaliseComplexidade.Estimativa::algoritmo, 170));
-        tabelaComplexidade.getColumns().add(Tabelas.coluna("Critério", (AnaliseComplexidade.Estimativa e) -> e.criterio().rotulo(), 100));
-        tabelaComplexidade.getColumns().add(Tabelas.coluna("Cenário", (AnaliseComplexidade.Estimativa e) -> e.cenario().toString(), 160));
-        tabelaComplexidade.getColumns().add(Tabelas.numero("k (tempo)", AnaliseComplexidade.Estimativa::expoenteTempo, v -> Formatos.decimal(v, 2), 90));
-        tabelaComplexidade.getColumns().add(Tabelas.numero("k (comparações)", AnaliseComplexidade.Estimativa::expoenteComparacoes,
-                v -> Double.isNaN(v) ? "—" : Formatos.decimal(v, 2), 120));
-        tabelaComplexidade.getColumns().add(Tabelas.numero("R² (tempo)", AnaliseComplexidade.Estimativa::r2Tempo, v -> Formatos.decimal(v, 3), 90));
-        tabelaComplexidade.getColumns().add(Tabelas.coluna("Classe estimada", AnaliseComplexidade.Estimativa::classificacao, 130));
+    private static ToggleButton chip(String texto, boolean selecionado) {
+        ToggleButton b = new ToggleButton(texto);
+        b.getStyleClass().add("chip-toggle");
+        b.setSelected(selecionado);
+        return b;
     }
+
+    private static void segmento(HBox caixa, ToggleGroup g, String... rotulos) {
+        caixa.getChildren().clear();
+        for (String r : rotulos) {
+            ToggleButton t = new ToggleButton(r);
+            t.setUserData(r);
+            t.setToggleGroup(g);
+            caixa.getChildren().add(t);
+        }
+    }
+
+    // ------------------------------------------------------------------ execucao
 
     @FXML
     private void configRapida() {
         tfTamanhos.setText("100, 500, 1000, 2000");
         spAquecimentos.getValueFactory().setValue(1);
         spRepeticoes.getValueFactory().setValue(3);
+        Feedback.info("Configuração rápida aplicada", "Tamanhos até 2.000, 1 aquecimento e 3 repetições (alguns segundos).");
     }
 
     private BenchmarkConfig config() {
         List<AlgoritmoTipo> algs = new ArrayList<>();
-        chkAlgoritmos.forEach((t, c) -> { if (c.isSelected()) algs.add(t); });
+        tgAlgoritmos.forEach((t, b) -> { if (b.isSelected()) algs.add(t); });
         List<CriterioOrdenacao> crits = new ArrayList<>();
-        chkCriterios.forEach((t, c) -> { if (c.isSelected()) crits.add(t); });
+        tgCriterios.forEach((t, b) -> { if (b.isSelected()) crits.add(t); });
         List<CenarioEntrada> cens = new ArrayList<>();
-        chkCenarios.forEach((t, c) -> { if (c.isSelected()) cens.add(t); });
+        tgCenarios.forEach((t, b) -> { if (b.isSelected()) cens.add(t); });
         List<Integer> tamanhos = new ArrayList<>();
         for (String p : tfTamanhos.getText().split("[,;\\s]+")) {
             if (p.isBlank()) continue;
@@ -147,18 +188,17 @@ public class BenchmarkController {
                 if (v < 0) throw new NumberFormatException();
                 tamanhos.add(v);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Tamanho invalido: '" + p + "'. Use inteiros >= 0 separados por virgula.");
+                throw new IllegalArgumentException("Tamanho inválido: '" + p + "'. Use inteiros ≥ 0 separados por vírgula (0 = base inteira).");
             }
         }
-        return new BenchmarkConfig(algs, crits, tamanhos, cens, spAquecimentos.getValue(), spRepeticoes.getValue(), 42L,
-                Integer.MAX_VALUE);
+        return new BenchmarkConfig(algs, crits, tamanhos, cens, spAquecimentos.getValue(), spRepeticoes.getValue(), 42L, Integer.MAX_VALUE);
     }
 
     @FXML
     private void executar() {
         BaseDeFocos base = ctx.baseProperty().get();
         if (base == null) {
-            ctx.aviso("Sem dados", "Carregue os CSVs do INPE antes de executar o benchmark.");
+            Feedback.alerta("Sem dados", "Carregue os CSVs do INPE antes de executar o benchmark.");
             return;
         }
         BenchmarkConfig cfg;
@@ -170,99 +210,247 @@ public class BenchmarkController {
         }
         int maior = 0;
         for (int t : cfg.tamanhos()) maior = Math.max(maior, t <= 0 ? base.tamanho() : Math.min(t, base.tamanho()));
-        boolean temQuadratico = false;
-        for (AlgoritmoTipo t : cfg.algoritmos()) temQuadratico |= t.quadratico();
-        if (temQuadratico && maior > 5_000 && !ctx.confirmar("Benchmark demorado",
+        boolean quad = cfg.algoritmos().stream().anyMatch(AlgoritmoTipo::quadratico);
+        if (quad && maior > 5_000 && !ctx.confirmar("Benchmark demorado",
                 cfg.totalCasos() + " casos com algoritmos O(n²) até n = " + Formatos.inteiro(maior)
-                        + " podem levar alguns minutos. Continuar? (é possível cancelar)")) {
+                        + " podem levar vários minutos (a bateria completa leva ~20 min). É possível cancelar a qualquer momento.")) {
             return;
         }
         ctx.executar("Benchmark (" + cfg.totalCasos() + " casos)",
                 prog -> new BenchmarkRunner().executar(base.getFocos(), cfg, p -> prog.accept(p.fracao(), p.mensagem())),
                 r -> {
-                    resultados = r;
                     ctx.sessao().setUltimoBenchmark(r);
-                    tabela.setItems(FXCollections.observableArrayList(r));
-                    tabelaComplexidade.setItems(FXCollections.observableArrayList(AnaliseComplexidade.estimar(r)));
-                    atualizarFiltros();
+                    aplicar(r);
+                    Feedback.sucesso("Benchmark concluído", Formatos.inteiro(r.size()) + " medições");
                 });
     }
 
-    private void atualizarFiltros() {
-        List<CriterioOrdenacao> crits = new ArrayList<>();
-        List<CenarioEntrada> cens = new ArrayList<>();
-        for (BenchmarkResult r : resultados) {
-            if (!crits.contains(r.criterio())) crits.add(r.criterio());
-            if (!cens.contains(r.cenario())) cens.add(r.cenario());
+    @FXML
+    private void abrirSalvos() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Abrir resultados de benchmark (CSV)");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV do benchmark", "*.csv"));
+        File dir = Path.of("docs", "resultados").toFile();
+        if (dir.isDirectory()) fc.setInitialDirectory(dir);
+        File f = fc.showOpenDialog(ctx.stage());
+        if (f != null) carregarCsv(f.toPath());
+    }
+
+    /**
+     * Le um CSV gerado por {@code ReportExporter.exportarBenchmarkCsv}.
+     *
+     * @param arquivo CSV
+     */
+    void carregarCsv(Path arquivo) {
+        try {
+            List<String> linhas = Files.readAllLines(arquivo, StandardCharsets.UTF_8);
+            CsvParser p = new CsvParser(';');
+            List<BenchmarkResult> r = new ArrayList<>();
+            for (int i = 1; i < linhas.size(); i++) {
+                List<String> c = p.dividir(linhas.get(i));
+                if (c.size() < 16) continue;
+                r.add(new BenchmarkResult(c.get(0), criterio(c.get(1)), cenario(c.get(2)), Integer.parseInt(c.get(3)),
+                        Integer.parseInt(c.get(4)), dec(c.get(5)) * 1e6, dec(c.get(6)) * 1e6, (long) (dec(c.get(7)) * 1e6),
+                        (long) (dec(c.get(8)) * 1e6), Long.parseLong(c.get(9)), Long.parseLong(c.get(10)), Long.parseLong(c.get(11)),
+                        Long.parseLong(c.get(12)), c.get(15).startsWith("s")));
+            }
+            if (r.isEmpty()) throw new IllegalArgumentException("O arquivo não contém medições no formato do benchmark.");
+            ctx.sessao().setUltimoBenchmark(r);
+            aplicar(r);
+            Feedback.sucesso("Resultados carregados", Formatos.inteiro(r.size()) + " medições de " + arquivo.getFileName());
+        } catch (IOException | RuntimeException e) {
+            ctx.erro("Não foi possível abrir os resultados", new IllegalArgumentException(
+                    "Arquivo inválido ou em outro formato: " + e.getMessage(), e));
         }
-        cbCriterio.setItems(FXCollections.observableArrayList(crits));
-        cbCenario.setItems(FXCollections.observableArrayList(cens));
-        if (!crits.isEmpty()) cbCriterio.getSelectionModel().selectFirst();
-        if (!cens.isEmpty()) cbCenario.getSelectionModel().selectFirst();
+    }
+
+    private static double dec(String s) {
+        return Double.parseDouble(s.replace(".", "").replace(',', '.'));
+    }
+
+    private static CriterioOrdenacao criterio(String rotulo) {
+        for (CriterioOrdenacao c : CriterioOrdenacao.values()) if (c.rotulo().equals(rotulo)) return c;
+        throw new IllegalArgumentException("critério desconhecido: " + rotulo);
+    }
+
+    private static CenarioEntrada cenario(String rotulo) {
+        for (CenarioEntrada c : CenarioEntrada.values()) if (c.toString().equals(rotulo)) return c;
+        throw new IllegalArgumentException("cenário desconhecido: " + rotulo);
+    }
+
+    private void aplicar(List<BenchmarkResult> r) {
+        resultados = r;
+        tabela.setItems(FXCollections.observableArrayList(r));
+        List<String> crits = new ArrayList<>(), cens = new ArrayList<>();
+        for (BenchmarkResult b : r) {
+            if (!crits.contains(b.criterio().rotulo())) crits.add(b.criterio().rotulo());
+            if (!cens.contains(b.cenario().toString())) cens.add(b.cenario().toString());
+        }
+        segmento(segCriterio, gCriterio, crits.toArray(String[]::new));
+        segmento(segCenario, gCenario, cens.toArray(String[]::new));
+        if (!gCriterio.getToggles().isEmpty()) gCriterio.selectToggle(gCriterio.getToggles().get(0));
+        if (!gCenario.getToggles().isEmpty()) gCenario.selectToggle(gCenario.getToggles().get(0));
+        tabVencedores.setItems(FXCollections.observableArrayList(vencedores(r)));
+        ChartCard.Estado e = r.isEmpty() ? ChartCard.Estado.VAZIO : ChartCard.Estado.CONTEUDO;
+        cVencedores.estado(e);
+        cComplexidade.estado(e);
         desenhar();
     }
 
-    private void desenhar() {
-        grafico.getData().clear();
-        if (resultados.isEmpty() || cbCriterio.getValue() == null || cbCenario.getValue() == null) return;
-        String metrica = cbMetrica.getValue();
-        boolean log = chkLog.isSelected();
-        Map<String, XYChart.Series<Number, Number>> series = new LinkedHashMap<>();
-        List<Integer> ns = new ArrayList<>();
-        for (BenchmarkResult r : resultados) {
-            if (r.criterio() != cbCriterio.getValue() || r.cenario() != cbCenario.getValue()) continue;
-            double v = switch (metrica) {
-                case "Tempo médio (ms)" -> r.mediaMs();
-                case "Tempo mínimo (ms)" -> r.minNs() / 1e6;
-                case "Trocas" -> r.trocas();
-                case "Acessos" -> r.acessos();
-                default -> r.comparacoes();
-            };
-            if (log && v <= 0) continue;
-            series.computeIfAbsent(r.algoritmo(), k -> {
-                XYChart.Series<Number, Number> s = new XYChart.Series<>();
-                s.setName(k);
-                return s;
-            }).getData().add(new XYChart.Data<>(r.n(), log ? Math.log10(v) : v));
-            if (!ns.contains(r.n())) ns.add(r.n());
+    private static List<Vencedor> vencedores(List<BenchmarkResult> r) {
+        Map<String, List<BenchmarkResult>> g = new LinkedHashMap<>();
+        for (BenchmarkResult b : r) g.computeIfAbsent(b.criterio().rotulo() + "|" + b.cenario(), k -> new ArrayList<>()).add(b);
+        List<Vencedor> v = new ArrayList<>();
+        for (List<BenchmarkResult> lista : g.values()) {
+            int nmax = 0;
+            for (BenchmarkResult b : lista) nmax = Math.max(nmax, b.n());
+            List<BenchmarkResult> maiores = new ArrayList<>();
+            for (BenchmarkResult b : lista) if (b.n() == nmax) maiores.add(b);
+            Ordenacoes.ordenar(maiores, Comparator.comparingDouble(BenchmarkResult::mediaNs));
+            BenchmarkResult w = maiores.get(0);
+            v.add(new Vencedor(w.criterio().rotulo(), w.cenario().toString(), nmax, w.algoritmo(), w.mediaMs(),
+                    maiores.size() > 1 ? maiores.get(1).algoritmo() : "—", maiores.get(maiores.size() - 1).algoritmo()));
         }
-        Ordenacoes.ordenar(ns, Comparator.naturalOrder());
-        grafico.getData().addAll(series.values());
-        if (chkTeoricas.isSelected() && metrica.equals("Comparações") && !ns.isEmpty()) {
-            XYChart.Series<Number, Number> n2 = new XYChart.Series<>();
-            n2.setName("teórico n²/2");
-            XYChart.Series<Number, Number> nlogn = new XYChart.Series<>();
-            nlogn.setName("teórico n·log₂n");
-            for (int n : ns) {
-                double a = n * (n - 1) / 2.0, b = n <= 1 ? 0 : n * Math.log(n) / Math.log(2);
-                if (!log || a > 0) n2.getData().add(new XYChart.Data<>(n, log ? Math.log10(a) : a));
-                if (!log || b > 0) nlogn.getData().add(new XYChart.Data<>(n, log ? Math.log10(b) : b));
-            }
-            grafico.getData().add(n2);
-            grafico.getData().add(nlogn);
-            n2.getNode().getStyleClass().add("serie-teorica");
-            nlogn.getNode().getStyleClass().add("serie-teorica");
-        }
-        eixoY.setLabel(metrica + (log ? " (log10)" : ""));
-        grafico.setTitle(cbCriterio.getValue().rotulo() + " · " + cbCenario.getValue());
+        return v;
     }
 
-    @FXML
-    private void exportarCsv() {
-        if (resultados.isEmpty()) {
-            ctx.aviso("Nada para exportar", "Execute o benchmark primeiro.");
+    // ------------------------------------------------------------------ graficos
+
+    private void desenhar() {
+        if (resultados.isEmpty() || gCriterio.getSelectedToggle() == null || gCenario.getSelectedToggle() == null) {
+            grafQuad.getData().clear();
+            grafLog.getData().clear();
+            cQuadraticos.estado(ChartCard.Estado.VAZIO);
+            cLogLineares.estado(ChartCard.Estado.VAZIO);
             return;
         }
-        FileChooser fc = new FileChooser();
-        Path sug = ctx.sessao().arquivoRelatorio("benchmark", ".csv");
-        File dir = sug.toAbsolutePath().getParent().toFile();
-        dir.mkdirs();
-        fc.setInitialDirectory(dir);
-        fc.setInitialFileName(sug.getFileName().toString());
-        File f = fc.showSaveDialog(ctx.stage());
-        if (f == null) return;
-        List<BenchmarkResult> r = resultados;
-        ctx.executar("Exportando benchmark", () -> ctx.sessao().exporter().exportarBenchmarkCsv(r, f.toPath()),
-                p -> ctx.info("CSV gravado", p.toAbsolutePath().toString()));
+        String crit = (String) gCriterio.getSelectedToggle().getUserData();
+        String cen = (String) gCenario.getSelectedToggle().getUserData();
+        String metrica = (String) gMetrica.getSelectedToggle().getUserData();
+        boolean log = "Log".equals(gEscala.getSelectedToggle().getUserData());
+        List<AnaliseComplexidade.Estimativa> est = new ArrayList<>();
+        for (AnaliseComplexidade.Estimativa e : AnaliseComplexidade.estimar(resultados)) {
+            if (e.criterio().rotulo().equals(crit) && e.cenario().toString().equals(cen)) est.add(e);
+        }
+        tabComplexidade.setItems(FXCollections.observableArrayList(est));
+        cComplexidade.setSubtitulo(crit + " · " + cen + " · custo ≈ c·nᵏ: k≈2 → O(n²); k≈1,0–1,2 → O(n log n)");
+        desenhar(grafQuad, cQuadraticos, true, crit, cen, metrica, log);
+        desenhar(grafLog, cLogLineares, false, crit, cen, metrica, log);
+    }
+
+    private void desenhar(LineChart<Number, Number> g, ChartCard card, boolean quadraticos, String crit, String cen,
+                          String metrica, boolean log) {
+        g.getData().clear();
+        card.limparLegenda();
+        Map<String, XYChart.Series<Number, Number>> series = new LinkedHashMap<>();
+        Map<String, String> classes = new LinkedHashMap<>();
+        List<Integer> ns = new ArrayList<>();
+        List<String[]> linhas = new ArrayList<>();
+        for (AlgoritmoTipo t : AlgoritmoTipo.values()) {
+            if (t.quadratico() != quadraticos) continue;
+            for (BenchmarkResult r : resultados) {
+                if (!r.algoritmo().equals(t.nome()) || !r.criterio().rotulo().equals(crit) || !r.cenario().toString().equals(cen)) continue;
+                double v = valor(r, metrica);
+                if (log && v <= 0) continue;
+                XYChart.Series<Number, Number> s = series.computeIfAbsent(t.nome(), k -> {
+                    XYChart.Series<Number, Number> nova = new XYChart.Series<>();
+                    nova.setName(k);
+                    return nova;
+                });
+                classes.put(t.nome(), SERIE.get(t));
+                s.getData().add(new XYChart.Data<>(r.n(), log ? Math.log10(v) : v));
+                if (!ns.contains(r.n())) ns.add(r.n());
+                linhas.add(new String[]{t.nome(), Formatos.inteiro(r.n()), formatar(metrica, v)});
+            }
+        }
+        Ordenacoes.ordenar(ns, Comparator.naturalOrder());
+        for (Map.Entry<String, XYChart.Series<Number, Number>> e : series.entrySet()) {
+            g.getData().add(e.getValue());
+            Graficos.classe(e.getValue(), classes.get(e.getKey()));
+            card.adicionarLegenda(e.getKey(), classes.get(e.getKey()), "linha");
+            Graficos.tooltips(e.getValue(), d -> e.getKey() + "\nn = " + Formatos.inteiro(d.getXValue().longValue()) + "\n"
+                    + metrica + ": " + formatar(metrica, log ? Math.pow(10, d.getYValue().doubleValue()) : d.getYValue().doubleValue()));
+        }
+        boolean teorica = !metrica.startsWith("Tempo") && !ns.isEmpty();
+        if (teorica) {
+            XYChart.Series<Number, Number> t = new XYChart.Series<>();
+            t.setName(quadraticos ? "n²/2 (teórico)" : "n·log₂n (teórico)");
+            for (int n : ns) {
+                double v = quadraticos ? n * (n - 1) / 2.0 : (n <= 1 ? 0 : n * Math.log(n) / Math.log(2));
+                if (!log || v > 0) t.getData().add(new XYChart.Data<>(n, log ? Math.log10(v) : v));
+            }
+            g.getData().add(t);
+            Graficos.classe(t, "serie-teorica");
+            card.adicionarLegenda(t.getName(), "tracejada");
+        }
+        NumberAxis y = (NumberAxis) g.getYAxis();
+        y.setLabel(metrica + (log ? " (escala log)" : ""));
+        Graficos.eixoLog(y, log);
+        if (log) {
+            y.setAutoRanging(true);
+            y.setTickUnit(1);
+        }
+        card.setDados(new String[]{"Algoritmo", "n", metrica}, () -> linhas);
+        card.estado(series.isEmpty() ? ChartCard.Estado.VAZIO : ChartCard.Estado.CONTEUDO);
+    }
+
+    private static double valor(BenchmarkResult r, String metrica) {
+        return switch (metrica) {
+            case "Tempo médio" -> r.mediaMs();
+            case "Trocas" -> r.trocas();
+            case "Acessos" -> r.acessos();
+            default -> r.comparacoes();
+        };
+    }
+
+    private static String formatar(String metrica, double v) {
+        return metrica.startsWith("Tempo") ? Formatos.decimal(v, 3) + " ms" : Formatos.inteiro(Math.round(v));
+    }
+
+    // ------------------------------------------------------------------ tabelas
+
+    private void configurarTabelas() {
+        Tabelas.preparar(tabela, "Execute o benchmark ou abra resultados salvos.");
+        tabela.getColumns().add(Tabelas.coluna("Algoritmo", BenchmarkResult::algoritmo, 160));
+        tabela.getColumns().add(Tabelas.coluna("Critério", (BenchmarkResult r) -> r.criterio().rotulo(), 100));
+        tabela.getColumns().add(Tabelas.coluna("Cenário", (BenchmarkResult r) -> r.cenario().toString(), 150));
+        tabela.getColumns().add(Tabelas.numero("n", BenchmarkResult::n, v -> Formatos.inteiro(v), 80));
+        tabela.getColumns().add(Tabelas.numero("Média (ms)", BenchmarkResult::mediaMs, v -> Formatos.decimal(v, 3), 100));
+        tabela.getColumns().add(Tabelas.numero("Desvio (ms)", BenchmarkResult::desvioMs, v -> Formatos.decimal(v, 3), 100));
+        tabela.getColumns().add(Tabelas.numero("Comparações", BenchmarkResult::comparacoes, Formatos::inteiro, 120));
+        tabela.getColumns().add(Tabelas.numero("Trocas", BenchmarkResult::trocas, Formatos::inteiro, 110));
+        tabela.getColumns().add(Tabelas.numero("Acessos", BenchmarkResult::acessos, Formatos::inteiro, 120));
+        tabela.getColumns().add(Tabelas.coluna("OK", (BenchmarkResult r) -> r.verificado() ? "✔" : "✘", 50));
+
+        Tabelas.preparar(tabVencedores, "Sem medições.");
+        tabVencedores.getStyleClass().add("data-table");
+        tabVencedores.getColumns().add(Tabelas.coluna("Critério", Vencedor::criterio, 90));
+        tabVencedores.getColumns().add(Tabelas.coluna("Cenário", Vencedor::cenario, 150));
+        tabVencedores.getColumns().add(Tabelas.coluna("★ Vencedor", v -> "★ " + v.algoritmo(), 170));
+        tabVencedores.getColumns().add(Tabelas.numero("Tempo (ms)", Vencedor::mediaMs, v -> Formatos.decimal(v, 3), 90));
+        tabVencedores.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(Vencedor v, boolean vazio) {
+                super.updateItem(v, vazio);
+                setTooltip(vazio || v == null ? null : new javafx.scene.control.Tooltip(
+                        "n = " + Formatos.inteiro(v.n()) + " · 2º lugar: " + v.segundo() + " · mais lento: " + v.ultimo()));
+            }
+        });
+
+        Tabelas.preparar(tabComplexidade, "Sem medições (são necessários ao menos 3 tamanhos).");
+        tabComplexidade.getColumns().add(Tabelas.coluna("Algoritmo", AnaliseComplexidade.Estimativa::algoritmo, 170));
+        tabComplexidade.getColumns().add(Tabelas.numero("k comparações", AnaliseComplexidade.Estimativa::expoenteComparacoes,
+                v -> Double.isNaN(v) ? "0 comp." : Formatos.decimal(v, 2), 110));
+        tabComplexidade.getColumns().add(Tabelas.numero("k tempo", AnaliseComplexidade.Estimativa::expoenteTempo, v -> Formatos.decimal(v, 2), 80));
+        tabComplexidade.getColumns().add(Tabelas.coluna("Classe estimada", AnaliseComplexidade.Estimativa::classificacao, 120));
+    }
+
+    @Override
+    public void demonstrar(Runnable concluido) {
+        Path salvo = Path.of("docs", "resultados", "benchmark.csv");
+        if (Files.isRegularFile(salvo)) {
+            carregarCsv(salvo);
+        }
+        concluido.run();
     }
 }

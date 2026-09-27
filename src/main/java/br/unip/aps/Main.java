@@ -67,6 +67,11 @@ public final class Main {
         try {
             switch (modo) {
                 case "dashboard", "gui" -> br.unip.aps.ui.DashboardApp.iniciar(args);
+                case "capturas" -> {
+                    System.setProperty("aps.capturas", op.getOrDefault("saida", "docs/prints"));
+                    System.setProperty("aps.capturas.sair", "true");
+                    br.unip.aps.ui.DashboardApp.iniciar(new String[0]);
+                }
                 case "cli", "menu" -> new MenuConsole(sessao, out).executar();
                 case "ordenar" -> ordenar(sessao, op, out);
                 case "comparar" -> comparar(sessao, op, out);
@@ -262,6 +267,7 @@ public final class Main {
                   ml                    previsao (Random Forest), classificacao e hotspots (DBSCAN/K-Means)
                   resultados [--rapido] comparativo + benchmark + ML + relatorios (numeros da dissertacao)
                   relatorio-codigo      gera relatorios/codigo-fonte.pdf (Relatorio com as linhas de codigo)
+                  capturas [--saida DIR] abre o dashboard e salva prints de todas as telas (claro/escuro) em docs/prints
                   baixar                --uf SP --anos 2023,2024  (baixa do INPE para data/raw)
 
                 Algoritmos: """ + SortAlgorithmFactory.nomes());

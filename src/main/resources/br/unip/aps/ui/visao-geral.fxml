@@ -1,60 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.BarChart?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.NumberAxis?>
-<?import javafx.scene.chart.PieChart?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
+<?import br.unip.aps.ui.componentes.ChartCard?>
+<?import br.unip.aps.ui.componentes.GradeResponsiva?>
+<?import br.unip.aps.ui.componentes.KpiCard?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
+<!-- Visao geral: KPIs (4/3/2 colunas) + graficos (2/1 colunas) + calendario em largura total -->
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="br.unip.aps.ui.VisaoGeralController" fitToWidth="true" styleClass="aba">
-    <VBox spacing="12">
-        <padding><Insets top="12" right="14" bottom="14" left="14"/></padding>
-        <HBox spacing="8" alignment="CENTER_LEFT" styleClass="painel-filtros">
-            <Label text="Bioma:"/>
-            <ComboBox fx:id="cbBioma" prefWidth="170"/>
-            <Label text="Município contém:"/>
-            <TextField fx:id="tfMunicipio" promptText="ex.: são carlos" prefWidth="200" onAction="#aplicar"/>
-            <Button text="Aplicar" onAction="#aplicar" styleClass="botao-primario"/>
-            <Button text="Limpar" onAction="#limpar"/>
-            <Label fx:id="lblFiltro" styleClass="texto-suave"/>
-        </HBox>
-        <FlowPane fx:id="kpis" hgap="10" vgap="10"/>
-        <GridPane hgap="12" vgap="12">
-            <columnConstraints>
-                <ColumnConstraints percentWidth="50"/>
-                <ColumnConstraints percentWidth="50"/>
-            </columnConstraints>
-            <LineChart fx:id="graficoMensal" title="Focos por mês" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                       prefHeight="330" createSymbols="true" animated="false">
-                <xAxis><CategoryAxis label="Mês"/></xAxis>
-                <yAxis><NumberAxis label="Focos"/></yAxis>
-            </LineChart>
-            <PieChart fx:id="graficoBiomas" title="Focos por bioma" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                      prefHeight="330" animated="false" labelsVisible="true"/>
-            <BarChart fx:id="graficoMunicipios" title="Top 10 municípios" GridPane.columnIndex="0" GridPane.rowIndex="1"
-                      prefHeight="360" animated="false" legendVisible="false">
-                <xAxis><NumberAxis label="Focos"/></xAxis>
-                <yAxis><CategoryAxis/></yAxis>
-            </BarChart>
-            <BarChart fx:id="graficoHoras" title="Focos por hora local da detecção (UTC−3)" GridPane.columnIndex="1"
-                      GridPane.rowIndex="1" prefHeight="360" animated="false" legendVisible="false">
-                <xAxis><CategoryAxis label="Hora"/></xAxis>
-                <yAxis><NumberAxis label="Focos"/></yAxis>
-            </BarChart>
-        </GridPane>
-        <Label wrapText="true" styleClass="texto-suave"
-               text="Base: satélite de referência (AQUA, tarde). Horários do INPE estão em GMT; o gráfico de horas converte para o horário de Brasília. Em 2024 o estado de São Paulo viveu uma crise de incêndios em agosto — observe o pico no gráfico mensal."/>
+            fx:controller="br.unip.aps.ui.VisaoGeralController" fitToWidth="true" styleClass="pagina-scroll">
+    <VBox styleClass="page">
+        <GradeResponsiva larguraMinima="250" maxColunas="4" gap="16">
+            <KpiCard fx:id="kTotal" titulo="Total de focos" icone="mdi2f-fire"/>
+            <KpiCard fx:id="kAnoAnterior" titulo="Focos no ano anterior" icone="mdi2c-calendar-outline"/>
+            <KpiCard fx:id="kAnoRecente" titulo="Focos no ano recente" icone="mdi2c-calendar-outline"/>
+            <KpiCard fx:id="kVariacao" titulo="Variação anual" icone="mdi2t-trending-up"/>
+            <KpiCard fx:id="kMunicipios" titulo="Municípios afetados" icone="mdi2m-map-marker-outline"/>
+            <KpiCard fx:id="kPico" titulo="Mês de pico" icone="mdi2c-calendar-month-outline"/>
+            <KpiCard fx:id="kLider" titulo="Município líder" icone="mdi2t-trophy-outline"/>
+            <KpiCard fx:id="kBioma" titulo="Bioma predominante" icone="mdi2t-tree-outline"/>
+        </GradeResponsiva>
+        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="16">
+            <ChartCard fx:id="cMensal" titulo="Focos por mês"
+                       subtitulo="Comparação mês a mês entre os anos da base" prefHeight="380"/>
+            <ChartCard fx:id="cBiomas" titulo="Focos por bioma"
+                       subtitulo="Participação de cada bioma do IBGE no total filtrado" prefHeight="380"/>
+            <ChartCard fx:id="cMunicipios" titulo="Top 10 municípios"
+                       subtitulo="Municípios com mais focos no período filtrado" prefHeight="420"/>
+            <ChartCard fx:id="cHoras" titulo="Focos por hora local (UTC−3)"
+                       subtitulo="O satélite de referência (AQUA) passa sobre SP no início da tarde: por isso as detecções se concentram entre 13h e 15h"
+                       prefHeight="420"/>
+        </GradeResponsiva>
+        <ChartCard fx:id="cCalendario" titulo="Calendário de focos por dia"
+                   subtitulo="Cada quadrado é um dia; a cor indica a quantidade de focos detectados"/>
     </VBox>
 </ScrollPane>

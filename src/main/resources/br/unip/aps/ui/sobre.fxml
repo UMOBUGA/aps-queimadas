@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import br.unip.aps.ui.componentes.GradeResponsiva?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Sobre: sistema, equipe (grupo.properties), disciplina, tecnologias e fonte dos dados -->
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="br.unip.aps.ui.SobreController" fitToWidth="true">
+    <VBox styleClass="page">
+        <HBox styleClass="panel-card" spacing="18" alignment="CENTER_LEFT">
+            <StackPane fx:id="marca" styleClass="brand-mark, marca-grande"/>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="APS Queimadas" styleClass="t-display"/>
+                <Label text="Sistema para Análise de Performance de Algoritmos de Ordenação de Dados, aplicado aos focos de queimadas detectados por satélite (INPE)."
+                       styleClass="t-small" wrapText="true"/>
+                <FlowPane fx:id="chipsVersao" hgap="6" vgap="6"/>
+            </VBox>
+        </HBox>
+        <GradeResponsiva larguraMinima="440" maxColunas="2" gap="16">
+            <VBox styleClass="panel-card" spacing="10">
+                <Label text="Equipe" styleClass="card-title"/>
+                <Label fx:id="lblCurso" styleClass="card-subtitle" wrapText="true"/>
+                <VBox fx:id="listaIntegrantes" spacing="10"/>
+                <Label fx:id="lblOrientador" styleClass="t-small"/>
+            </VBox>
+            <VBox styleClass="panel-card" spacing="10">
+                <Label text="Fonte dos dados" styleClass="card-title"/>
+                <Label text="INPE — Programa Queimadas. Focos detectados pelo satélite de referência (AQUA, passagem da tarde), que mantém a série histórica comparável entre os anos."
+                       styleClass="t-small" wrapText="true"/>
+                <Hyperlink fx:id="linkInpe" text="dataserver-coids.inpe.br › queimadas › focos › EstadosBr_sat_ref"/>
+                <Label text="Mapas-base: Tiles © Esri — Esri, HERE, Garmin, © colaboradores do OpenStreetMap." styleClass="t-caption"/>
+            </VBox>
+            <VBox styleClass="panel-card" spacing="10">
+                <Label text="Tecnologias" styleClass="card-title"/>
+                <FlowPane fx:id="chipsTecnologias" hgap="6" vgap="6"/>
+            </VBox>
+            <VBox styleClass="panel-card" spacing="10">
+                <Label text="Disciplina e interdisciplinaridade" styleClass="card-title"/>
+                <Label fx:id="lblDisciplina" styleClass="t-small" wrapText="true"/>
+                <FlowPane fx:id="chipsAreas" hgap="6" vgap="6"/>
+            </VBox>
+        </GradeResponsiva>
+    </VBox>
+</ScrollPane>

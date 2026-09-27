@@ -2,11 +2,18 @@ package br.unip.aps.ui;
 
 import br.unip.aps.ApsException;
 import br.unip.aps.app.Sessao;
+import br.unip.aps.ml.Preditor;
 import br.unip.aps.model.BaseDeFocos;
+import br.unip.aps.model.FocoIncendio;
+import br.unip.aps.ui.componentes.Dialogos;
+import br.unip.aps.ui.componentes.Feedback;
+import br.unip.aps.ui.tema.GerenciadorTema;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -16,31 +23,29 @@ import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.chart.Chart;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextArea;
 import javafx.scene.image.WritableImage;
 import javafx.stage.Stage;
 
 import java.awt.image.BufferedImage;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Contexto compartilhado pelos controllers do dashboard: sessao (modelo), propriedades
- * observaveis (base carregada, status, progresso), execucao de tarefas em background com
- * cancelamento e dialogos de erro amigaveis.
+ * Contexto compartilhado pelos controllers do dashboard: sessao (modelo), estado observavel
+ * (base carregada, filtro global, lista filtrada, resultado de ML, tela atual), execucao de
+ * tarefas em background com progresso e cancelamento, dialogos estilizados e toasts.
  */
 public final class UiContexto {
 
@@ -55,17 +60,34 @@ public final class UiContexto {
     });
 
     private final ObjectProperty<BaseDeFocos> base = new SimpleObjectProperty<>();
-    private final ObjectProperty<br.unip.aps.ml.Preditor.ResultadoML> ml = new SimpleObjectProperty<>();
+    private final ObjectProperty<Preditor.ResultadoML> ml = new SimpleObjectProperty<>();
+    private final ObjectProperty<FiltroGlobal> filtro = new SimpleObjectProperty<>(FiltroGlobal.VAZIO);
+    private final ReadOnlyObjectWrapper<List<FocoIncendio>> focosFiltrados = new ReadOnlyObjectWrapper<>(List.of());
+    private final ObjectProperty<Pagina> pagina = new SimpleObjectProperty<>(Pagina.VISAO_GERAL);
     private final StringProperty status = new SimpleStringProperty("Pronto.");
     private final DoubleProperty progresso = new SimpleDoubleProperty(0);
     private final BooleanProperty ocupado = new SimpleBooleanProperty(false);
-    private final Map<String, Chart> graficos = new LinkedHashMap<>();
+    private final Map<String, Node> graficos = new LinkedHashMap<>();
     private Task<?> tarefaAtual;
     private MainController main;
 
     UiContexto(Sessao sessao, Stage stage) {
         this.sessao = sessao;
         this.stage = stage;
+        base.addListener((o, a, n) -> recalcularFiltrados());
+        filtro.addListener((o, a, n) -> recalcularFiltrados());
+    }
+
+    private void recalcularFiltrados() {
+        BaseDeFocos b = base.get();
+        FiltroGlobal f = filtro.get();
+        if (b == null) {
+            focosFiltrados.set(List.of());
+        } else if (f == null || !f.ativo()) {
+            focosFiltrados.set(b.getFocos());
+        } else {
+            focosFiltrados.set(List.copyOf(b.filtrar(f)));
+        }
     }
 
     /**
@@ -89,31 +111,30 @@ public final class UiContexto {
     }
 
     /**
-     * Executa uma tarefa em background, atualizando status e barra de progresso.
+     * Executa uma tarefa em background, atualizando status, progresso e overlay.
      *
-     * @param descricao  texto exibido na barra de status
-     * @param trabalho   trabalho (roda fora da thread da interface)
+     * @param descricao  texto exibido no status/overlay
+     * @param trabalho   trabalho (fora da thread da interface)
      * @param aoConcluir callback na thread da interface com o resultado
      * @param <T>        tipo do resultado
-     * @return tarefa criada (pode ser cancelada)
+     * @return tarefa criada, ou {@code null} se ja houver outra em andamento
      */
     public <T> Task<T> executar(String descricao, Callable<T> trabalho, Consumer<T> aoConcluir) {
         return executar(descricao, p -> trabalho.call(), aoConcluir);
     }
 
     /**
-     * Variante em que o trabalho recebe um reportador de progresso (0 a 1).
+     * Variante em que o trabalho recebe um reportador de progresso (0 a 1, mensagem).
      *
      * @param descricao  texto
      * @param trabalho   trabalho com progresso
      * @param aoConcluir callback com o resultado
      * @param <T>        tipo
-     * @return tarefa
+     * @return tarefa, ou {@code null} se ocupado
      */
     public <T> Task<T> executar(String descricao, TrabalhoComProgresso<T> trabalho, Consumer<T> aoConcluir) {
         if (ocupado.get()) {
-            aviso("Aguarde", "Ja existe uma operacao em andamento: " + status.get()
-                    + "\nAguarde a conclusao ou clique em Cancelar.");
+            Feedback.alerta("Aguarde a operação atual", status.get());
             return null;
         }
         Task<T> task = new Task<>() {
@@ -130,11 +151,11 @@ public final class UiContexto {
         });
         progresso.bind(task.progressProperty());
         ocupado.set(true);
-        status.set(descricao + "...");
+        status.set(descricao + "…");
         long t0 = System.nanoTime();
         task.setOnSucceeded(e -> {
             finalizar();
-            status.set(descricao + " — concluido em " + br.unip.aps.util.Formatos.duracao(System.nanoTime() - t0));
+            status.set(descricao + " — concluído em " + br.unip.aps.util.Formatos.duracao(System.nanoTime() - t0));
             try {
                 aoConcluir.accept(task.getValue());
             } catch (RuntimeException ex) {
@@ -146,6 +167,7 @@ public final class UiContexto {
             Throwable ex = task.getException();
             if (ex instanceof CancellationException) {
                 status.set(descricao + " — cancelado.");
+                Feedback.info("Operação cancelada", descricao);
             } else {
                 status.set(descricao + " — falhou.");
                 erro(descricao, ex);
@@ -153,7 +175,8 @@ public final class UiContexto {
         });
         task.setOnCancelled(e -> {
             finalizar();
-            status.set(descricao + " — cancelado pelo usuario.");
+            status.set(descricao + " — cancelado pelo usuário.");
+            Feedback.info("Operação cancelada", descricao);
         });
         tarefaAtual = task;
         executor.submit(task);
@@ -172,13 +195,14 @@ public final class UiContexto {
         if (tarefaAtual != null) tarefaAtual.cancel(true);
     }
 
-    /** Carrega os CSVs da pasta de dados; em caso de falha oferece alternativas. */
-    void carregarDadosIniciais() {
-        if (main != null) main.carregarInicial();
+    /** Dispara a carga inicial dos dados (feita pela janela principal). */
+    void carregarDadosIniciais(Runnable aoTerminar) {
+        if (main != null) main.carregarInicial(aoTerminar);
+        else aoTerminar.run();
     }
 
     /**
-     * Exibe erro com mensagem amigavel; excecoes inesperadas incluem detalhes tecnicos expansiveis.
+     * Mostra erro amigavel; excecoes inesperadas ganham detalhes tecnicos expansiveis.
      *
      * @param titulo contexto
      * @param ex     excecao
@@ -191,21 +215,14 @@ public final class UiContexto {
         boolean esperado = causa instanceof ApsException || causa instanceof IllegalArgumentException
                 || causa instanceof UnsupportedOperationException;
         if (!esperado) LOG.log(Level.SEVERE, titulo, ex);
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.initOwner(stage);
-        a.setTitle("Erro");
-        a.setHeaderText(titulo);
-        a.setContentText(esperado ? causa.getMessage() : "Ocorreu um erro inesperado: " + causa
-                + "\nOs detalhes foram gravados em logs/aps-0.log.");
+        String detalhes = null;
         if (!esperado) {
-            java.io.StringWriter sw = new java.io.StringWriter();
-            ex.printStackTrace(new java.io.PrintWriter(sw));
-            TextArea ta = new TextArea(sw.toString());
-            ta.setEditable(false);
-            a.getDialogPane().setExpandableContent(ta);
+            StringWriter sw = new StringWriter();
+            ex.printStackTrace(new PrintWriter(sw));
+            detalhes = sw.toString();
         }
-        a.getDialogPane().setMinWidth(520);
-        a.showAndWait();
+        Dialogos.erro(stage, titulo, esperado ? causa.getMessage()
+                : "Ocorreu um erro inesperado: " + causa + "\nOs detalhes foram gravados em logs/aps-0.log.", detalhes);
     }
 
     /**
@@ -213,11 +230,7 @@ public final class UiContexto {
      * @param msg    mensagem
      */
     public void aviso(String titulo, String msg) {
-        Alert a = new Alert(Alert.AlertType.WARNING, msg);
-        a.initOwner(stage);
-        a.setHeaderText(titulo);
-        a.getDialogPane().setMinWidth(480);
-        a.showAndWait();
+        Dialogos.aviso(stage, titulo, msg);
     }
 
     /**
@@ -225,11 +238,7 @@ public final class UiContexto {
      * @param msg    mensagem
      */
     public void info(String titulo, String msg) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, msg);
-        a.initOwner(stage);
-        a.setHeaderText(titulo);
-        a.getDialogPane().setMinWidth(480);
-        a.showAndWait();
+        Dialogos.info(stage, titulo, msg);
     }
 
     /**
@@ -238,28 +247,23 @@ public final class UiContexto {
      * @return {@code true} se o usuario confirmar
      */
     public boolean confirmar(String titulo, String msg) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION, msg, ButtonType.YES, ButtonType.NO);
-        a.initOwner(stage);
-        a.setHeaderText(titulo);
-        a.getDialogPane().setMinWidth(480);
-        Optional<ButtonType> r = a.showAndWait();
-        return r.isPresent() && r.get() == ButtonType.YES;
+        return Dialogos.confirmar(stage, titulo, msg, "Continuar");
     }
 
     /**
      * Registra um grafico para inclusao (snapshot) nos relatorios PDF.
      *
      * @param titulo legenda
-     * @param chart  grafico
+     * @param no     no do grafico (ou card)
      */
-    public void registrarGrafico(String titulo, Chart chart) {
-        graficos.put(titulo, chart);
+    public void registrarGrafico(String titulo, Node no) {
+        graficos.put(titulo, no);
     }
 
-    /** @return snapshots dos graficos visiveis e com dados (deve ser chamado na thread FX) */
+    /** @return snapshots dos graficos ja exibidos e com dados (thread FX) */
     public List<Map.Entry<String, BufferedImage>> snapshotsGraficos() {
         List<Map.Entry<String, BufferedImage>> r = new ArrayList<>();
-        for (Map.Entry<String, Chart> e : graficos.entrySet()) {
+        for (Map.Entry<String, Node> e : graficos.entrySet()) {
             BufferedImage img = snapshot(e.getValue());
             if (img != null) r.add(Map.entry(e.getKey(), img));
         }
@@ -279,12 +283,21 @@ public final class UiContexto {
     }
 
     /**
-     * Seleciona uma aba do dashboard.
+     * Navega para uma tela.
      *
-     * @param id fx:id da aba
+     * @param p tela
+     */
+    public void navegar(Pagina p) {
+        pagina.set(p);
+    }
+
+    /**
+     * Compatibilidade: seleciona tela pelo identificador antigo das abas.
+     *
+     * @param id "mapa", "ml"...
      */
     public void selecionarAba(String id) {
-        if (main != null) main.selecionarAba(id);
+        for (Pagina p : Pagina.values()) if (p.name().equalsIgnoreCase(id)) navegar(p);
     }
 
     /**
@@ -304,8 +317,13 @@ public final class UiContexto {
 
     public Sessao sessao() { return sessao; }
     public Stage stage() { return stage; }
+    public GerenciadorTema tema() { return GerenciadorTema.get(); }
     public ObjectProperty<BaseDeFocos> baseProperty() { return base; }
-    public ObjectProperty<br.unip.aps.ml.Preditor.ResultadoML> mlProperty() { return ml; }
+    public ObjectProperty<Preditor.ResultadoML> mlProperty() { return ml; }
+    public ObjectProperty<FiltroGlobal> filtroProperty() { return filtro; }
+    /** @return focos da base apos o filtro global (lista imutavel) */
+    public ReadOnlyObjectProperty<List<FocoIncendio>> focosFiltradosProperty() { return focosFiltrados.getReadOnlyProperty(); }
+    public ObjectProperty<Pagina> paginaProperty() { return pagina; }
     public StringProperty statusProperty() { return status; }
     public DoubleProperty progressoProperty() { return progresso; }
     public BooleanProperty ocupadoProperty() { return ocupado; }
@@ -318,6 +336,6 @@ public final class UiContexto {
          * @return resultado
          * @throws Exception qualquer falha (exibida em dialogo)
          */
-        T executar(java.util.function.BiConsumer<Double, String> progresso) throws Exception;
+        T executar(BiConsumer<Double, String> progresso) throws Exception;
     }
 }

@@ -1,0 +1,99 @@
+/* =====================================================================
+   Graficos: visual recessivo (grade horizontal leve e tracejada, sem grade
+   vertical, eixos discretos) e cor SEMPRE ligada a entidade (ano, bioma,
+   algoritmo), nunca a posicao da serie. As classes de serie (.serie-*)
+   sao aplicadas pelo codigo Java (ui.componentes.Graficos).
+   ===================================================================== */
+.chart { -fx-padding: 4 4 0 0; -fx-background-color: transparent; }
+.chart-content { -fx-padding: 6 6 0 0; }
+.chart-plot-background { -fx-background-color: transparent; }
+.chart-vertical-grid-lines { -fx-stroke: transparent; }
+.chart-horizontal-grid-lines { -fx-stroke: -aps-grid; -fx-stroke-dash-array: 3 4; -fx-stroke-width: 1; }
+.chart-alternative-row-fill, .chart-alternative-column-fill { -fx-fill: transparent; -fx-stroke: transparent; }
+.chart-vertical-zero-line, .chart-horizontal-zero-line { -fx-stroke: transparent; }
+.chart-title { -fx-font-size: 0; -fx-padding: 0; }
+.chart-legend { -fx-background-color: transparent; -fx-padding: 0; }
+
+.axis {
+    -fx-tick-label-fill: -aps-text-3;
+    -fx-tick-label-font-size: 11px;
+    -fx-tick-length: 0;
+    -fx-minor-tick-visible: false;
+    -fx-border-color: transparent;
+}
+.axis:bottom { -fx-border-color: -aps-border-strong transparent transparent transparent; -fx-border-width: 1 0 0 0; }
+.axis-tick-mark, .axis-minor-tick-mark { -fx-stroke: transparent; }
+.axis-label { -fx-text-fill: -aps-text-3; -fx-font-size: 11px; -fx-font-family: "Inter Medium"; }
+
+/* ---------- Linhas e areas ---------- */
+.chart-series-area-line, .chart-series-line { -fx-stroke-width: 2.25px; -fx-stroke-line-join: round; -fx-stroke-line-cap: round; }
+.chart-series-area-fill { -fx-stroke: transparent; }
+
+.serie-ano-recente .chart-series-area-line, .chart-series-line.serie-ano-recente { -fx-stroke: -aps-ano-recente; }
+.serie-ano-recente .chart-series-area-fill { -fx-fill: linear-gradient(to bottom, -aps-ano-recente-area 0%, -aps-ano-recente-area-0 100%); }
+.serie-ano-anterior .chart-series-area-line, .chart-series-line.serie-ano-anterior { -fx-stroke: -aps-ano-anterior; }
+.serie-ano-anterior .chart-series-area-fill { -fx-fill: linear-gradient(to bottom, -aps-ano-anterior-area 0%, -aps-ano-anterior-area-0 100%); }
+
+/* pontos: invisiveis ate o hover (hit target mantido) */
+.chart-area-symbol, .chart-line-symbol {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 5;
+}
+.chart-area-symbol.serie-ano-recente:hover, .chart-line-symbol.serie-ano-recente:hover, .ponto-pico {
+    -fx-background-color: -aps-surface, -aps-ano-recente; -fx-background-insets: 0, 2;
+}
+.chart-area-symbol.serie-ano-anterior:hover, .chart-line-symbol.serie-ano-anterior:hover {
+    -fx-background-color: -aps-surface, -aps-ano-anterior; -fx-background-insets: 0, 2;
+}
+.chart-area-symbol.ponto-pico { -fx-padding: 5.5; }
+
+/* series categoricas (ordem fixa por algoritmo) */
+.chart-series-line.serie-1 { -fx-stroke: -aps-serie-1; }
+.chart-series-line.serie-2 { -fx-stroke: -aps-serie-2; }
+.chart-series-line.serie-3 { -fx-stroke: -aps-serie-3; }
+.chart-series-line.serie-4 { -fx-stroke: -aps-serie-4; }
+.chart-series-line.serie-5 { -fx-stroke: -aps-serie-5; }
+.chart-series-line.serie-6 { -fx-stroke: -aps-serie-6; }
+.chart-series-line.serie-7 { -fx-stroke: -aps-serie-7; }
+.chart-series-line.serie-neutra { -fx-stroke: -aps-serie-neutra; }
+.chart-series-line.serie-teorica { -fx-stroke: -aps-text-3; -fx-stroke-dash-array: 6 5; -fx-stroke-width: 1.5px; }
+.chart-line-symbol.serie-1:hover { -fx-background-color: -aps-surface, -aps-serie-1; -fx-background-insets: 0, 2; }
+.chart-line-symbol.serie-2:hover { -fx-background-color: -aps-surface, -aps-serie-2; -fx-background-insets: 0, 2; }
+.chart-line-symbol.serie-3:hover { -fx-background-color: -aps-surface, -aps-serie-3; -fx-background-insets: 0, 2; }
+.chart-line-symbol.serie-4:hover { -fx-background-color: -aps-surface, -aps-serie-4; -fx-background-insets: 0, 2; }
+.chart-line-symbol.serie-5:hover { -fx-background-color: -aps-surface, -aps-serie-5; -fx-background-insets: 0, 2; }
+.chart-line-symbol.serie-6:hover { -fx-background-color: -aps-surface, -aps-serie-6; -fx-background-insets: 0, 2; }
+.chart-line-symbol.serie-7:hover { -fx-background-color: -aps-surface, -aps-serie-7; -fx-background-insets: 0, 2; }
+.chart-line-symbol.serie-neutra:hover { -fx-background-color: -aps-surface, -aps-serie-neutra; -fx-background-insets: 0, 2; }
+.legenda-marca.serie-1 { -fx-background-color: -aps-serie-1; }
+.legenda-marca.serie-2 { -fx-background-color: -aps-serie-2; }
+.legenda-marca.serie-3 { -fx-background-color: -aps-serie-3; }
+.legenda-marca.serie-4 { -fx-background-color: -aps-serie-4; }
+.legenda-marca.serie-5 { -fx-background-color: -aps-serie-5; }
+.legenda-marca.serie-6 { -fx-background-color: -aps-serie-6; }
+.legenda-marca.serie-7 { -fx-background-color: -aps-serie-7; }
+.legenda-marca.serie-neutra { -fx-background-color: -aps-serie-neutra; }
+
+/* ---------- Barras verticais ---------- */
+.chart-bar { -fx-background-color: -aps-accent; -fx-background-radius: 4 4 0 0; -fx-background-insets: 0 1 0 1; }
+.chart-bar:hover { -fx-background-color: -aps-accent-hover; }
+.chart-bar.barra-vazia { -fx-background-color: transparent; }
+.bar-chart { -fx-bar-gap: 3; -fx-category-gap: 6; }
+
+/* ---------- Donut ---------- */
+.donut-segmento { -fx-fill: transparent; -fx-stroke-line-cap: butt; }
+.donut-segmento.bioma-mata-atlantica { -fx-stroke: -aps-bioma-mata; }
+.donut-segmento.bioma-cerrado { -fx-stroke: -aps-bioma-cerrado; }
+.donut-segmento.bioma-amazonia { -fx-stroke: -aps-bioma-amazonia; }
+.donut-segmento.bioma-caatinga { -fx-stroke: -aps-bioma-caatinga; }
+.donut-segmento.bioma-pantanal { -fx-stroke: -aps-bioma-pantanal; }
+.donut-segmento.bioma-pampa { -fx-stroke: -aps-bioma-pampa; }
+.donut-segmento.bioma-outro { -fx-stroke: -aps-bioma-outro; }
+.donut-trilho { -fx-fill: transparent; -fx-stroke: -aps-surface-sunken; }
+.donut-total { -fx-font-family: "Inter"; -fx-font-weight: bold; -fx-font-size: 24px; -fx-fill: -aps-text-1; }
+.donut-legenda-rotulo { -fx-font-size: 11.5px; -fx-fill: -aps-text-3; }
+.donut-item { -fx-spacing: 10; -fx-alignment: center-left; -fx-padding: 6 0; -fx-border-color: transparent transparent -aps-border transparent; }
+.donut-item-nome { -fx-font-family: "Inter Medium"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
+.donut-item-valor { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
+.donut-item-pct { -fx-font-size: 12px; -fx-text-fill: -aps-text-3; -fx-min-width: 48; -fx-alignment: center-right; }

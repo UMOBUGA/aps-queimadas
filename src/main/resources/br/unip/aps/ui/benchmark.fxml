@@ -1,84 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.NumberAxis?>
+<?import br.unip.aps.ui.componentes.ChartCard?>
+<?import br.unip.aps.ui.componentes.GradeResponsiva?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<SplitPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="br.unip.aps.ui.BenchmarkController" dividerPositions="0.22" styleClass="aba">
-    <ScrollPane fitToWidth="true" minWidth="270" maxWidth="380">
-        <VBox spacing="8" styleClass="painel-lateral">
-            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
-            <Label text="Algoritmos" styleClass="secao"/>
-            <VBox fx:id="boxAlgoritmos" spacing="3"/>
-            <Separator/>
-            <Label text="Critérios" styleClass="secao"/>
-            <VBox fx:id="boxCriterios" spacing="3"/>
-            <Separator/>
-            <Label text="Cenários de entrada" styleClass="secao"/>
-            <VBox fx:id="boxCenarios" spacing="3"/>
-            <Separator/>
-            <Label text="Tamanhos (n), separados por vírgula; 0 = base inteira" wrapText="true"/>
-            <TextField fx:id="tfTamanhos" text="100, 1000, 5000, 10000, 0"/>
-            <GridPane hgap="6" vgap="6">
-                <Label text="Aquecimentos (JIT):" GridPane.rowIndex="0"/>
-                <Spinner fx:id="spAquecimentos" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="80"/>
-                <Label text="Repetições:" GridPane.rowIndex="1"/>
-                <Spinner fx:id="spRepeticoes" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="80"/>
-            </GridPane>
-            <Button text="Configuração rápida" onAction="#configRapida" maxWidth="Infinity"/>
-            <Button text="Executar benchmark" onAction="#executar" maxWidth="Infinity" styleClass="botao-primario"/>
-            <Button text="Exportar CSV" onAction="#exportarCsv" maxWidth="Infinity"/>
-            <Label wrapText="true" styleClass="texto-suave"
-                   text="Cada caso: aquecimentos descartados + repetições medidas (média ± desvio). Todos os algoritmos recebem a mesma entrada."/>
-        </VBox>
-    </ScrollPane>
-
-    <VBox spacing="6">
-        <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
-        <HBox spacing="8" alignment="CENTER_LEFT" styleClass="painel-filtros">
-            <Label text="Critério:"/>
-            <ComboBox fx:id="cbCriterio" prefWidth="130"/>
-            <Label text="Cenário:"/>
-            <ComboBox fx:id="cbCenario" prefWidth="170"/>
-            <Label text="Métrica:"/>
-            <ComboBox fx:id="cbMetrica" prefWidth="150"/>
-            <CheckBox fx:id="chkLog" text="log10" selected="true"/>
-            <CheckBox fx:id="chkTeoricas" text="Curvas teóricas" selected="true"/>
-        </HBox>
-        <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-            <Tab text="Gráfico (custo × n)">
-                <LineChart fx:id="grafico" animated="false" createSymbols="true">
-                    <xAxis><NumberAxis fx:id="eixoX" label="n (tamanho da entrada)"/></xAxis>
-                    <yAxis><NumberAxis fx:id="eixoY" label="custo"/></yAxis>
-                </LineChart>
-            </Tab>
-            <Tab text="Tabela de medições">
-                <TableView fx:id="tabela"/>
-            </Tab>
-            <Tab text="Complexidade empírica">
-                <VBox spacing="6">
-                    <padding><Insets top="6" right="6" bottom="6" left="6"/></padding>
-                    <Label wrapText="true" styleClass="texto-suave"
-                           text="Se custo ≈ c·n^k, então log(custo) = log(c) + k·log(n): a inclinação da reta no gráfico log-log é o expoente k. Esperado: k≈2 para O(n²), k≈1,0–1,15 para O(n log n), k≈1 para lineares."/>
-                    <TableView fx:id="tabelaComplexidade" VBox.vgrow="ALWAYS"/>
+<!-- Benchmark: configuracao, graficos custo x n (O(n^2) | O(n log n)), vencedores e medicoes -->
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="br.unip.aps.ui.BenchmarkController" fitToWidth="true">
+    <VBox styleClass="page">
+        <VBox styleClass="panel-card" spacing="12">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label text="Configuração da bateria" styleClass="card-title"/>
+                    <Label text="Cada caso: aquecimentos descartados (JIT) + repetições medidas (média ± desvio). Todos os algoritmos recebem exatamente a mesma entrada. Usa a base completa (sem o filtro global)."
+                           styleClass="card-subtitle" wrapText="true"/>
                 </VBox>
-            </Tab>
-        </TabPane>
+                <Button fx:id="btnSalvos" text="Abrir resultados salvos" onAction="#abrirSalvos" styleClass="btn-ghost"/>
+                <Button fx:id="btnRapida" text="Configuração rápida" onAction="#configRapida" styleClass="btn-secondary"/>
+                <Button fx:id="btnExecutar" text="Executar benchmark" onAction="#executar" styleClass="btn-primary"/>
+            </HBox>
+            <GridPane hgap="16" vgap="10">
+                <Label text="ALGORITMOS" styleClass="section-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <FlowPane fx:id="fpAlgoritmos" hgap="6" vgap="6" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                <Label text="CRITÉRIOS" styleClass="section-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <FlowPane fx:id="fpCriterios" hgap="6" vgap="6" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="CENÁRIOS" styleClass="section-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <FlowPane fx:id="fpCenarios" hgap="6" vgap="6" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                <Label text="EXECUÇÃO" styleClass="section-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <HBox spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                    <Label text="Tamanhos (n)" styleClass="field-label"/>
+                    <TextField fx:id="tfTamanhos" text="100, 1000, 5000, 10000, 0" prefWidth="220" promptText="0 = base inteira"/>
+                    <Label text="Aquecimentos" styleClass="field-label"/>
+                    <Spinner fx:id="spAquecimentos" prefWidth="84"/>
+                    <Label text="Repetições" styleClass="field-label"/>
+                    <Spinner fx:id="spRepeticoes" prefWidth="84"/>
+                </HBox>
+            </GridPane>
+        </VBox>
+
+        <FlowPane fx:id="barraVisao" hgap="10" vgap="8" alignment="CENTER_LEFT">
+            <HBox fx:id="segCriterio" styleClass="segmented"/>
+            <HBox fx:id="segCenario" styleClass="segmented"/>
+            <HBox fx:id="segMetrica" styleClass="segmented"/>
+            <HBox fx:id="segEscala" styleClass="segmented"/>
+        </FlowPane>
+
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="16">
+            <ChartCard fx:id="cQuadraticos" titulo="Algoritmos O(n²)" subtitulo="Bubble, Selection e Insertion" prefHeight="420"/>
+            <ChartCard fx:id="cLogLineares" titulo="Algoritmos O(n log n) e lineares" subtitulo="Shell, Merge, Quick, Quick 3-Way, Heap, Tim e Radix" prefHeight="420"/>
+        </GradeResponsiva>
+
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="16">
+            <ChartCard fx:id="cVencedores" titulo="Vencedores por critério e cenário" subtitulo="Menor tempo médio no maior n medido; ★ = vencedor" prefHeight="360"/>
+            <ChartCard fx:id="cComplexidade" titulo="Complexidade empírica" subtitulo="Expoente k da regressão log-log (custo ≈ c·nᵏ): ≈2 para O(n²), ≈1,0–1,2 para O(n log n)" prefHeight="360"/>
+        </GradeResponsiva>
+
+        <TitledPane text="Todas as medições" expanded="false" styleClass="titled-plano">
+            <TableView fx:id="tabela" prefHeight="420"/>
+        </TitledPane>
     </VBox>
-</SplitPane>
+</ScrollPane>

@@ -1,0 +1,122 @@
+/* =====================================================================
+   Tema CLARO — tokens semanticos (-aps-*) e mapeamento para o AtlantaFX.
+   Contraste WCAG AA verificado (texto terciario 4,97:1 sobre a superficie;
+   botao primario 5,18:1). Paleta de dados validada (CVD / contraste).
+   ===================================================================== */
+.root {
+    /* Superficies e texto */
+    -aps-bg-app:          -slate-50;
+    -aps-surface:         -slate-0;
+    -aps-surface-muted:   -slate-25;
+    -aps-surface-hover:   -slate-100;
+    -aps-surface-sunken:  -slate-100;
+    -aps-border:          -slate-150;
+    -aps-border-strong:   -slate-200;
+    -aps-text-1:          -slate-900;
+    -aps-text-2:          -slate-600;
+    -aps-text-3:          -slate-500;
+    -aps-text-on-accent:  #FFFFFF;
+    -aps-focus-ring:      rgba(232, 89, 12, 0.55);
+    -aps-scrim:           rgba(16, 24, 40, 0.38);
+    -aps-shadow-1:        rgba(16, 24, 40, 0.06);
+    -aps-shadow-2:        rgba(16, 24, 40, 0.16);
+
+    /* Destaque (brasa) */
+    -aps-accent:          -brasa-600;
+    -aps-accent-strong:   -brasa-700;
+    -aps-accent-hover:    -brasa-800;
+    -aps-accent-subtle:   -brasa-50;
+    -aps-accent-muted:    -brasa-100;
+    -aps-accent-text:     -brasa-700;
+
+    /* Semanticas: texto / fundo suave */
+    -aps-success:        -verde-700;
+    -aps-success-subtle: -verde-50;
+    -aps-warning:        -ambar-700;
+    -aps-warning-subtle: -ambar-50;
+    -aps-danger:         -vermelho-700;
+    -aps-danger-subtle:  -vermelho-50;
+    -aps-info:           -azul-700;
+    -aps-info-subtle:    -azul-50;
+
+    /* ---- Paleta de DADOS (significado fixo em graficos, mapa e relatorios) ---- */
+    -aps-ano-recente:        #E8590C;
+    -aps-ano-recente-area:   rgba(232, 89, 12, 0.22);
+    -aps-ano-recente-area-0: rgba(232, 89, 12, 0.00);
+    -aps-ano-anterior:        #3D6DB5;
+    -aps-ano-anterior-area:   rgba(61, 109, 181, 0.16);
+    -aps-ano-anterior-area-0: rgba(61, 109, 181, 0.00);
+    -aps-bioma-mata:     #1F6E45;
+    -aps-bioma-cerrado:  #C48E22;
+    -aps-bioma-amazonia: #2A78D6;
+    -aps-bioma-caatinga: #E87BA4;
+    -aps-bioma-pantanal: #4A3AA7;
+    -aps-bioma-pampa:    #1BAF7A;
+    -aps-bioma-outro:    #98A2B3;
+    /* escala sequencial (1 matiz, claro -> escuro = menos -> mais) */
+    -aps-heat-vazio: #EEF1F4;
+    -aps-heat-1: #F0975C;
+    -aps-heat-2: #E8590C;
+    -aps-heat-3: #C4470A;
+    -aps-heat-4: #963608;
+    -aps-heat-tinta-1: #1A0B02;
+    -aps-heat-tinta-2: #1A0B02;
+    -aps-heat-tinta-3: #FFFFFF;
+    -aps-heat-tinta-4: #FFFFFF;
+    -aps-heat-tinta-5: #FFFFFF;
+    -aps-heat-5: #662405;
+    /* series categoricas (ordem fixa por algoritmo) */
+    -aps-serie-1: #2A78D6;
+    -aps-serie-2: #EB6834;
+    -aps-serie-3: #1BAF7A;
+    -aps-serie-4: #EDA100;
+    -aps-serie-5: #E87BA4;
+    -aps-serie-6: #008300;
+    -aps-serie-7: #4A3AA7;
+    -aps-serie-neutra: #475467;
+    -aps-grid: #E4E7EC;
+    -aps-skeleton-1: #EEF1F4;
+    -aps-skeleton-2: #F7F8FA;
+
+    /* ---- Sobrescrita dos tokens do AtlantaFX (Primer) ---- */
+    -color-fg-default:      -aps-text-1;
+    -color-fg-muted:        -aps-text-2;
+    -color-fg-subtle:       -aps-text-3;
+    -color-bg-default:      -aps-surface;
+    -color-bg-overlay:      -aps-surface;
+    -color-bg-subtle:       -aps-surface-muted;
+    -color-bg-inset:        -aps-bg-app;
+    -color-border-default:  -aps-border-strong;
+    -color-border-muted:    -aps-border;
+    -color-border-subtle:   -aps-border;
+    -color-accent-0: -brasa-50;
+    -color-accent-1: -brasa-100;
+    -color-accent-2: -brasa-300;
+    -color-accent-3: -brasa-400;
+    -color-accent-4: -brasa-500;
+    -color-accent-5: -brasa-600;
+    -color-accent-6: -brasa-700;
+    -color-accent-7: -brasa-800;
+    -color-accent-8: -brasa-800;
+    -color-accent-9: -brasa-950;
+    -color-accent-fg:       -aps-accent-text;
+    -color-accent-emphasis: -aps-accent-strong;
+    -color-accent-muted:    rgba(232, 89, 12, 0.35);
+    -color-accent-subtle:   -aps-accent-subtle;
+    -color-success-fg:      -aps-success;
+    -color-success-subtle:  -aps-success-subtle;
+    -color-warning-fg:      -aps-warning;
+    -color-warning-subtle:  -aps-warning-subtle;
+    -color-danger-fg:       -aps-danger;
+    -color-danger-emphasis: -aps-danger;
+    -color-danger-subtle:   -aps-danger-subtle;
+    -color-chart-1: -aps-ano-anterior;
+    -color-chart-2: -aps-ano-recente;
+}
+
+.card, .kpi-card, .chart-card, .panel-card {
+    -fx-effect: dropshadow(gaussian, rgba(16, 24, 40, 0.06), 10, 0, 0, 1);
+}
+.toast, .splash-card {
+    -fx-effect: dropshadow(gaussian, rgba(16, 24, 40, 0.18), 24, 0, 0, 6);
+}

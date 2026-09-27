@@ -5,99 +5,193 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa de focos</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
+<!-- A WebView do JavaFX desenha tiles fora de posicao com transformacoes 3D: usa 2D -->
+<script>window.L_DISABLE_3D = true;</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
 <style>
-  html, body, #mapa { height: 100%; margin: 0; padding: 0; font-family: "Segoe UI", Arial, sans-serif; }
-  .legenda { background: rgba(255,255,255,.92); padding: 8px 10px; border-radius: 6px; line-height: 1.5;
-             box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 12px; }
-  .legenda i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
-  #aviso { display: none; position: absolute; inset: 0; align-items: center; justify-content: center;
-           background: #f5f5f5; color: #444; text-align: center; padding: 30px; font-size: 15px; }
+  /* Paleta espelhada dos tokens do design system (theme-light.css / theme-dark.css) */
+  :root {
+    --surface: #FFFFFF; --text-1: #101828; --text-2: #475467; --text-3: #667085; --border: #E4E7EC;
+    --accent: #E8590C; --accent-subtle: #FFF4ED; --shadow: 0 8px 24px rgba(16,24,40,.14);
+  }
+  body.escuro {
+    --surface: #151B23; --text-1: #F2F4F7; --text-2: #B4BDC9; --text-3: #8C97A6; --border: #273140;
+    --accent: #F97316; --accent-subtle: #2A1A12; --shadow: 0 8px 24px rgba(0,0,0,.5);
+  }
+  html, body, #mapa { height: 100%; margin: 0; padding: 0; font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--surface); }
+  .leaflet-container { background: var(--surface); font-family: inherit; }
+  .legenda {
+    background: var(--surface); color: var(--text-2); padding: 10px 12px; border-radius: 10px; line-height: 1.7;
+    box-shadow: var(--shadow); border: 1px solid var(--border); font-size: 12px; min-width: 150px;
+  }
+  .legenda b { color: var(--text-1); font-size: 13px; }
+  .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; }
+  .legenda .grad { height: 8px; border-radius: 4px; margin: 6px 0 2px; }
+  .leaflet-popup-content-wrapper { background: var(--surface); color: var(--text-1); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+  .leaflet-popup-tip { background: var(--surface); border: 1px solid var(--border); }
+  .leaflet-popup-content { margin: 12px 14px; font-size: 12.5px; line-height: 1.5; }
+  .pop-titulo { font-weight: 600; font-size: 13.5px; color: var(--text-1); margin-bottom: 2px; }
+  .pop-linha { color: var(--text-2); }
+  .pop-bioma { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--accent-subtle); color: var(--text-1); font-size: 11.5px; margin-top: 4px; }
+  .leaflet-control-zoom a, .leaflet-control-layers { background: var(--surface) !important; color: var(--text-1) !important; border-color: var(--border) !important; }
+  .leaflet-control-attribution { background: rgba(255,255,255,.7) !important; }
+  body.escuro .leaflet-control-attribution { background: rgba(21,27,35,.75) !important; color: var(--text-3); }
+  body.escuro .leaflet-control-attribution a { color: var(--text-2); }
+  .cluster { background: rgba(232, 89, 12, .22); border-radius: 50%; }
+  .cluster div { background: var(--accent); color: #fff; border-radius: 50%; width: 30px; height: 30px; margin: 5px;
+                 display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; }
+  #aviso { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; background: var(--surface);
+           color: var(--text-2); text-align: center; padding: 30px; font-size: 14px; line-height: 1.6; }
+  #aviso b { color: var(--text-1); font-size: 16px; }
 </style>
 </head>
 <body>
 <div id="mapa"></div>
-<div id="aviso">
-  <div><b>Não foi possível carregar o mapa.</b><br><br>
-  O mapa usa a biblioteca Leaflet e as imagens do OpenStreetMap, que exigem conexão com a internet.<br>
-  Verifique a conexão e clique em "Aplicar" novamente. As demais abas funcionam normalmente offline.</div>
-</div>
+<div id="aviso"><div><b>Não foi possível carregar o mapa</b><br>
+  O mapa usa a biblioteca Leaflet e mapas-base do OpenStreetMap/CARTO, que exigem internet.<br>
+  Verifique a conexão; as demais telas funcionam normalmente offline.</div></div>
 <script>
+window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + ':' + l); } catch (e) {} };
 (function () {
-  var CORES = ['#d7301f', '#1a9850', '#4575b4', '#984ea3', '#ff7f00', '#a65628', '#f781bf', '#666666'];
-
+  var PALETA = {
+    claro:  { bioma: {"Mata Atlântica": "#1F6E45", "Cerrado": "#C48E22", "Amazônia": "#2A78D6", "Caatinga": "#E87BA4", "Pantanal": "#4A3AA7", "Pampa": "#1BAF7A"},
+              outro: "#98A2B3", anoRecente: "#E8590C", anoAnterior: "#3D6DB5", borda: "#FFFFFF",
+              heat: ["#F0975C", "#E8590C", "#C4470A", "#963608", "#662405"], hotspot: "#C2410C" },
+    escuro: { bioma: {"Mata Atlântica": "#23804F", "Cerrado": "#BC862A", "Amazônia": "#3987E5", "Caatinga": "#D55181", "Pantanal": "#9085E9", "Pampa": "#199E70"},
+              outro: "#8C97A6", anoRecente: "#EC6325", anoAnterior: "#6A95D6", borda: "#151B23",
+              heat: ["#8A3208", "#B8440A", "#E8590C", "#F68A45", "#FCAE78"], hotspot: "#FB8A4C" }
+  };
   if (typeof L === 'undefined') {
     document.getElementById('aviso').style.display = 'flex';
-    window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, limpar: function () {} };
+    window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, setTema: function () {}, setModo: function () {}, setCorPor: function () {} };
     return;
   }
-
-  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: true }).setView([-22.3, -48.6], 7);
-  var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18, attribution: '&copy; colaboradores do <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 }, hotspots: [], ajustar: true };
+  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: true, attributionControl: true }).setView([-22.3, -48.6], 7);
+  /* Mapas-base neutros (claro/escuro) da Esri, gratuitos e sem chave de API.
+     Obs.: os basemaps CARTO Positron/Dark Matter passaram a exigir chave de API. */
+  var atrib = 'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, HERE, Garmin, &copy; colaboradores do OpenStreetMap';
+  var base = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+  var tiles = {
+    claro: L.tileLayer(base + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: atrib }),
+    escuro: L.tileLayer(base + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: atrib })
+  };
+  tiles.claro.addTo(mapa);
+  var erroTile = false;
+  ['claro', 'escuro'].forEach(function (k) {
+    tiles[k].on('tileerror', function () { if (!erroTile) { erroTile = true; alert('TILE: falha ao carregar mapa-base'); } });
   });
-  var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19, subdomains: 'abcd',
-    attribution: '&copy; colaboradores do OpenStreetMap &copy; <a href="https://carto.com/attributions">CARTO</a>'
-  });
-  carto.addTo(mapa);
   var renderer = L.canvas({ padding: 0.5 });
-  var camadaFocos = L.layerGroup().addTo(mapa);
-  var camadaHotspots = L.layerGroup().addTo(mapa);
-  L.control.layers({ 'CARTO claro (OSM)': carto, 'OpenStreetMap': osm },
-                   { 'Focos': camadaFocos, 'Hotspots (ML)': camadaHotspots }).addTo(mapa);
-  L.control.scale({ imperial: false }).addTo(mapa);
-
+  var camada = L.layerGroup().addTo(mapa);
+  var camadaHot = L.layerGroup().addTo(mapa);
+  L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(mapa);
   var legenda = L.control({ position: 'bottomright' });
   var legendaDiv;
   legenda.onAdd = function () { legendaDiv = L.DomUtil.create('div', 'legenda'); return legendaDiv; };
   legenda.addTo(mapa);
 
-  function escapar(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
+  function pal() { return PALETA[estado.tema]; }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(n) { return n.toLocaleString('pt-BR'); }
+  function cor(f) {
+    var p = pal();
+    if (estado.corPor === 'ano') return f[5] === estado.dados.anoRecente ? p.anoRecente : p.anoAnterior;
+    return p.bioma[estado.dados.biomas[f[2]]] || p.outro;
+  }
+  function popup(f) {
+    return '<div class="pop-titulo">' + esc(f[3]) + '</div><div class="pop-linha">' + esc(f[4]) + ' (GMT)</div>'
+         + '<div class="pop-linha">' + f[0].toFixed(5) + ', ' + f[1].toFixed(5) + '</div>'
+         + '<span class="pop-bioma">' + esc(estado.dados.biomas[f[2]]) + '</span>';
   }
 
-  /**
-   * dados = { biomas: ["Cerrado", ...], focos: [[lat, lon, idxBioma, "MUNICIPIO", "dd/MM/yyyy HH:mm"], ...] }
-   */
-  function setFocos(dados) {
-    camadaFocos.clearLayers();
-    var limites = [];
-    dados.focos.forEach(function (f) {
-      var cor = CORES[f[2] % CORES.length];
-      L.circleMarker([f[0], f[1]], { renderer: renderer, radius: 3.5, weight: 0.6, color: '#333',
-                                     fillColor: cor, fillOpacity: 0.8 })
-        .bindPopup('<b>' + escapar(f[3]) + '</b><br>' + escapar(f[4]) + ' (GMT)<br>' + escapar(dados.biomas[f[2]])
-                   + '<br>' + f[0].toFixed(5) + ', ' + f[1].toFixed(5))
-        .addTo(camadaFocos);
-      limites.push([f[0], f[1]]);
-    });
-    var html = '<b>' + dados.focos.length.toLocaleString('pt-BR') + ' focos</b><br>';
-    dados.biomas.forEach(function (b, i) { html += '<i style="background:' + CORES[i % CORES.length] + '"></i>' + escapar(b) + '<br>'; });
+  var TAM = 0.08, LIMITES = [1, 3, 10, 25, 60];
+  function faixa(n) { var r = 0; for (var i = 0; i < LIMITES.length; i++) if (n >= LIMITES[i]) r = i; return r; }
+
+  function desenhar() {
+    camada.clearLayers();
+    var focos = estado.dados.focos, p = pal();
+    if (estado.modo === 'calor') {
+      /* Grade de densidade (~9 km): cada celula mostra a contagem exata; cor pela escala sequencial */
+      var grade = {};
+      focos.forEach(function (f) {
+        var k = Math.floor(f[0] / TAM) + ':' + Math.floor(f[1] / TAM);
+        grade[k] = (grade[k] || 0) + 1;
+      });
+      Object.keys(grade).forEach(function (k) {
+        var n = grade[k], q = k.split(':'), la = +q[0] * TAM, lo = +q[1] * TAM;
+        L.rectangle([[la, lo], [la + TAM, lo + TAM]], { renderer: renderer, stroke: false, fillColor: p.heat[faixa(n)], fillOpacity: 0.82 })
+          .bindTooltip(fmt(n) + (n === 1 ? ' foco' : ' focos') + ' nesta célula (~9 km)', { sticky: true })
+          .addTo(camada);
+      });
+    } else if (estado.modo === 'cluster') {
+      var grupo = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 48, chunkedLoading: true,
+        iconCreateFunction: function (c) {
+          var n = c.getChildCount(), s = n < 50 ? 40 : n < 500 ? 48 : 56;
+          return L.divIcon({ html: '<div style="width:' + (s - 10) + 'px;height:' + (s - 10) + 'px">' + fmt(n) + '</div>', className: 'cluster', iconSize: [s, s] });
+        } });
+      focos.forEach(function (f) {
+        grupo.addLayer(L.circleMarker([f[0], f[1]], { renderer: renderer, radius: 5, weight: 1, color: p.borda, fillColor: cor(f), fillOpacity: 0.9 }).bindPopup(popup(f)));
+      });
+      camada.addLayer(grupo);
+    } else {
+      focos.forEach(function (f) {
+        L.circleMarker([f[0], f[1]], { renderer: renderer, radius: 3.6, weight: 0.8, color: p.borda, fillColor: cor(f), fillOpacity: 0.85 })
+          .bindPopup(popup(f)).addTo(camada);
+      });
+    }
+    desenharLegenda();
+  }
+
+  function desenharLegenda() {
+    var p = pal(), html = '<b>' + fmt(estado.dados.focos.length) + ' focos</b><br>';
+    if (estado.modo === 'calor') {
+      html += 'Focos por célula (~9 km)<br>';
+      var rot = ['1–2', '3–9', '10–24', '25–59', '60+'];
+      p.heat.forEach(function (c, i) { html += '<i style="background:' + c + ';border-radius:2px"></i>' + rot[i] + '<br>'; });
+    } else if (estado.corPor === 'ano') {
+      html += '<i style="background:' + p.anoRecente + '"></i>' + estado.dados.anoRecente + '<br><i style="background:' + p.anoAnterior + '"></i>anos anteriores';
+    } else {
+      estado.dados.biomas.forEach(function (b) { html += '<i style="background:' + (p.bioma[b] || p.outro) + '"></i>' + esc(b) + '<br>'; });
+    }
+    if (estado.hotspots.length) html += '<br><i style="background:transparent;border:2px solid ' + p.hotspot + '"></i>Hotspots (DBSCAN)';
     legendaDiv.innerHTML = html;
-    if (limites.length > 0) mapa.fitBounds(limites, { padding: [20, 20], maxZoom: 11 });
   }
 
-  /** hotspots = [[lat, lon, focos, raioKm, id, "MUNICIPIO", "Bioma"], ...] */
-  function setHotspots(hotspots) {
-    camadaHotspots.clearLayers();
-    hotspots.forEach(function (h) {
-      L.circle([h[0], h[1]], { radius: Math.max(1500, h[3] * 1000), color: '#b10026', weight: 2,
-                               fillColor: '#fd8d3c', fillOpacity: 0.18 })
-        .bindTooltip('Hotspot #' + h[4] + ' — ' + h[2] + ' focos', { sticky: true })
-        .bindPopup('<b>Hotspot #' + h[4] + '</b><br>' + h[2] + ' focos<br>raio ~' + h[3].toFixed(1) + ' km<br>'
-                   + escapar(h[5]) + ' / ' + escapar(h[6]))
-        .addTo(camadaHotspots);
+  function desenharHotspots() {
+    camadaHot.clearLayers();
+    var p = pal();
+    estado.hotspots.forEach(function (h) {
+      L.circle([h[0], h[1]], { radius: Math.max(1500, h[3] * 1000), color: p.hotspot, weight: 2, dashArray: '5 4', fillColor: p.hotspot, fillOpacity: 0.08 })
+        .bindTooltip('Hotspot #' + h[4] + ' — ' + fmt(h[2]) + ' focos', { sticky: true })
+        .bindPopup('<div class="pop-titulo">Hotspot #' + h[4] + '</div><div class="pop-linha">' + fmt(h[2]) + ' focos · raio ~' + h[3].toFixed(1)
+          + ' km</div><div class="pop-linha">' + esc(h[5]) + '</div><span class="pop-bioma">' + esc(h[6]) + '</span>')
+        .addTo(camadaHot);
     });
+    desenharLegenda();
   }
 
   window.APS = {
     pronto: true,
-    setFocos: setFocos,
-    setHotspots: setHotspots,
-    limpar: function () { camadaFocos.clearLayers(); camadaHotspots.clearLayers(); }
+    setFocos: function (dados) {
+      estado.dados = dados;
+      desenhar();
+      if (dados.focos.length) {
+        mapa.fitBounds(dados.focos.map(function (f) { return [f[0], f[1]]; }), { padding: [24, 24], maxZoom: 11 });
+      }
+    },
+    setHotspots: function (h) { estado.hotspots = h; desenharHotspots(); },
+    setModo: function (m) { estado.modo = m; desenhar(); },
+    setCorPor: function (c) { estado.corPor = c; desenhar(); },
+    setTema: function (escuro) {
+      estado.tema = escuro ? 'escuro' : 'claro';
+      document.body.classList.toggle('escuro', escuro);
+      mapa.removeLayer(escuro ? tiles.claro : tiles.escuro);
+      (escuro ? tiles.escuro : tiles.claro).addTo(mapa);
+      desenhar();
+      desenharHotspots();
+    }
   };
 })();
 </script>

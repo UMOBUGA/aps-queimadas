@@ -1,0 +1,75 @@
+/* =====================================================================
+   APS Queimadas — Design tokens (paleta bruta e escalas)
+   ---------------------------------------------------------------------
+   Camadas do design system (carregadas nesta ordem):
+     1. tokens.css        paleta bruta (este arquivo)  -> NUNCA usada direto nos componentes
+     2. theme-light.css / theme-dark.css
+                          tokens semanticos (-aps-*) + sobrescrita dos tokens do AtlantaFX
+     3. base.css          tipografia e elementos base
+     4. components.css    componentes (.kpi-card, .chart-card, .btn-primary, ...)
+     5. charts.css        graficos
+   Componentes so referenciam tokens SEMANTICOS (-aps-*), por isso trocar o
+   tema e apenas trocar o arquivo 2.
+
+   Escalas (JavaFX CSS nao tem variaveis de tamanho; os valores abaixo sao
+   a regra seguida no CSS e na classe Java ui.Espaco):
+     espacamento: 4 · 8 · 12 · 16 · 24 · 32 px
+     raios:       6 (controles) · 10 (cards pequenos, chips) · 14 (cards, dialogos)
+     sombras:     nivel 1 (cards) · nivel 2 (popups, toasts)
+     tipografia:  display 28 · h1 22 · h2 16 · h3 14 · corpo 14 · pequeno 13 · legenda 12
+   Paleta de dados validada para daltonismo (CVD) e contraste WCAG
+   (ver docs/DESIGN.md).
+   ===================================================================== */
+.root {
+    /* Neutros (slate) */
+    -slate-0:   #FFFFFF;
+    -slate-25:  #FAFBFC;
+    -slate-50:  #F5F6F8;
+    -slate-100: #EEF1F4;
+    -slate-150: #E4E7EC;
+    -slate-200: #D0D5DD;
+    -slate-400: #98A2B3;
+    -slate-500: #667085;
+    -slate-600: #475467;
+    -slate-800: #1D2939;
+    -slate-900: #101828;
+
+    -ink-950: #0B0F14;
+    -ink-900: #151B23;
+    -ink-850: #1A212B;
+    -ink-800: #1F2833;
+    -ink-700: #273140;
+    -ink-600: #344154;
+    -ink-400: #8C97A6;
+    -ink-300: #B4BDC9;
+    -ink-100: #F2F4F7;
+
+    /* Brasa (destaque) */
+    -brasa-50:  #FFF4ED;
+    -brasa-100: #FFE6D5;
+    -brasa-300: #FDBA8C;
+    -brasa-400: #FB8A4C;
+    -brasa-500: #F97316;
+    -brasa-600: #E8590C;
+    -brasa-700: #C2410C;
+    -brasa-800: #9A3412;
+    -brasa-950: #2A1A12;
+
+    /* Semanticas */
+    -verde-700:    #067647;
+    -verde-50:     #ECFDF3;
+    -verde-400:    #47CD89;
+    -verde-950:    #0E2A1D;
+    -ambar-700:    #B54708;
+    -ambar-50:     #FFFAEB;
+    -ambar-400:    #FDB022;
+    -ambar-950:    #2B1F0A;
+    -vermelho-700: #B42318;
+    -vermelho-50:  #FEF3F2;
+    -vermelho-400: #F97066;
+    -vermelho-950: #2D1414;
+    -azul-700:     #175CD3;
+    -azul-50:      #EFF8FF;
+    -azul-400:     #53B1FD;
+    -azul-950:     #0D2238;
+}

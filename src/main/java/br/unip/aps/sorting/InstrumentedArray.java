@@ -21,6 +21,31 @@ public final class InstrumentedArray<T> {
     private final Comparator<? super T> comparador;
     private final ToLongFunction<? super T> chaveNumerica;
     private final OperationCounter contador;
+    private final Ouvinte ouvinte;
+
+    /**
+     * Observador opcional das operacoes (padrao <b>Observer</b>). Usado apenas pela visualizacao
+     * animada do dashboard; a ordenacao e a contagem sao identicas com ou sem ouvinte.
+     */
+    public interface Ouvinte {
+        /**
+         * @param i posicao comparada
+         * @param j posicao comparada
+         */
+        default void comparacao(int i, int j) { }
+
+        /**
+         * @param i posicao trocada
+         * @param j posicao trocada
+         */
+        default void troca(int i, int j) { }
+
+        /**
+         * @param i     posicao escrita
+         * @param valor novo valor
+         */
+        default void atribuicao(int i, Object valor) { }
+    }
 
     /**
      * @param dados         vetor a ordenar (sera modificado in-place)
@@ -34,6 +59,26 @@ public final class InstrumentedArray<T> {
         this.comparador = comparador;
         this.chaveNumerica = chaveNumerica;
         this.contador = contador;
+        this.ouvinte = null;
+    }
+
+    /**
+     * Cria um array instrumentado que tambem notifica um {@link Ouvinte} a cada comparacao por
+     * posicao, troca e atribuicao (arrays auxiliares nao notificam).
+     *
+     * @param dados         vetor a ordenar
+     * @param comparador    criterio de ordenacao
+     * @param chaveNumerica chave inteira equivalente (Radix), ou {@code null}
+     * @param contador      contador de operacoes
+     * @param ouvinte       observador das operacoes
+     */
+    public InstrumentedArray(T[] dados, Comparator<? super T> comparador,
+                             ToLongFunction<? super T> chaveNumerica, OperationCounter contador, Ouvinte ouvinte) {
+        this.dados = dados;
+        this.comparador = comparador;
+        this.chaveNumerica = chaveNumerica;
+        this.contador = contador;
+        this.ouvinte = ouvinte;
     }
 
     /** @return numero de elementos */
@@ -57,6 +102,7 @@ public final class InstrumentedArray<T> {
     public void set(int i, T v) {
         contador.atribuicao();
         dados[i] = v;
+        if (ouvinte != null) ouvinte.atribuicao(i, v);
     }
 
     /**
@@ -70,6 +116,7 @@ public final class InstrumentedArray<T> {
         T t = dados[i];
         dados[i] = dados[j];
         dados[j] = t;
+        if (ouvinte != null) ouvinte.troca(i, j);
     }
 
     /**
@@ -81,6 +128,7 @@ public final class InstrumentedArray<T> {
      */
     public int compare(int i, int j) {
         contador.leituras(2);
+        if (ouvinte != null) ouvinte.comparacao(i, j);
         return contador.comparar(comparador, dados[i], dados[j]);
     }
 

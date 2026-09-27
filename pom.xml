@@ -25,6 +25,8 @@
         <javafx.app.class>br.unip.aps.ui.DashboardApp</javafx.app.class>
 
         <javafx.version>21.0.8</javafx.version>
+        <atlantafx.version>2.1.0</atlantafx.version>
+        <ikonli.version>12.4.0</ikonli.version>
         <smile.version>4.4.2</smile.version>
         <poi.version>5.4.1</poi.version>
         <openpdf.version>2.2.4</openpdf.version>
@@ -53,6 +55,23 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- Design system da interface: tema base (AtlantaFX) + icones (Ikonli / Material Design Icons 2) -->
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>${atlantafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-javafx</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-materialdesign2-pack</artifactId>
+            <version>${ikonli.version}</version>
         </dependency>
 
         <!-- Machine Learning -->

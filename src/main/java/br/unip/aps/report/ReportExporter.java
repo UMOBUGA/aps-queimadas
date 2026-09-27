@@ -184,27 +184,42 @@ public final class ReportExporter {
         final CellStyle titulo, cabecalho, inteiro, decimal, texto;
 
         Estilos(Workbook wb) {
-            org.apache.poi.ss.usermodel.Font ft = wb.createFont();
+            // Mesma identidade da interface: fonte Inter, cabecalho brasa, texto slate
+            org.apache.poi.xssf.usermodel.XSSFFont ft = (org.apache.poi.xssf.usermodel.XSSFFont) wb.createFont();
             ft.setBold(true);
             ft.setFontHeightInPoints((short) 14);
+            ft.setFontName(Identidade.FONTE_EXCEL);
+            ft.setColor(cor(Identidade.TEXTO));
             titulo = wb.createCellStyle();
             titulo.setFont(ft);
 
-            org.apache.poi.ss.usermodel.Font fc = wb.createFont();
+            org.apache.poi.xssf.usermodel.XSSFFont fc = (org.apache.poi.xssf.usermodel.XSSFFont) wb.createFont();
             fc.setBold(true);
+            fc.setFontName(Identidade.FONTE_EXCEL);
             fc.setColor(IndexedColors.WHITE.getIndex());
-            cabecalho = wb.createCellStyle();
-            cabecalho.setFont(fc);
-            cabecalho.setFillForegroundColor(IndexedColors.DARK_RED.getIndex());
-            cabecalho.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            cabecalho.setBorderBottom(BorderStyle.THIN);
+            org.apache.poi.xssf.usermodel.XSSFCellStyle cab = (org.apache.poi.xssf.usermodel.XSSFCellStyle) wb.createCellStyle();
+            cab.setFont(fc);
+            cab.setFillForegroundColor(cor(Identidade.BRASA));
+            cab.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            cab.setBorderBottom(BorderStyle.THIN);
+            cabecalho = cab;
 
+            org.apache.poi.ss.usermodel.Font corpo = wb.createFont();
+            corpo.setFontName(Identidade.FONTE_EXCEL);
+            corpo.setFontHeightInPoints((short) 10);
             inteiro = wb.createCellStyle();
+            inteiro.setFont(corpo);
             inteiro.setDataFormat(wb.createDataFormat().getFormat("#,##0"));
             decimal = wb.createCellStyle();
+            decimal.setFont(corpo);
             decimal.setDataFormat(wb.createDataFormat().getFormat("#,##0.000"));
             texto = wb.createCellStyle();
+            texto.setFont(corpo);
         }
+    }
+
+    private static org.apache.poi.xssf.usermodel.XSSFColor cor(Color c) {
+        return new org.apache.poi.xssf.usermodel.XSSFColor(new byte[]{(byte) c.getRed(), (byte) c.getGreen(), (byte) c.getBlue()}, null);
     }
 
     /** Escritor sequencial de linhas em uma aba. */
@@ -252,6 +267,7 @@ public final class ReportExporter {
                     }
                 } else {
                     c.setCellValue(v.toString());
+                    c.setCellStyle(es.texto);
                 }
             }
             maxColunas = Math.max(maxColunas, vals.length);
@@ -280,16 +296,16 @@ public final class ReportExporter {
         a.cabecalho("Indicador", "Valor");
         a.linha("Total de focos", (long) est.total());
         est.porAno().forEach((ano, n) -> a.linha("Focos em " + ano, n));
-        a.linha("Municipios afetados", (long) est.municipiosAfetados());
-        a.linha("Periodo", ctx.base().dataInicial().format(Formatos.DATA) + " a " + ctx.base().dataFinal().format(Formatos.DATA));
+        a.linha("Municípios afetados", (long) est.municipiosAfetados());
+        a.linha("Período", ctx.base().dataInicial().format(Formatos.DATA) + " a " + ctx.base().dataFinal().format(Formatos.DATA));
         Map.Entry<YearMonth, Long> pico = est.mesPico();
-        if (pico != null) a.linha("Mes com mais focos", pico.getKey() + " (" + pico.getValue() + " focos)");
+        if (pico != null) a.linha("Mês com mais focos", pico.getKey() + " (" + pico.getValue() + " focos)");
         a.ajustar();
     }
 
     private void abaQualidade(Workbook wb, Estilos es, RelatorioCarga rel) {
         Aba a = new Aba(wb, es, "Qualidade dos dados");
-        a.titulo("Relatorio de carga e limpeza");
+        a.titulo("Relatório de carga e limpeza");
         a.cabecalho("Arquivo", "Encoding", "Separador", "Linhas lidas", "Aceitas", "Rejeitadas", "Colunas");
         for (RelatorioCarga.ResumoArquivo r : rel.getArquivos()) {
             a.linha(r.arquivo().getFileName().toString(), r.encoding().name(), String.valueOf(r.separador()),
@@ -298,11 +314,11 @@ public final class ReportExporter {
         a.vazia();
         a.linha("Duplicados removidos (foco_id repetido)", rel.getDuplicadosRemovidos());
         a.vazia();
-        a.cabecalho("Motivo de rejeicao", "Quantidade");
+        a.cabecalho("Motivo de rejeição", "Quantidade");
         rel.getMotivos().forEach((m, n) -> a.linha(m, n));
         if (rel.getMotivos().isEmpty()) a.linha("Nenhuma linha rejeitada", 0L);
         a.vazia();
-        a.cabecalho("Arquivo", "Linha", "Motivo", "Conteudo");
+        a.cabecalho("Arquivo", "Linha", "Motivo", "Conteúdo");
         for (RelatorioCarga.Rejeicao r : rel.getRejeicoes()) {
             a.linha(r.arquivo().getFileName().toString(), r.linha(), r.motivo(), r.conteudo());
         }
@@ -316,7 +332,7 @@ public final class ReportExporter {
         if (anos.size() >= 2) {
             int a1 = anos.get(anos.size() - 2), a2 = anos.get(anos.size() - 1);
             a.titulo("Comparativo mensal " + a1 + " x " + a2);
-            a.cabecalho("Mes", String.valueOf(a1), String.valueOf(a2), "Variacao (%)");
+            a.cabecalho("Mês", String.valueOf(a1), String.valueOf(a2), "Variação (%)");
             for (Estatisticas.LinhaComparativo l : est.comparativo(a1, a2)) {
                 a.linha(l.mes() == 0 ? "TOTAL" : Estatisticas.MESES[l.mes() - 1], l.anoA(), l.anoB(), l.variacao());
             }
@@ -326,8 +342,8 @@ public final class ReportExporter {
         a.cabecalho("Bioma", "Focos", "%");
         for (Contagem c : est.porBioma()) a.linha(c.chave(), c.total(), 100.0 * c.total() / Math.max(1, est.total()));
         a.vazia();
-        a.titulo("Top 20 municipios");
-        a.cabecalho("Posicao", "Municipio", "Focos");
+        a.titulo("Top 20 municípios");
+        a.cabecalho("Posição", "Município", "Focos");
         int i = 1;
         for (Contagem c : est.topMunicipios(20)) a.linha((long) i++, c.chave(), c.total());
         a.ajustar();
@@ -336,12 +352,12 @@ public final class ReportExporter {
     private void abaOrdenacao(Workbook wb, Estilos es, ResultadoOrdenacao<FocoIncendio> r) {
         Aba a = new Aba(wb, es, "Ordenacao");
         a.titulo("Dados ordenados: " + r.algoritmo() + " | " + r.criterio());
-        a.cabecalho("Algoritmo", "Criterio", "Cenario", "n", "Comparacoes", "Trocas", "Atribuicoes", "Acessos", "Tempo (ms)", "Verificado");
+        a.cabecalho("Algoritmo", "Critério", "Cenário", "n", "Comparações", "Trocas", "Atribuições", "Acessos", "Tempo (ms)", "Verificado");
         a.linha(r.algoritmo(), r.criterio(), r.cenario().toString(), (long) r.tamanho(), r.metricas().comparacoes(),
                 r.metricas().trocas(), r.metricas().atribuicoes(), r.metricas().acessos(), r.metricas().millis(),
                 r.verificado() ? "sim" : "NAO");
         a.vazia();
-        a.cabecalho("Posicao", "Data/hora (GMT)", "Municipio", "Bioma", "Latitude", "Longitude", "id_bdq");
+        a.cabecalho("Posição", "Data/hora (GMT)", "Município", "Bioma", "Latitude", "Longitude", "id_bdq");
         int i = 1;
         for (FocoIncendio f : r.dados()) {
             a.linha((long) i++, f.getDataHora().format(Formatos.DATA_HORA), f.getMunicipio(), f.getBioma(),
@@ -353,7 +369,7 @@ public final class ReportExporter {
     private void abaComparativo(Workbook wb, Estilos es, List<ResultadoOrdenacao<FocoIncendio>> lista) {
         Aba a = new Aba(wb, es, "Comparativo algoritmos");
         a.titulo("Todos os algoritmos sobre a mesma entrada");
-        a.cabecalho("Algoritmo", "Criterio", "Cenario", "n", "Comparacoes", "Trocas", "Atribuicoes", "Acessos", "Tempo (ms)", "Verificado");
+        a.cabecalho("Algoritmo", "Critério", "Cenário", "n", "Comparações", "Trocas", "Atribuições", "Acessos", "Tempo (ms)", "Verificado");
         for (ResultadoOrdenacao<FocoIncendio> r : lista) {
             a.linha(r.algoritmo(), r.criterio(), r.cenario().toString(), (long) r.tamanho(), r.metricas().comparacoes(),
                     r.metricas().trocas(), r.metricas().atribuicoes(), r.metricas().acessos(), r.metricas().millis(),
@@ -364,9 +380,9 @@ public final class ReportExporter {
 
     private void abaBenchmark(Workbook wb, Estilos es, List<BenchmarkResult> res) {
         Aba a = new Aba(wb, es, "Benchmark");
-        a.titulo("Benchmark (tempo = media de repeticoes apos aquecimento do JIT)");
-        a.cabecalho("Algoritmo", "Criterio", "Cenario", "n", "Media (ms)", "Desvio (ms)", "Min (ms)", "Max (ms)",
-                "Comparacoes", "Trocas", "Atribuicoes", "Acessos", "n log2 n", "n²/2", "Verificado");
+        a.titulo("Benchmark (tempo = média das repetições após o aquecimento do JIT)");
+        a.cabecalho("Algoritmo", "Critério", "Cenário", "n", "Média (ms)", "Desvio (ms)", "Min (ms)", "Max (ms)",
+                "Comparações", "Trocas", "Atribuições", "Acessos", "n log2 n", "n²/2", "Verificado");
         for (BenchmarkResult r : res) {
             a.linha(r.algoritmo(), r.criterio().rotulo(), r.cenario().toString(), (long) r.n(), r.mediaMs(), r.desvioMs(),
                     r.minNs() / 1e6, r.maxNs() / 1e6, r.comparacoes(), r.trocas(), r.atribuicoes(), r.acessos(),
@@ -377,8 +393,8 @@ public final class ReportExporter {
 
     private void abaComplexidade(Workbook wb, Estilos es, List<BenchmarkResult> res) {
         Aba a = new Aba(wb, es, "Complexidade empirica");
-        a.titulo("Expoente empirico k (regressao log-log: custo ~ n^k)");
-        a.cabecalho("Algoritmo", "Criterio", "Cenario", "k (tempo)", "k (comparacoes)", "R² (tempo)", "Classe estimada");
+        a.titulo("Expoente empírico k (regressão log-log: custo ≈ c·nᵏ)");
+        a.cabecalho("Algoritmo", "Critério", "Cenário", "k (tempo)", "k (comparacoes)", "R² (tempo)", "Classe estimada");
         for (AnaliseComplexidade.Estimativa e : AnaliseComplexidade.estimar(res)) {
             a.linha(e.algoritmo(), e.criterio().rotulo(), e.cenario().toString(), e.expoenteTempo(),
                     e.expoenteComparacoes(), e.r2Tempo(), e.classificacao());
@@ -389,30 +405,30 @@ public final class ReportExporter {
     private void abaMl(Workbook wb, Estilos es, Preditor.ResultadoML ml) {
         Aba a = new Aba(wb, es, "Machine Learning");
         var reg = ml.regressao();
-        a.titulo("Previsao de focos por municipio/mes - Random Forest (treino " + reg.anoTreino() + ", teste " + reg.anoTeste() + ")");
+        a.titulo("Previsão de focos por município/mês — Random Forest (treino " + reg.anoTreino() + ", teste " + reg.anoTeste() + ")");
         a.cabecalho("Modelo", "MAE", "RMSE", "R²");
         linhaReg(a, "Random Forest (treino fixo)", reg.modelo());
-        linhaReg(a, "Random Forest (janela expansivel)", reg.janelaExpansivel());
-        linhaReg(a, "Baseline persistencia (lag1)", reg.persistencia());
-        linhaReg(a, "Baseline media historica", reg.mediaHistorica());
+        linhaReg(a, "Random Forest (janela expansível)", reg.janelaExpansivel());
+        linhaReg(a, "Baseline persistência (lag1)", reg.persistencia());
+        linhaReg(a, "Baseline média histórica", reg.mediaHistorica());
         a.vazia();
-        a.cabecalho("Mes", "Focos reais (estado)", "Previstos RF treino fixo", "Previstos RF janela expansivel");
+        a.cabecalho("Mês", "Focos reais (estado)", "Previstos RF treino fixo", "Previstos RF janela expansivel");
         reg.realPorMes().forEach((m, v) -> a.linha(m.toString(), v, reg.previstoPorMes().get(m),
                 reg.previstoJanelaPorMes().getOrDefault(m, 0.0)));
         a.vazia();
-        a.cabecalho("Variavel", "Importancia (RF regressao)", "Importancia (RF classificacao)");
+        a.cabecalho("Variável", "Importância (RF regressão)", "Importância (RF classificação)");
         for (int i = 0; i < BaseMensal.VARIAVEIS.length; i++) {
             a.linha(BaseMensal.VARIAVEIS[i], reg.importancia()[i], ml.classificacao().importancia()[i]);
         }
         a.vazia();
         var cls = ml.classificacao();
-        a.titulo("Classificacao do nivel de atividade (baixo / medio / alto)");
+        a.titulo("Classificação do nível de atividade (baixo / médio / alto)");
         a.cabecalho("Metrica", "Random Forest", "Baseline (classe majoritaria)");
-        a.linha("Acuracia", cls.metricas().acuracia(), cls.baselineAcuracia());
+        a.linha("Acurácia", cls.metricas().acuracia(), cls.baselineAcuracia());
         a.linha("F1 macro", cls.metricas().f1Macro(), cls.baselineF1Macro());
         a.vazia();
         NivelAtividade[] niveis = NivelAtividade.values();
-        a.cabecalho("Real \\ Previsto", niveis[0].toString(), niveis[1].toString(), niveis[2].toString(), "Precisao", "Revocacao", "F1");
+        a.cabecalho("Real \\ Previsto", niveis[0].toString(), niveis[1].toString(), niveis[2].toString(), "Precisão", "Revocação", "F1");
         Metricas.Classificacao m = cls.metricas();
         for (int i = 0; i < niveis.length; i++) {
             a.linha(niveis[i].toString(), (long) m.matriz()[i][0], (long) m.matriz()[i][1], (long) m.matriz()[i][2],
@@ -421,7 +437,7 @@ public final class ReportExporter {
         a.vazia();
         for (ClusterizacaoHotspots.Resultado c : List.of(ml.dbscan(), ml.kMeans())) {
             a.titulo("Hotspots - " + c.metodo() + (c.ruido() > 0 ? " | ruido: " + c.ruido() + " focos" : ""));
-            a.cabecalho("#", "Focos", "Latitude", "Longitude", "Raio (km)", "Municipio principal", "Bioma", "Focos por ano");
+            a.cabecalho("#", "Focos", "Latitude", "Longitude", "Raio (km)", "Município principal", "Bioma", "Focos por ano");
             for (ClusterizacaoHotspots.Hotspot h : c.hotspots()) {
                 a.linha((long) h.id(), (long) h.focos(), h.latitude(), h.longitude(), h.raioKm(), h.municipioPrincipal(),
                         h.biomaPredominante(), h.focosPorAno().toString());
@@ -450,13 +466,16 @@ public final class ReportExporter {
         try {
             criarPasta(destino);
             try (OutputStream out = Files.newOutputStream(destino)) {
-                PdfWriter.getInstance(doc, out);
+                PdfWriter w = PdfWriter.getInstance(doc, out);
+                w.setPageEvent(new Pdf.Rodape());
                 doc.addTitle(Pdf.limpar(ctx.titulo()));
                 doc.addAuthor("APS UNIP - Estrutura de Dados");
                 doc.open();
+                doc.add(new Paragraph("APS QUEIMADAS  ·  RELATÓRIO", Pdf.SOBRETITULO));
                 doc.add(new Paragraph(Pdf.limpar(ctx.titulo()), Pdf.TITULO));
+                doc.add(new com.lowagie.text.Chunk(new com.lowagie.text.pdf.draw.LineSeparator(2f, 12f, Identidade.BRASA_GRAFICO, Element.ALIGN_LEFT, -4)));
                 doc.add(new Paragraph("Gerado em " + LocalDateTime.now().format(Formatos.DATA_HORA)
-                        + " | Fontes: " + String.join(", ", nomes(ctx.base().getFontes())), Pdf.PEQUENA));
+                        + " · Fontes: " + String.join(", ", nomes(ctx.base().getFontes())), Pdf.PEQUENA));
                 doc.add(new Paragraph("Filtro: " + Pdf.limpar(ctx.filtro()), Pdf.PEQUENA));
 
                 secaoResumoPdf(doc, ctx);
@@ -486,7 +505,7 @@ public final class ReportExporter {
         PdfPTable t = Pdf.tabela(new float[]{3, 2}, "Indicador", "Valor");
         Pdf.linha(t, "Total de focos", Formatos.inteiro(est.total()));
         est.porAno().forEach((ano, n) -> Pdf.linha(t, "Focos em " + ano, Formatos.inteiro(n)));
-        Pdf.linha(t, "Municipios afetados", Formatos.inteiro(est.municipiosAfetados()));
+        Pdf.linha(t, "Municípios afetados", Formatos.inteiro(est.municipiosAfetados()));
         RelatorioCarga rel = ctx.base().getRelatorio();
         Pdf.linha(t, "Linhas lidas / rejeitadas / duplicadas", rel.getTotalLidas() + " / " + rel.getTotalRejeitadas()
                 + " / " + rel.getDuplicadosRemovidos());
@@ -496,15 +515,15 @@ public final class ReportExporter {
         if (anos.size() >= 2) {
             int a1 = anos.get(anos.size() - 2), a2 = anos.get(anos.size() - 1);
             doc.add(new Paragraph("Comparativo mensal " + a1 + " x " + a2, Pdf.SUBTITULO));
-            PdfPTable c = Pdf.tabela(new float[]{2, 2, 2, 2}, "Mes", String.valueOf(a1), String.valueOf(a2), "Variacao");
+            PdfPTable c = Pdf.tabela(new float[]{2, 2, 2, 2}, "Mês", String.valueOf(a1), String.valueOf(a2), "Variação");
             for (Estatisticas.LinhaComparativo l : est.comparativo(a1, a2)) {
                 Pdf.linha(c, l.mes() == 0 ? "TOTAL" : Estatisticas.MESES[l.mes() - 1], Formatos.inteiro(l.anoA()),
                         Formatos.inteiro(l.anoB()), Double.isNaN(l.variacao()) ? "-" : Formatos.decimal(l.variacao(), 1) + "%");
             }
             doc.add(c);
         }
-        doc.add(new Paragraph("Focos por bioma e top 10 municipios", Pdf.SUBTITULO));
-        PdfPTable b = Pdf.tabela(new float[]{3, 2}, "Bioma / Municipio", "Focos");
+        doc.add(new Paragraph("Focos por bioma e top 10 municípios", Pdf.SUBTITULO));
+        PdfPTable b = Pdf.tabela(new float[]{3, 2}, "Bioma / Município", "Focos");
         for (Contagem x : est.porBioma()) Pdf.linha(b, x.chave(), Formatos.inteiro(x.total()));
         for (Contagem x : est.topMunicipios(10)) Pdf.linha(b, x.chave(), Formatos.inteiro(x.total()));
         doc.add(b);
@@ -512,9 +531,9 @@ public final class ReportExporter {
 
     private void secaoComparativoPdf(Document doc, List<ResultadoOrdenacao<FocoIncendio>> lista) {
         doc.add(new Paragraph("2. Comparativo de algoritmos (mesma entrada)", Pdf.SUBTITULO));
-        doc.add(new Paragraph("Criterio: " + Pdf.limpar(lista.get(0).criterio()) + " | cenario: " + lista.get(0).cenario()
+        doc.add(new Paragraph("Critério: " + Pdf.limpar(lista.get(0).criterio()) + " · cenário: " + lista.get(0).cenario()
                 + " | n = " + Formatos.inteiro(lista.get(0).tamanho()), Pdf.PEQUENA));
-        PdfPTable t = Pdf.tabela(new float[]{3, 2.2f, 2, 2.2f, 2}, "Algoritmo", "Comparacoes", "Trocas", "Acessos", "Tempo");
+        PdfPTable t = Pdf.tabela(new float[]{3, 2.2f, 2, 2.2f, 2}, "Algoritmo", "Comparações", "Trocas", "Acessos", "Tempo");
         for (ResultadoOrdenacao<FocoIncendio> r : lista) {
             Pdf.linha(t, r.algoritmo(), Formatos.inteiro(r.metricas().comparacoes()), Formatos.inteiro(r.metricas().trocas()),
                     Formatos.inteiro(r.metricas().acessos()), Formatos.duracao(r.metricas().nanos()));
@@ -524,16 +543,16 @@ public final class ReportExporter {
 
     private void secaoBenchmarkPdf(Document doc, List<BenchmarkResult> res) {
         doc.add(new Paragraph("3. Benchmark", Pdf.SUBTITULO));
-        PdfPTable t = Pdf.tabela(new float[]{3, 1.6f, 1.8f, 1.2f, 1.6f, 1.4f, 2, 2}, "Algoritmo", "Criterio", "Cenario", "n",
-                "Media ms", "Desvio", "Comparacoes", "Trocas");
+        PdfPTable t = Pdf.tabela(new float[]{3, 1.6f, 1.8f, 1.2f, 1.6f, 1.4f, 2, 2}, "Algoritmo", "Critério", "Cenário", "n",
+                "Média ms", "Desvio", "Comparações", "Trocas");
         for (BenchmarkResult r : res) {
             Pdf.linha(t, r.algoritmo(), r.criterio().rotulo(), r.cenario().toString(), Formatos.inteiro(r.n()),
                     Formatos.decimal(r.mediaMs(), 3), Formatos.decimal(r.desvioMs(), 3), Formatos.inteiro(r.comparacoes()),
                     Formatos.inteiro(r.trocas()));
         }
         doc.add(t);
-        doc.add(new Paragraph("Expoente empirico (custo ~ n^k)", Pdf.SUBTITULO));
-        PdfPTable e = Pdf.tabela(new float[]{3, 2, 2, 1.5f, 1.5f, 2}, "Algoritmo", "Criterio", "Cenario", "k tempo", "k comp.", "Classe");
+        doc.add(new Paragraph("Expoente empírico (custo ≈ nᵏ)", Pdf.SUBTITULO));
+        PdfPTable e = Pdf.tabela(new float[]{3, 2, 2, 1.5f, 1.5f, 2}, "Algoritmo", "Critério", "Cenário", "k tempo", "k comp.", "Classe");
         for (AnaliseComplexidade.Estimativa x : AnaliseComplexidade.estimar(res)) {
             Pdf.linha(e, x.algoritmo(), x.criterio().rotulo(), x.cenario().toString(), Formatos.decimal(x.expoenteTempo(), 2),
                     Double.isNaN(x.expoenteComparacoes()) ? "-" : Formatos.decimal(x.expoenteComparacoes(), 2), x.classificacao());
@@ -544,22 +563,22 @@ public final class ReportExporter {
     private void secaoMlPdf(Document doc, Preditor.ResultadoML ml) {
         doc.add(new Paragraph("4. Machine Learning", Pdf.SUBTITULO));
         var reg = ml.regressao();
-        doc.add(new Paragraph("Previsao de focos por municipio/mes (Random Forest, " + ml.parametros().arvores()
-                + " arvores). Treino: " + reg.anoTreino() + " | Teste: " + reg.anoTeste(), Pdf.NORMAL));
+        doc.add(new Paragraph("Previsão de focos por município/mês (Random Forest, " + ml.parametros().arvores()
+                + " árvores). Treino: " + reg.anoTreino() + " | Teste: " + reg.anoTeste(), Pdf.NORMAL));
         PdfPTable t = Pdf.tabela(new float[]{4, 2, 2, 2}, "Modelo", "MAE", "RMSE", "R2");
         for (var e : List.of(Map.entry("Random Forest (treino fixo)", reg.modelo()),
-                Map.entry("Random Forest (janela expansivel)", reg.janelaExpansivel()), Map.entry("Persistencia (lag1)", reg.persistencia()),
-                Map.entry("Media historica", reg.mediaHistorica()))) {
+                Map.entry("Random Forest (janela expansível)", reg.janelaExpansivel()), Map.entry("Persistência (mês anterior)", reg.persistencia()),
+                Map.entry("Média histórica", reg.mediaHistorica()))) {
             Pdf.linha(t, e.getKey(), Formatos.decimal(e.getValue().mae(), 3), Formatos.decimal(e.getValue().rmse(), 3),
                     Formatos.decimal(e.getValue().r2(), 3));
         }
         doc.add(t);
         var cls = ml.classificacao();
-        doc.add(new Paragraph(String.format("Classificacao do nivel de atividade: acuracia %s (baseline %s), F1 macro %s (baseline %s)",
+        doc.add(new Paragraph(String.format("Classificação do nível de atividade: acurácia %s (baseline %s), F1 macro %s (baseline %s)",
                 Formatos.decimal(cls.metricas().acuracia(), 3), Formatos.decimal(cls.baselineAcuracia(), 3),
                 Formatos.decimal(cls.metricas().f1Macro(), 3), Formatos.decimal(cls.baselineF1Macro(), 3)), Pdf.NORMAL));
         doc.add(new Paragraph("Hotspots - " + ml.dbscan().metodo(), Pdf.NORMAL));
-        PdfPTable h = Pdf.tabela(new float[]{0.6f, 1.2f, 1.6f, 1.6f, 1.2f, 3, 2}, "#", "Focos", "Lat", "Lon", "Raio km", "Municipio", "Bioma");
+        PdfPTable h = Pdf.tabela(new float[]{0.6f, 1.2f, 1.6f, 1.6f, 1.2f, 3, 2}, "#", "Focos", "Lat", "Lon", "Raio km", "Município", "Bioma");
         for (ClusterizacaoHotspots.Hotspot x : ml.dbscan().hotspots().subList(0, Math.min(15, ml.dbscan().hotspots().size()))) {
             Pdf.linha(h, String.valueOf(x.id()), Formatos.inteiro(x.focos()), Formatos.decimal(x.latitude(), 4),
                     Formatos.decimal(x.longitude(), 4), Formatos.decimal(x.raioKm(), 1), x.municipioPrincipal(), x.biomaPredominante());
@@ -570,10 +589,10 @@ public final class ReportExporter {
     private void secaoOrdenacaoPdf(Document doc, ResultadoOrdenacao<FocoIncendio> r) {
         doc.newPage();
         doc.add(new Paragraph("5. Dados ordenados", Pdf.SUBTITULO));
-        doc.add(new Paragraph(Pdf.limpar(r.algoritmo() + " | " + r.criterio() + " | cenario: " + r.cenario()
+        doc.add(new Paragraph(Pdf.limpar(r.algoritmo() + " | " + r.criterio() + " · cenário: " + r.cenario()
                 + " | n = " + Formatos.inteiro(r.tamanho())), Pdf.NORMAL));
-        doc.add(new Paragraph(Pdf.limpar("Operacoes: " + r.metricas()) + (r.verificado() ? " | ordenacao verificada" : " | FALHA NA VERIFICACAO"), Pdf.PEQUENA));
-        PdfPTable t = Pdf.tabela(new float[]{0.9f, 2.4f, 3.4f, 2.2f, 1.5f, 1.5f}, "#", "Data/hora GMT", "Municipio", "Bioma", "Lat", "Lon");
+        doc.add(new Paragraph(Pdf.limpar("Operações: " + r.metricas()) + (r.verificado() ? " · ordenação verificada" : " · FALHA NA VERIFICAÇÃO"), Pdf.PEQUENA));
+        PdfPTable t = Pdf.tabela(new float[]{0.9f, 2.4f, 3.4f, 2.2f, 1.5f, 1.5f}, "#", "Data/hora GMT", "Município", "Bioma", "Lat", "Lon");
         int limite = Math.min(MAX_LINHAS_PDF, r.dados().size());
         for (int i = 0; i < limite; i++) {
             FocoIncendio f = r.dados().get(i);
@@ -582,19 +601,38 @@ public final class ReportExporter {
         }
         doc.add(t);
         if (r.dados().size() > limite) {
-            doc.add(new Paragraph("... exibidas as primeiras " + limite + " de " + Formatos.inteiro(r.dados().size())
-                    + " linhas (a lista completa esta no Excel/CSV).", Pdf.PEQUENA));
+            doc.add(new Paragraph("… exibidas as primeiras " + limite + " de " + Formatos.inteiro(r.dados().size())
+                    + " linhas (a lista completa está no Excel/CSV).", Pdf.PEQUENA));
         }
     }
 
     /** Utilitarios de formatacao do PDF. */
     static final class Pdf {
-        static final Font TITULO = new Font(Font.HELVETICA, 15, Font.BOLD, new Color(0x8B, 0x1A, 0x1A));
-        static final Font SUBTITULO = new Font(Font.HELVETICA, 12, Font.BOLD, new Color(0x33, 0x33, 0x33));
-        static final Font NORMAL = new Font(Font.HELVETICA, 9.5f);
-        static final Font PEQUENA = new Font(Font.HELVETICA, 8, Font.NORMAL, Color.DARK_GRAY);
-        static final Font CELULA = new Font(Font.HELVETICA, 7.5f);
-        static final Font CABECALHO = new Font(Font.HELVETICA, 7.5f, Font.BOLD, Color.WHITE);
+        static final Font SOBRETITULO = Identidade.pdf(7.5f, true, Identidade.BRASA);
+        static final Font TITULO = Identidade.pdf(16, true, Identidade.TEXTO);
+        static final Font SUBTITULO = Identidade.pdf(11.5f, true, Identidade.TEXTO);
+        static final Font NORMAL = Identidade.pdf(9.5f, false, Identidade.TEXTO_2);
+        static final Font PEQUENA = Identidade.pdf(8, false, Identidade.TEXTO_3);
+        static final Font CELULA = Identidade.pdf(7.5f, false, Identidade.TEXTO);
+        static final Font CABECALHO = Identidade.pdf(7.5f, true, Color.WHITE);
+
+        /** Rodape com identificacao e numero da pagina. */
+        static final class Rodape extends com.lowagie.text.pdf.PdfPageEventHelper {
+            @Override
+            public void onEndPage(PdfWriter w, Document d) {
+                com.lowagie.text.pdf.PdfContentByte cb = w.getDirectContent();
+                com.lowagie.text.pdf.ColumnText.showTextAligned(cb, Element.ALIGN_LEFT,
+                        new Phrase("APS Queimadas · Análise de Performance de Algoritmos de Ordenação · dados INPE", PEQUENA),
+                        d.left(), d.bottom() - 22, 0);
+                com.lowagie.text.pdf.ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT,
+                        new Phrase("Página " + w.getPageNumber(), PEQUENA), d.right(), d.bottom() - 22, 0);
+                cb.setColorStroke(Identidade.BORDA);
+                cb.setLineWidth(0.6f);
+                cb.moveTo(d.left(), d.bottom() - 12);
+                cb.lineTo(d.right(), d.bottom() - 12);
+                cb.stroke();
+            }
+        }
 
         private Pdf() { }
 
@@ -606,17 +644,22 @@ public final class ReportExporter {
             t.setHeaderRows(1);
             for (String c : cab) {
                 PdfPCell cell = new PdfPCell(new Phrase(limpar(c), CABECALHO));
-                cell.setBackgroundColor(new Color(0x8B, 0x1A, 0x1A));
-                cell.setPadding(3);
+                cell.setBackgroundColor(Identidade.BRASA);
+                cell.setBorderColor(Identidade.BRASA);
+                cell.setPadding(4);
                 t.addCell(cell);
             }
             return t;
         }
 
         static void linha(PdfPTable t, String... v) {
+            // linhas zebradas: a linha atual e deduzida pelo numero de celulas ja adicionadas
+            boolean par = (t.size() - t.getHeaderRows()) % 2 == 1;
             for (String s : v) {
                 PdfPCell cell = new PdfPCell(new Phrase(limpar(s == null ? "" : s), CELULA));
-                cell.setPadding(2.5f);
+                cell.setPadding(3.5f);
+                cell.setBorderColor(Identidade.BORDA);
+                if (par) cell.setBackgroundColor(Identidade.ZEBRA);
                 t.addCell(cell);
             }
         }
@@ -624,6 +667,7 @@ public final class ReportExporter {
         /** Troca simbolos fora do Cp1252 (fontes padrao do PDF) por equivalentes ASCII. */
         static String limpar(String s) {
             if (s == null) return "";
+            if (Identidade.interDisponivel()) return s; // Inter embarcada cobre setas e simbolos
             return s.replace("→", "->").replace("↑", "(cresc.)").replace("↓", "(decresc.)")
                     .replace("≈", "~").replace("·", ".").replace("Ω", "Omega").replace("✔", "OK");
         }

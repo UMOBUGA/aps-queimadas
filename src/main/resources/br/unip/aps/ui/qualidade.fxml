@@ -1,23 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
+<?import br.unip.aps.ui.componentes.ChartCard?>
+<?import br.unip.aps.ui.componentes.GradeResponsiva?>
+<?import br.unip.aps.ui.componentes.KpiCard?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.VBox?>
 
+<!-- Qualidade dos dados: resumo, completude por coluna, problemas por severidade, arquivos -->
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="br.unip.aps.ui.QualidadeController" fitToWidth="true" styleClass="aba">
-    <VBox spacing="10">
-        <padding><Insets top="12" right="14" bottom="14" left="14"/></padding>
-        <Label text="Arquivos carregados" styleClass="secao"/>
-        <TableView fx:id="tabelaArquivos" prefHeight="140"/>
-        <Label fx:id="lblResumo" wrapText="true"/>
-        <Label text="Motivos de rejeição e valores ausentes" styleClass="secao"/>
-        <TableView fx:id="tabelaMotivos" prefHeight="150"/>
-        <Label text="Linhas rejeitadas (até 500)" styleClass="secao"/>
-        <TableView fx:id="tabelaRejeicoes" prefHeight="220"/>
-        <Label text="Plano de limpeza aplicado" styleClass="secao"/>
-        <Label fx:id="lblPlano" wrapText="true" styleClass="texto-plano"/>
+            fx:controller="br.unip.aps.ui.QualidadeController" fitToWidth="true">
+    <VBox styleClass="page">
+        <GradeResponsiva larguraMinima="200" maxColunas="5" gap="12">
+            <KpiCard fx:id="kLidos" titulo="Registros lidos" icone="mdi2f-file-delimited-outline"/>
+            <KpiCard fx:id="kValidos" titulo="Válidos" icone="mdi2c-check-circle-outline"/>
+            <KpiCard fx:id="kDescartados" titulo="Descartados" icone="mdi2a-alert-circle-outline"/>
+            <KpiCard fx:id="kDuplicados" titulo="Duplicados" icone="mdi2c-content-copy"/>
+            <KpiCard fx:id="kCompletude" titulo="Completude" icone="mdi2p-percent-outline"/>
+        </GradeResponsiva>
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="16">
+            <ChartCard fx:id="cCompletude" titulo="Completude por coluna" subtitulo="Percentual de registros com o campo preenchido (cinza = coluna inexistente no arquivo)" prefHeight="470"/>
+            <ChartCard fx:id="cProblemas" titulo="Problemas encontrados" subtitulo="Verificações da leitura, validação e limpeza, por severidade" prefHeight="470"/>
+        </GradeResponsiva>
+        <ChartCard fx:id="cArquivos" titulo="Arquivos carregados" subtitulo="Encoding e separador detectados automaticamente; colunas mapeadas pelo nome" prefHeight="200"/>
+        <TitledPane fx:id="tpRejeicoes" text="Linhas rejeitadas" expanded="false" styleClass="titled-plano">
+            <TableView fx:id="tabRejeicoes" prefHeight="260"/>
+        </TitledPane>
     </VBox>
 </ScrollPane>

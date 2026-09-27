@@ -1,39 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.web.WebView?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="br.unip.aps.ui.MapaController" styleClass="aba">
-    <top>
-        <FlowPane hgap="8" vgap="6" styleClass="painel-filtros">
-            <padding><Insets top="8" right="10" bottom="8" left="10"/></padding>
-            <Label text="Anos:"/>
-            <HBox fx:id="boxAnos" spacing="6" alignment="CENTER_LEFT"/>
-            <Label text="Bioma:"/>
-            <ComboBox fx:id="cbBioma" prefWidth="150"/>
-            <Label text="Município:"/>
-            <TextField fx:id="tfMunicipio" promptText="contém…" prefWidth="160" onAction="#aplicar"/>
-            <Label text="De:"/>
-            <DatePicker fx:id="dpInicio" prefWidth="125"/>
-            <Label text="Até:"/>
-            <DatePicker fx:id="dpFim" prefWidth="125"/>
-            <Button text="Aplicar" onAction="#aplicar" styleClass="botao-primario"/>
-            <Button text="Limpar" onAction="#limpar"/>
-            <CheckBox fx:id="chkHotspots" text="Hotspots do ML" disable="true"/>
-            <Label fx:id="lblContagem" styleClass="texto-suave"/>
-        </FlowPane>
-    </top>
-    <center>
+<!-- Mapa: controles de visualizacao + WebView (Leaflet). Os filtros vem da barra global. -->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="br.unip.aps.ui.MapaController" styleClass="page">
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Modo" styleClass="field-label"/>
+        <HBox fx:id="segModo" styleClass="segmented">
+            <ToggleButton fx:id="tgPontos" text="Pontos" selected="true"/>
+            <ToggleButton fx:id="tgCluster" text="Agrupado"/>
+            <ToggleButton fx:id="tgCalor" text="Calor"/>
+        </HBox>
+        <Label text="Cor por" styleClass="field-label"/>
+        <HBox fx:id="segCor" styleClass="segmented">
+            <ToggleButton fx:id="tgBioma" text="Bioma" selected="true"/>
+            <ToggleButton fx:id="tgAno" text="Ano"/>
+        </HBox>
+        <ToggleButton fx:id="tgHotspots" text="Hotspots do ML" styleClass="chip-toggle" disable="true"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblContagem" styleClass="chip"/>
+    </HBox>
+    <StackPane fx:id="moldura" styleClass="chart-card" VBox.vgrow="ALWAYS">
         <WebView fx:id="webView"/>
-    </center>
-</BorderPane>
+    </StackPane>
+</VBox>

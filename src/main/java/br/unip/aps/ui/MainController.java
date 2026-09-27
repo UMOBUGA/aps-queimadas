@@ -5,20 +5,46 @@ import br.unip.aps.io.DataValidationException;
 import br.unip.aps.model.BaseDeFocos;
 import br.unip.aps.report.CodigoFonteReport;
 import br.unip.aps.report.ContextoRelatorio;
+import br.unip.aps.ui.componentes.Chip;
+import br.unip.aps.ui.componentes.Dialogos;
+import br.unip.aps.ui.componentes.EmptyState;
+import br.unip.aps.ui.componentes.Feedback;
+import br.unip.aps.ui.componentes.FilterBar;
+import br.unip.aps.ui.componentes.Icones;
+import br.unip.aps.ui.componentes.LoadingOverlay;
+import br.unip.aps.ui.componentes.SidebarItem;
+import br.unip.aps.ui.componentes.Toast;
+import br.unip.aps.ui.tema.GerenciadorTema;
 import br.unip.aps.util.Formatos;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
+import javafx.geometry.Side;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.util.Duration;
 
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
@@ -26,23 +52,44 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * Controller da janela principal: barra de ferramentas (carga, download, exportacoes), abas e
- * barra de status com progresso e cancelamento.
+ * Controller do shell da aplicacao: sidebar de navegacao, top bar (titulo, breadcrumb, chips de
+ * contexto, acoes), barra de filtros global, area de conteudo com estado vazio e overlay de
+ * carregamento, toasts e atalhos de teclado.
  */
 public class MainController {
 
     private final UiContexto ctx;
 
-    @FXML private TabPane abas;
-    @FXML private Label lblBase;
-    @FXML private Label lblStatus;
-    @FXML private ProgressBar barraProgresso;
-    @FXML private Button btnCancelar;
+    @FXML private StackPane raiz;
+    @FXML private BorderPane shell;
+    @FXML private VBox sidebar;
+    @FXML private VBox topo;
+    @FXML private ProgressBar progressoTopo;
+    @FXML private VBox filtroHost;
+    @FXML private StackPane conteudo;
+    @FXML private VBox toasts;
+
+    private final Map<Pagina, Node> nos = new EnumMap<>(Pagina.class);
+    private final Map<Pagina, Object> controllers = new EnumMap<>(Pagina.class);
+    private final Map<Pagina, SidebarItem> itens = new EnumMap<>(Pagina.class);
+    private final ToggleGroup grupoNav = new ToggleGroup();
+    private final Label breadcrumb = new Label();
+    private final Label titulo = new Label();
+    private final HBox chipsContexto = new HBox(6);
+    private final FilterBar filterBar = new FilterBar();
+    private final Button btnTema = new Button();
+    private final MenuButton exportar = new MenuButton("Exportar");
+    private final List<Label> rotulosSecao = new ArrayList<>();
+    private VBox marcaTextos;
+    private Button btnRecolher;
+    private EmptyState vazio;
+    private Pagina exibida;
 
     /** @param ctx contexto injetado */
     public MainController(UiContexto ctx) {
@@ -51,55 +98,296 @@ public class MainController {
 
     @FXML
     private void initialize() {
-        lblStatus.textProperty().bind(ctx.statusProperty());
-        barraProgresso.progressProperty().bind(ctx.progressoProperty());
-        barraProgresso.visibleProperty().bind(ctx.ocupadoProperty());
-        btnCancelar.visibleProperty().bind(ctx.ocupadoProperty());
-        ctx.baseProperty().addListener((o, a, b) -> atualizarCabecalho(b));
-        atualizarCabecalho(null);
+        Feedback.instalar((tipo, t, x) -> Toast.mostrar(toasts, tipo, t, x));
+        toasts.setAlignment(Pos.BOTTOM_RIGHT);
+        montarSidebar();
+        montarTopbar();
+        filtroHost.getChildren().add(filterBar);
+        filterBar.filtroProperty().addListener((o, a, n) -> ctx.filtroProperty().set(n));
+        ctx.focosFiltradosProperty().addListener((o, a, n) -> filterBar.setContagem(n.size()));
+
+        vazio = new EmptyState(Icones.SEM_DADOS, "Nenhum dado carregado",
+                "Carregue os CSVs de focos de queimadas do INPE (satélite de referência) para começar. "
+                        + "Os arquivos de SP 2023 e 2024 ficam em data/raw.", false,
+                botao("Abrir CSV…", Icones.ABRIR, "btn-primary", this::abrirCsv),
+                botao("Baixar do INPE", Icones.BAIXAR, "btn-secondary", this::baixarInpe));
+        LoadingOverlay overlay = new LoadingOverlay(ctx.ocupadoProperty(), ctx.statusProperty(), ctx.progressoProperty(), ctx::cancelar);
+        conteudo.getChildren().addAll(vazio, overlay);
+
+        progressoTopo.progressProperty().bind(ctx.progressoProperty().map(p -> p.doubleValue() <= 0 ? -1.0 : p.doubleValue()));
+        progressoTopo.visibleProperty().bind(ctx.ocupadoProperty());
+
+        ctx.baseProperty().addListener((o, a, b) -> {
+            filterBar.setOpcoes(b);
+            atualizarChips(b);
+            exibir(ctx.paginaProperty().get());
+        });
+        ctx.paginaProperty().addListener((o, a, n) -> exibir(n));
+        GerenciadorTema.get().temaProperty().addListener((o, a, n) -> atualizarBotaoTema());
+        GerenciadorTema.get().sidebarRecolhidaProperty().addListener((o, a, n) -> aplicarRecolhimento(n));
+        aplicarRecolhimento(GerenciadorTema.get().sidebarRecolhidaProperty().get());
+        atualizarBotaoTema();
+        atualizarChips(null);
+        raiz.sceneProperty().addListener((o, a, s) -> {
+            if (s != null) registrarAtalhos(s);
+        });
+        br.unip.aps.ui.componentes.Layout.naoEncolher(topo);
+        br.unip.aps.ui.componentes.Layout.naoEncolher(filtroHost);
+        exibir(Pagina.VISAO_GERAL);
     }
 
-    private void atualizarCabecalho(BaseDeFocos b) {
+    // ------------------------------------------------------------------ sidebar
+
+    private void montarSidebar() {
+        StackPane marca = new StackPane(Icones.de(Icones.MARCA, 20));
+        marca.getStyleClass().add("brand-mark");
+        Label nome = new Label("APS Queimadas");
+        nome.getStyleClass().add("brand-title");
+        Label sub = new Label("INPE · Estrutura de Dados");
+        sub.getStyleClass().add("brand-subtitle");
+        marcaTextos = new VBox(1, nome, sub);
+        HBox brand = new HBox(10, marca, marcaTextos);
+        brand.getStyleClass().add("sidebar-brand");
+        brand.setAlignment(Pos.CENTER_LEFT);
+
+        VBox nav = new VBox(2);
+        Label sec = new Label("ANÁLISE");
+        sec.getStyleClass().add("sidebar-section");
+        rotulosSecao.add(sec);
+        nav.getChildren().add(sec);
+        VBox rodape = new VBox(2);
+        int atalho = 1;
+        for (Pagina p : Pagina.values()) {
+            SidebarItem it = new SidebarItem(p.titulo(), p.icone(), p.rodape() ? null : "Ctrl+" + atalho++);
+            it.setToggleGroup(grupoNav);
+            it.setOnAction(e -> {
+                ctx.navegar(p);
+                it.setSelected(true);
+            });
+            itens.put(p, it);
+            (p.rodape() ? rodape : nav).getChildren().add(it);
+        }
+        btnRecolher = new Button("Recolher menu", Icones.de(Icones.RECOLHER, 18));
+        btnRecolher.getStyleClass().addAll("sidebar-item", "sidebar-toggle");
+        btnRecolher.setMaxWidth(Double.MAX_VALUE);
+        btnRecolher.setTooltip(new Tooltip("Recolher/expandir menu (Ctrl+B)"));
+        btnRecolher.setOnAction(e -> GerenciadorTema.get().sidebarRecolhidaProperty().set(
+                !GerenciadorTema.get().sidebarRecolhidaProperty().get()));
+        rodape.getChildren().add(btnRecolher);
+
+        Region esp = new Region();
+        VBox.setVgrow(esp, Priority.ALWAYS);
+        sidebar.getChildren().addAll(brand, nav, esp, rodape);
+        sidebar.setPrefWidth(236);
+    }
+
+    private void aplicarRecolhimento(boolean recolhida) {
+        sidebar.setPrefWidth(recolhida ? 64 : 236);
+        sidebar.setMinWidth(recolhida ? 64 : 236);
+        sidebar.getStyleClass().remove("recolhida");
+        if (recolhida) sidebar.getStyleClass().add("recolhida");
+        marcaTextos.setVisible(!recolhida);
+        marcaTextos.setManaged(!recolhida);
+        rotulosSecao.forEach(l -> {
+            l.setVisible(!recolhida);
+            l.setManaged(!recolhida);
+        });
+        itens.values().forEach(i -> i.setRecolhido(recolhida));
+        btnRecolher.setText(recolhida ? "Expandir menu" : "Recolher menu");
+        btnRecolher.setGraphic(Icones.de(recolhida ? Icones.EXPANDIR : Icones.RECOLHER, 18));
+        btnRecolher.setContentDisplay(recolhida ? javafx.scene.control.ContentDisplay.GRAPHIC_ONLY : javafx.scene.control.ContentDisplay.LEFT);
+    }
+
+    // ------------------------------------------------------------------ top bar
+
+    private void montarTopbar() {
+        breadcrumb.getStyleClass().add("breadcrumb");
+        titulo.getStyleClass().add("page-title");
+        VBox textos = new VBox(1, breadcrumb, titulo);
+        Region esp = new Region();
+        HBox.setHgrow(esp, Priority.ALWAYS);
+        chipsContexto.setAlignment(Pos.CENTER_LEFT);
+
+        Button abrir = iconeAcao(Icones.ABRIR, "Abrir CSV (Ctrl+O)", this::abrirCsv);
+        Button recarregar = iconeAcao(Icones.RECARREGAR, "Recarregar dados (Ctrl+R)", this::recarregar);
+        Button baixar = iconeAcao(Icones.BAIXAR, "Baixar do INPE", this::baixarInpe);
+        btnTema.getStyleClass().add("btn-icon");
+        btnTema.setOnAction(e -> GerenciadorTema.get().alternar());
+
+        MenuItem excel = new MenuItem("Relatório Excel (.xlsx)", Icones.de(Icones.EXCEL, 16));
+        excel.setOnAction(e -> exportarRelatorio("xlsx"));
+        MenuItem pdf = new MenuItem("Relatório PDF (com gráficos)", Icones.de(Icones.PDF, 16));
+        pdf.setOnAction(e -> exportarRelatorio("pdf"));
+        MenuItem codigo = new MenuItem("Relatório com as linhas de código", Icones.de(Icones.CODIGO, 16));
+        codigo.setOnAction(e -> relatorioCodigo());
+        exportar.getItems().setAll(excel, pdf, codigo);
+        exportar.setGraphic(Icones.de(Icones.EXPORTAR, 16));
+        exportar.getStyleClass().add("btn-primary");
+        exportar.setTooltip(new Tooltip("Exportar relatórios (Ctrl+E)"));
+        exportar.setPopupSide(Side.BOTTOM);
+        exportar.setMinWidth(Region.USE_PREF_SIZE);
+        chipsContexto.setMinWidth(Region.USE_PREF_SIZE);
+
+        Separator sep = new Separator(javafx.geometry.Orientation.VERTICAL);
+        HBox barra = new HBox(12, textos, esp, chipsContexto, sep, abrir, recarregar, baixar, btnTema, exportar);
+        barra.getStyleClass().add("topbar");
+        barra.setAlignment(Pos.CENTER_LEFT);
+        topo.getChildren().add(barra);
+    }
+
+    private Button iconeAcao(String icone, String dica, Runnable acao) {
+        Button b = new Button(null, Icones.de(icone, 18));
+        b.getStyleClass().add("btn-icon");
+        b.setTooltip(new Tooltip(dica));
+        b.setAccessibleText(dica);
+        b.setOnAction(e -> acao.run());
+        return b;
+    }
+
+    private static Button botao(String texto, String icone, String estilo, Runnable acao) {
+        Button b = new Button(texto, Icones.de(icone, 16));
+        b.getStyleClass().add(estilo);
+        b.setOnAction(e -> acao.run());
+        return b;
+    }
+
+    private void atualizarBotaoTema() {
+        boolean escuro = GerenciadorTema.get().escuro();
+        btnTema.setGraphic(Icones.de(escuro ? Icones.TEMA_CLARO : Icones.TEMA_ESCURO, 18));
+        btnTema.setTooltip(new Tooltip(escuro ? "Usar tema claro (Ctrl+T)" : "Usar tema escuro (Ctrl+T)"));
+        btnTema.setAccessibleText("Alternar tema");
+    }
+
+    private void atualizarChips(BaseDeFocos b) {
+        chipsContexto.getChildren().clear();
         if (b == null) {
-            lblBase.setText("Nenhum dado carregado");
+            chipsContexto.getChildren().add(Chip.de("Sem dados", Icones.SEM_DADOS, Chip.Variante.ALERTA));
             return;
         }
-        StringBuilder anos = new StringBuilder();
-        for (Integer a : b.anos()) anos.append(anos.isEmpty() ? "" : ", ").append(a);
-        lblBase.setText(Formatos.inteiro(b.tamanho()) + " focos | " + String.join(", ", b.estados()) + " | " + anos
-                + " | " + b.getFontes().size() + " arquivo(s)");
+        String uf = ctx.sessao().config().uf();
+        List<Integer> anos = b.anos();
+        String faixa = anos.size() == 1 ? String.valueOf(anos.get(0)) : anos.get(0) + "–" + anos.get(anos.size() - 1);
+        Label cUf = Chip.de(uf, Icones.MUNICIPIO, Chip.Variante.NEUTRO);
+        cUf.setTooltip(new Tooltip(String.join(", ", b.estados())));
+        Label cAnos = Chip.de(faixa, Icones.CALENDARIO, Chip.Variante.NEUTRO);
+        Label cReg = Chip.de(Formatos.inteiro(b.tamanho()) + " focos", Icones.MARCA, Chip.Variante.DESTAQUE);
+        Label cArq = Chip.de(b.getFontes().size() + (b.getFontes().size() == 1 ? " arquivo" : " arquivos"), Icones.CSV, Chip.Variante.NEUTRO);
+        List<String> nomes = new ArrayList<>();
+        b.getFontes().forEach(p -> nomes.add(p.getFileName().toString()));
+        cArq.setTooltip(new Tooltip(String.join("\n", nomes)));
+        chipsContexto.getChildren().addAll(cUf, cAnos, cReg, cArq);
     }
 
-    /** Carga automatica ao abrir: se nao houver CSVs, oferece baixar do INPE ou abrir arquivos. */
-    void carregarInicial() {
-        Task<BaseDeFocos> t = ctx.executar("Carregando dados do INPE", () -> {
+    // ------------------------------------------------------------------ navegacao
+
+    private void exibir(Pagina p) {
+        if (p == null) return;
+        SidebarItem it = itens.get(p);
+        if (it != null) it.setSelected(true);
+        breadcrumb.setText("APS Queimadas  ›  " + (p.rodape() ? "Sistema" : "Análise"));
+        titulo.setText(p.titulo());
+        boolean semDados = ctx.baseProperty().get() == null && !p.rodape();
+        filterBar.setVisible(p.usaFiltro() && !semDados);
+        filterBar.setManaged(p.usaFiltro() && !semDados);
+
+        if (exibida != null && exibida != p) {
+            Node antigo = nos.get(exibida);
+            if (antigo != null) antigo.setVisible(false);
+            if (controllers.get(exibida) instanceof Pagina.Controlador c) c.aoOcultar();
+        }
+        vazio.setVisible(semDados);
+        Node no = semDados ? null : carregar(p);
+        if (no != null) {
+            no.setVisible(true);
+            if (GerenciadorTema.get().animacoesProperty().get() && exibida != p) {
+                no.setOpacity(0);
+                FadeTransition f = new FadeTransition(Duration.millis(200), no);
+                f.setToValue(1);
+                f.play();
+            }
+            if (controllers.get(p) instanceof Pagina.Controlador c) c.aoExibir();
+        }
+        exibida = p;
+    }
+
+    private Node carregar(Pagina p) {
+        Node n = nos.get(p);
+        if (n != null) return n;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/br/unip/aps/ui/" + p.fxml()));
+            loader.setControllerFactory(ctx::criarController);
+            Parent raizPagina = loader.load();
+            br.unip.aps.ui.componentes.Layout.naoEncolher(raizPagina);
+            nos.put(p, raizPagina);
+            controllers.put(p, loader.getController());
+            conteudo.getChildren().add(conteudo.getChildren().size() - 1, raizPagina); // abaixo do overlay
+            return raizPagina;
+        } catch (IOException e) {
+            ctx.erro("Não foi possível abrir a tela " + p.titulo(), e);
+            return null;
+        }
+    }
+
+    /**
+     * @param p tela
+     * @return controller da tela (carregando-a se preciso)
+     */
+    Object controllerDe(Pagina p) {
+        carregar(p);
+        return controllers.get(p);
+    }
+
+    private void registrarAtalhos(Scene s) {
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN), this::abrirCsv);
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN), this::recarregar);
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN), () -> exportar.show());
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN), () -> GerenciadorTema.get().alternar());
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN),
+                () -> GerenciadorTema.get().sidebarRecolhidaProperty().set(!GerenciadorTema.get().sidebarRecolhidaProperty().get()));
+        s.getAccelerators().put(new KeyCodeCombination(KeyCode.F1), () -> ctx.navegar(Pagina.SOBRE));
+        KeyCode[] numeros = {KeyCode.DIGIT1, KeyCode.DIGIT2, KeyCode.DIGIT3, KeyCode.DIGIT4, KeyCode.DIGIT5, KeyCode.DIGIT6};
+        Pagina[] ps = Pagina.values();
+        for (int i = 0; i < numeros.length; i++) {
+            Pagina p = ps[i];
+            s.getAccelerators().put(new KeyCodeCombination(numeros[i], KeyCombination.SHORTCUT_DOWN), () -> ctx.navegar(p));
+        }
+    }
+
+    // ------------------------------------------------------------------ carga de dados
+
+    /**
+     * Carga automatica ao abrir. Se nao houver CSVs, oferece baixar do INPE ou abrir arquivos.
+     *
+     * @param aoTerminar chamado ao final (sucesso ou falha), usado para fechar o splash
+     */
+    void carregarInicial(Runnable aoTerminar) {
+        String[] falha = new String[1];
+        var t = ctx.executar("Carregando dados do INPE", () -> {
             try {
                 return ctx.sessao().carregar();
             } catch (DataValidationException e) {
-                Platform.runLater(() -> oferecerAlternativas(e.getMessage()));
+                falha[0] = e.getMessage();
                 return null;
             }
         }, b -> {
-            if (b != null) ctx.baseProperty().set(b);
+            aoTerminar.run();
+            if (b != null) {
+                ctx.baseProperty().set(b);
+                Feedback.sucesso("Dados carregados", Formatos.inteiro(b.tamanho()) + " focos de " + b.getFontes().size() + " arquivo(s)");
+            } else if (falha[0] != null) {
+                Platform.runLater(() -> oferecerAlternativas(falha[0]));
+            }
         });
-        if (t == null) ctx.statusProperty().set("Ocupado.");
+        if (t == null) aoTerminar.run();
+        else t.setOnFailed(e -> aoTerminar.run());
     }
 
     private void oferecerAlternativas(String motivo) {
-        ButtonType baixar = new ButtonType("Baixar do INPE");
-        ButtonType abrir = new ButtonType("Abrir CSV...");
-        ButtonType fechar = new ButtonType("Agora não", ButtonBar.ButtonData.CANCEL_CLOSE);
-        Alert a = new Alert(Alert.AlertType.WARNING, motivo, baixar, abrir, fechar);
-        a.initOwner(ctx.stage());
-        a.setHeaderText("Dados de focos não encontrados");
-        a.getDialogPane().setMinWidth(560);
-        Optional<ButtonType> r = a.showAndWait();
-        if (r.isEmpty()) return;
-        if (r.get() == baixar) baixarInpe();
-        else if (r.get() == abrir) abrirCsv();
+        int op = Dialogos.escolher(ctx.stage(), "Dados de focos não encontrados", motivo, "Baixar do INPE", "Abrir CSV…");
+        if (op == 0) baixarInpe();
+        else if (op == 1) abrirCsv();
     }
 
-    @FXML
     private void abrirCsv() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Selecione os CSVs de focos do INPE (ex.: 2023 e 2024)");
@@ -110,41 +398,43 @@ public class MainController {
         if (arquivos == null || arquivos.isEmpty()) return;
         List<Path> paths = new ArrayList<>();
         for (File f : arquivos) paths.add(f.toPath());
-        ctx.executar("Carregando " + paths.size() + " arquivo(s)", () -> ctx.sessao().carregar(paths), ctx.baseProperty()::set);
+        ctx.executar("Carregando " + paths.size() + " arquivo(s)", () -> ctx.sessao().carregar(paths), b -> {
+            ctx.baseProperty().set(b);
+            Feedback.sucesso("Dados carregados", Formatos.inteiro(b.tamanho()) + " focos");
+        });
     }
 
-    @FXML
     private void recarregar() {
-        ctx.executar("Recarregando dados", () -> ctx.sessao().carregar(), ctx.baseProperty()::set);
+        ctx.executar("Recarregando dados", () -> ctx.sessao().carregar(), b -> {
+            ctx.baseProperty().set(b);
+            Feedback.sucesso("Dados recarregados", Formatos.inteiro(b.tamanho()) + " focos");
+        });
     }
 
-    @FXML
     private void baixarInpe() {
         TextInputDialog d = new TextInputDialog(ctx.sessao().config().uf());
         d.initOwner(ctx.stage());
         d.setTitle("Baixar dados do INPE");
-        d.setHeaderText("Arquivos anuais do satélite de referência (EstadosBr_sat_ref)\nAnos: "
-                + ctx.sessao().config().anos() + " — destino: " + ctx.sessao().config().diretorioDados().toAbsolutePath());
+        d.setHeaderText("Baixar focos do satélite de referência (EstadosBr_sat_ref)\nAnos "
+                + ctx.sessao().config().anos() + " → " + ctx.sessao().config().diretorioDados().toAbsolutePath());
         d.setContentText("UF (sigla):");
+        d.setGraphic(Icones.de(Icones.BAIXAR, 26));
+        GerenciadorTema.get().aplicar(d.getDialogPane());
+        d.getDialogPane().getStyleClass().add("app-dialog");
         Optional<String> uf = d.showAndWait();
         if (uf.isEmpty()) return;
         ctx.executar("Baixando dados do INPE (" + uf.get().toUpperCase() + ")", () -> {
             ctx.sessao().baixarDoInpe(uf.get(), ctx.sessao().config().anos());
             return ctx.sessao().carregar();
-        }, ctx.baseProperty()::set);
+        }, b -> {
+            ctx.baseProperty().set(b);
+            Feedback.sucesso("Download concluído", Formatos.inteiro(b.tamanho()) + " focos carregados");
+        });
     }
 
-    @FXML
-    private void exportarExcel() {
-        exportar("xlsx");
-    }
+    // ------------------------------------------------------------------ exportacao
 
-    @FXML
-    private void exportarPdf() {
-        exportar("pdf");
-    }
-
-    private void exportar(String tipo) {
+    private void exportarRelatorio(String tipo) {
         ContextoRelatorio rel;
         try {
             rel = ctx.sessao().contextoRelatorio();
@@ -152,6 +442,8 @@ public class MainController {
             ctx.aviso("Nada para exportar", e.getMessage());
             return;
         }
+        FiltroGlobal f = ctx.filtroProperty().get();
+        if (f != null && f.ativo()) rel.filtro(f.descricao(), ctx.focosFiltradosProperty().get());
         if (tipo.equals("pdf")) {
             for (Map.Entry<String, BufferedImage> g : ctx.snapshotsGraficos()) rel.grafico(g.getKey(), g.getValue());
         }
@@ -163,57 +455,46 @@ public class MainController {
         fc.setInitialDirectory(dir);
         fc.setInitialFileName(sugestao.getFileName().toString());
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(tipo.toUpperCase(), "*." + tipo));
-        File f = fc.showSaveDialog(ctx.stage());
-        if (f == null) return;
+        File arq = fc.showSaveDialog(ctx.stage());
+        if (arq == null) return;
         final ContextoRelatorio r = rel;
         ctx.executar("Gerando relatório " + tipo.toUpperCase(), () -> tipo.equals("pdf")
-                ? ctx.sessao().exporter().exportarPdf(r, f.toPath())
-                : ctx.sessao().exporter().exportarExcel(r, f.toPath()), this::oferecerAbrir);
+                ? ctx.sessao().exporter().exportarPdf(r, arq.toPath())
+                : ctx.sessao().exporter().exportarExcel(r, arq.toPath()), p -> concluidoExportacao("Relatório " + tipo.toUpperCase() + " exportado", p));
     }
 
-    @FXML
     private void relatorioCodigo() {
         Path dir = ctx.sessao().config().diretorioRelatorios();
         ctx.executar("Gerando relatório com as linhas de código", () -> {
             new CodigoFonteReport().gerar(Path.of("").toAbsolutePath(), dir.resolve("codigo-fonte.pdf"), dir.resolve("codigo-fonte.txt"));
             return dir.resolve("codigo-fonte.pdf");
-        }, this::oferecerAbrir);
+        }, p -> concluidoExportacao("Relatório de código gerado", p));
     }
 
-    private void oferecerAbrir(Path arquivo) {
-        if (ctx.confirmar("Arquivo gerado", arquivo.toAbsolutePath() + "\n\nDeseja abrir o arquivo agora?")) {
-            try {
-                if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(arquivo.toFile());
-            } catch (IOException | UnsupportedOperationException e) {
-                ctx.aviso("Não foi possível abrir", "Abra manualmente: " + arquivo.toAbsolutePath());
-            }
+    private void concluidoExportacao(String titulo, Path arquivo) {
+        Feedback.sucesso(titulo, arquivo.toAbsolutePath().toString());
+        try {
+            if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(arquivo.toFile());
+        } catch (IOException | UnsupportedOperationException e) {
+            Feedback.info("Abra o arquivo manualmente", arquivo.toAbsolutePath().toString());
         }
     }
 
-    @FXML
-    private void cancelar() {
-        ctx.cancelar();
+    /**
+     * @param p tela
+     * @return no raiz ja carregado da tela (ou {@code null})
+     */
+    Node noDe(Pagina p) {
+        return nos.get(p);
     }
 
-    @FXML
-    private void sobre() {
-        ctx.info("APS — Estrutura de Dados (UNIP)",
-                """
-                Sistema para Análise de Performance de Algoritmos de Ordenação aplicado aos focos de \
-                queimadas detectados por satélite (INPE — Programa Queimadas).
-
-                • 10 algoritmos implementados manualmente (Strategy + Factory)
-                • Contagem de comparações, trocas, atribuições e acessos
-                • Benchmark com aquecimento do JIT, repetições e expoente empírico
-                • Machine Learning (Smile): Random Forest e DBSCAN/K-Means
-                • Mapa Leaflet/OpenStreetMap, relatórios Excel/PDF
-
-                Dados: dataserver-coids.inpe.br (EstadosBr_sat_ref).""");
+    /** @return barra de filtros (para demonstracoes e testes) */
+    FilterBar filterBar() {
+        return filterBar;
     }
 
-    void selecionarAba(String id) {
-        for (Tab t : abas.getTabs()) {
-            if (id.equals(t.getId())) abas.getSelectionModel().select(t);
-        }
+    /** @return raiz visual da janela */
+    StackPane raiz() {
+        return raiz;
     }
 }
