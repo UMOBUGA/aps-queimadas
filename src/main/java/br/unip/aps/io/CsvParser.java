@@ -3,34 +3,19 @@ package br.unip.aps.io;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Parser de linhas CSV (RFC 4180) implementado manualmente.
- *
- * <p>Suporta campos entre aspas contendo o separador ou aspas duplicadas ({@code ""}), e
- * separadores configuraveis (virgula no INPE; ponto e virgula em arquivos reexportados pelo
- * Excel brasileiro). Campos multilinha nao sao necessarios nesta base e nao sao suportados.</p>
- */
+/** Parser de linhas CSV (RFC 4180) implementado manualmente. */
 public final class CsvParser {
-
     private final char separador;
 
-    /** @param separador caractere separador de campos */
     public CsvParser(char separador) {
         this.separador = separador;
     }
 
-    /** @return separador usado por este parser */
     public char getSeparador() {
         return separador;
     }
 
-    /**
-     * Detecta o separador a partir da linha de cabecalho (o caractere mais frequente entre
-     * {@code , ; \t |}).
-     *
-     * @param cabecalho primeira linha do arquivo
-     * @return separador detectado (virgula por padrao)
-     */
+    /** Detecta o separador a partir da linha de cabecalho (o mais frequente entre virgula, ponto e virgula, tab e barra). */
     public static char detectarSeparador(String cabecalho) {
         char[] candidatos = {',', ';', '\t', '|'};
         char melhor = ',';
@@ -48,13 +33,7 @@ public final class CsvParser {
         return melhor;
     }
 
-    /**
-     * Divide uma linha em campos.
-     *
-     * @param linha linha do arquivo (sem quebra de linha)
-     * @return campos, sem as aspas delimitadoras (espacos internos preservados)
-     * @throws IllegalArgumentException se houver aspas nao fechadas
-     */
+    /** Divide uma linha em campos. */
     public List<String> dividir(String linha) {
         List<String> campos = new ArrayList<>(16);
         StringBuilder atual = new StringBuilder(32);
@@ -88,13 +67,7 @@ public final class CsvParser {
         return campos;
     }
 
-    /**
-     * Escapa um valor para escrita em CSV (aspas quando necessario).
-     *
-     * @param valor     valor (pode ser {@code null})
-     * @param separador separador em uso
-     * @return valor pronto para escrever
-     */
+    /** Escapa um valor para escrita em CSV (aspas quando necessario). */
     public static String escapar(String valor, char separador) {
         if (valor == null) return "";
         boolean precisa = valor.indexOf(separador) >= 0 || valor.indexOf('"') >= 0

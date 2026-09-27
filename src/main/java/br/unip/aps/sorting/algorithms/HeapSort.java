@@ -4,23 +4,8 @@ import br.unip.aps.sorting.Complexidade;
 import br.unip.aps.sorting.InstrumentedArray;
 import br.unip.aps.sorting.SortAlgorithm;
 
-/**
- * <b>Heap Sort</b> (J. W. J. Williams, 1964; construcao bottom-up de Floyd).
- *
- * <p>Enxerga o vetor como uma arvore binaria completa (filhos de i em 2i+1 e 2i+2). Fase 1:
- * transforma o vetor em um <i>max-heap</i> (cada pai &gt;= filhos) em O(n), afundando ("sink") os
- * nos internos de baixo para cima. Fase 2: troca a raiz (maior elemento) com o ultimo, reduz o heap
- * e afunda a nova raiz; repete n-1 vezes.</p>
- *
- * <ul>
- *   <li>Melhor, medio e pior caso: O(n log n) garantido (~2·n·log2 n comparacoes).</li>
- *   <li>Espaco: O(1) — unico O(n log n) garantido e in-place entre os implementados.</li>
- *   <li>Estavel: <b>nao</b>. Na pratica e mais lento que Quick/Merge por acessar posicoes distantes
- *       (pouca localidade de cache).</li>
- * </ul>
- */
+/** Heap Sort (Williams, 1964). */
 public final class HeapSort implements SortAlgorithm {
-
     @Override
     public String nome() {
         return "Heap Sort";

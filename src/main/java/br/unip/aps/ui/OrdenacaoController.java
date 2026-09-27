@@ -54,12 +54,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Tela "Ordenacao": atende a solicitacao central do enunciado — ordenar e exibir os focos por
- * data, bioma, municipio (e extras), informando o numero de operacoes realizadas.
- */
+/** Tela Ordenacao. */
 public class OrdenacaoController implements Pagina.Controlador {
-
     private static final DataFormat FORMATO_INDICE = new DataFormat("application/x-aps-nivel");
 
     /** Nivel editavel da lista de criterios. */
@@ -100,7 +96,6 @@ public class OrdenacaoController implements Pagina.Controlador {
     private ChartCard cardComparativo;
     private List<ResultadoOrdenacao<FocoIncendio>> comparativo = List.of();
 
-    /** @param ctx contexto injetado */
     public OrdenacaoController(UiContexto ctx) {
         this.ctx = ctx;
     }
@@ -175,8 +170,6 @@ public class OrdenacaoController implements Pagina.Controlador {
         visualizador.parar();
     }
 
-    // ------------------------------------------------------------------ criterios
-
     private void configurarCriterios(BaseDeFocos b) {
         disponiveis.clear();
         for (CriterioOrdenacao c : CriterioOrdenacao.values()) {
@@ -200,7 +193,7 @@ public class OrdenacaoController implements Pagina.Controlador {
         niveis.add(new NivelEditavel(disponiveis.get(0), Ordem.CRESCENTE));
     }
 
-    /** Celula da lista de criterios: alca de arraste, numero, criterio, ordem e remover. */
+    /** Celula da lista de criterios. */
     private final class CelulaNivel extends ListCell<NivelEditavel> {
         private final Label alca = new Label(null, Icones.de(Icones.ARRASTAR, 18));
         private final Label numero = new Label();
@@ -307,9 +300,7 @@ public class OrdenacaoController implements Pagina.Controlador {
         return Criterios.composto(r);
     }
 
-    // ------------------------------------------------------------------ algoritmo
-
-    /** Celula do combo de algoritmos: nome + complexidade media. */
+    /** Celula do combo de algoritmos. */
     private static final class CelulaAlgoritmo extends ListCell<AlgoritmoTipo> {
         @Override
         protected void updateItem(AlgoritmoTipo t, boolean vazio) {
@@ -385,8 +376,6 @@ public class OrdenacaoController implements Pagina.Controlador {
         banner.setManaged(msg != null);
         lblBanner.setText(msg);
     }
-
-    // ------------------------------------------------------------------ execucao
 
     private List<FocoIncendio> dados() throws ApsException {
         ctx.sessao().exigirBase();
@@ -473,8 +462,6 @@ public class OrdenacaoController implements Pagina.Controlador {
             ctx.erro("Não foi possível comparar", e);
         }
     }
-
-    // ------------------------------------------------------------------ visoes
 
     private void configurarVisoes() {
         ToggleGroup g = new ToggleGroup();
@@ -572,8 +559,6 @@ public class OrdenacaoController implements Pagina.Controlador {
         };
     }
 
-    // ------------------------------------------------------------------ tabelas
-
     private void configurarTabelas() {
         Tabelas.preparar(tabela, "Execute uma ordenação para ver os focos ordenados aqui.");
         tabela.getColumns().add(Tabelas.indice());
@@ -638,13 +623,11 @@ public class OrdenacaoController implements Pagina.Controlador {
         concluido.run();
     }
 
-    /** Usado pela captura de telas para mostrar o comparativo. */
     void demonstrarComparativo(Runnable concluido) {
         compararTodos();
         concluido.run();
     }
 
-    /** Usado pela captura de telas: abre a visualizacao animada e inicia a reproducao. */
     void demonstrarVisualizacao() {
         cbAlgoritmo.getSelectionModel().select(AlgoritmoTipo.QUICK);
         tgVisualizar.setSelected(true);

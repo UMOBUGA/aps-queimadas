@@ -12,41 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Previsao da quantidade de focos por municipio e mes com <b>Random Forest de regressao</b>
- * (Breiman, 2001) — conjunto de arvores de decisao treinadas em amostras bootstrap com sorteio
- * de variaveis em cada divisao; a previsao e a media das arvores.
- *
- * <h2>Protocolo de validacao</h2>
- * <p>Validacao temporal (nunca embaralhar series temporais): treina com um ano (ex.: 2023) e
- * testa no ano seguinte (2024), prevendo cada mes com a informacao disponivel ate o mes anterior
- * (previsao de um passo a frente). Comparamos com dois modelos de referencia (baselines):</p>
- * <ul>
- *   <li><b>Persistencia</b>: "o mes que vem sera igual a este" (ŷ = lag1);</li>
- *   <li><b>Media historica</b>: ŷ = media mensal do municipio ate o mes anterior.</li>
- * </ul>
- * <p>Um modelo de ML so agrega valor se superar esses baselines.</p>
- */
+/** Previsao de focos por municipio e mes com Random Forest de regressao. */
 public final class PrevisaoFocos {
-
-    /**
-     * Resultado da previsao.
-     *
-     * @param anoTreino          ano de treino
-     * @param anoTeste           ano de teste
-     * @param linhasTreino       observacoes de treino
-     * @param linhasTeste        observacoes de teste
-     * @param modelo             metricas do Random Forest no teste
-     * @param persistencia       metricas do baseline de persistencia
-     * @param mediaHistorica     metricas do baseline de media historica
-     * @param realPorMes         focos reais do estado por mes do ano de teste
-     * @param previstoPorMes     focos previstos (soma dos municipios) por mes
-     * @param importancia        importancia de cada variavel (reducao de impureza), mesma ordem de {@link BaseMensal#VARIAVEIS}
-     * @param maioresPrevisoes   municipios com maior previsao acumulada no ano de teste
-     * @param maioresErros       municipio/mes com maiores erros absolutos
-     * @param janelaExpansivel   metricas do RF re-treinado a cada mes com todo o historico anterior
-     * @param previstoJanelaPorMes focos previstos por mes na validacao em janela expansivel
-     */
+    /** Resultado da previsao. */
     public record Resultado(int anoTreino, int anoTeste, int linhasTreino, int linhasTeste,
                             Metricas.Regressao modelo, Metricas.Regressao persistencia,
                             Metricas.Regressao mediaHistorica,
@@ -55,16 +23,8 @@ public final class PrevisaoFocos {
                             List<ErroPrevisao> maioresErros, Metricas.Regressao janelaExpansivel,
                             Map<YearMonth, Double> previstoJanelaPorMes) { }
 
-    /**
-     * Erro de previsao de um municipio em um mes.
-     *
-     * @param municipio municipio
-     * @param mes       mes
-     * @param real      focos observados
-     * @param previsto  focos previstos
-     */
+    /** Erro de previsao de um municipio em um mes. */
     public record ErroPrevisao(String municipio, YearMonth mes, int real, double previsto) {
-        /** @return erro absoluto */
         public double erroAbsoluto() {
             return Math.abs(real - previsto);
         }
@@ -73,23 +33,12 @@ public final class PrevisaoFocos {
     private final int arvores;
     private final long semente;
 
-    /**
-     * @param arvores numero de arvores da floresta
-     * @param semente semente (reprodutibilidade)
-     */
     public PrevisaoFocos(int arvores, long semente) {
         this.arvores = arvores;
         this.semente = semente;
     }
 
-    /**
-     * Treina em {@code anoTreino} e avalia em {@code anoTeste}.
-     *
-     * @param base      base mensal
-     * @param anoTreino ano de treino
-     * @param anoTeste  ano de teste
-     * @return metricas, series e importancias
-     */
+    /** Treina em {@code anoTreino} e avalia em {@code anoTeste}. */
     public Resultado executar(BaseMensal base, int anoTreino, int anoTeste) {
         List<BaseMensal.Linha> treino = base.linhasDoAno(anoTreino);
         List<BaseMensal.Linha> teste = base.linhasDoAno(anoTeste);
@@ -135,11 +84,6 @@ public final class PrevisaoFocos {
                 Metricas.regressao(real, prevJ), prevJanela);
     }
 
-    /**
-     * Validacao em janela expansivel (walk-forward): para cada mes m do ano de teste, treina uma
-     * floresta com TODOS os meses anteriores a m (inclusive os meses ja observados do proprio ano
-     * de teste) e preve apenas m. Simula o uso real do modelo, re-treinado todo mes.
-     */
     private double[] janelaExpansivel(BaseMensal base, int anoTeste, Map<YearMonth, Double> porMes) {
         int arvoresJanela = Math.max(50, arvores / 2);
         List<BaseMensal.Linha> teste = base.linhasDoAno(anoTeste);

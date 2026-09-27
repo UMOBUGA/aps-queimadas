@@ -1,9 +1,3 @@
-/* =====================================================================
-   Graficos: visual recessivo (grade horizontal leve e tracejada, sem grade
-   vertical, eixos discretos) e cor SEMPRE ligada a entidade (ano, bioma,
-   algoritmo), nunca a posicao da serie. As classes de serie (.serie-*)
-   sao aplicadas pelo codigo Java (ui.componentes.Graficos).
-   ===================================================================== */
 .chart { -fx-padding: 4 4 0 0; -fx-background-color: transparent; }
 .chart-content { -fx-padding: 6 6 0 0; }
 .chart-plot-background { -fx-background-color: transparent; }
@@ -25,7 +19,6 @@
 .axis-tick-mark, .axis-minor-tick-mark { -fx-stroke: transparent; }
 .axis-label { -fx-text-fill: -aps-text-3; -fx-font-size: 11px; -fx-font-family: "Inter Medium"; }
 
-/* ---------- Linhas e areas ---------- */
 .chart-series-area-line, .chart-series-line { -fx-stroke-width: 2.25px; -fx-stroke-line-join: round; -fx-stroke-line-cap: round; }
 .chart-series-area-fill { -fx-stroke: transparent; }
 
@@ -34,7 +27,6 @@
 .serie-ano-anterior .chart-series-area-line, .chart-series-line.serie-ano-anterior { -fx-stroke: -aps-ano-anterior; }
 .serie-ano-anterior .chart-series-area-fill { -fx-fill: linear-gradient(to bottom, -aps-ano-anterior-area 0%, -aps-ano-anterior-area-0 100%); }
 
-/* pontos: invisiveis ate o hover (hit target mantido) */
 .chart-area-symbol, .chart-line-symbol {
     -fx-background-color: transparent;
     -fx-background-radius: 6;
@@ -48,7 +40,6 @@
 }
 .chart-area-symbol.ponto-pico { -fx-padding: 5.5; }
 
-/* series categoricas (ordem fixa por algoritmo) */
 .chart-series-line.serie-1 { -fx-stroke: -aps-serie-1; }
 .chart-series-line.serie-2 { -fx-stroke: -aps-serie-2; }
 .chart-series-line.serie-3 { -fx-stroke: -aps-serie-3; }
@@ -75,13 +66,11 @@
 .legenda-marca.serie-7 { -fx-background-color: -aps-serie-7; }
 .legenda-marca.serie-neutra { -fx-background-color: -aps-serie-neutra; }
 
-/* ---------- Barras verticais ---------- */
 .chart-bar { -fx-background-color: -aps-accent; -fx-background-radius: 4 4 0 0; -fx-background-insets: 0 1 0 1; }
 .chart-bar:hover { -fx-background-color: -aps-accent-hover; }
 .chart-bar.barra-vazia { -fx-background-color: transparent; }
 .bar-chart { -fx-bar-gap: 3; -fx-category-gap: 6; }
 
-/* ---------- Donut ---------- */
 .donut-segmento { -fx-fill: transparent; -fx-stroke-line-cap: butt; }
 .donut-segmento.bioma-mata-atlantica { -fx-stroke: -aps-bioma-mata; }
 .donut-segmento.bioma-cerrado { -fx-stroke: -aps-bioma-cerrado; }

@@ -14,12 +14,8 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-/**
- * Tela "Configuracoes": tema claro/escuro, animacoes e menu recolhido (persistidos com
- * {@link java.util.prefs.Preferences}), atalhos de teclado e parametros de dados.
- */
+/** Tela Configuracoes. */
 public class ConfiguracoesController implements Pagina.Controlador {
-
     private final UiContexto ctx;
 
     @FXML private ToggleButton tgClaro, tgEscuro;
@@ -27,7 +23,6 @@ public class ConfiguracoesController implements Pagina.Controlador {
     @FXML private Button btnRestaurar;
     @FXML private GridPane gridAtalhos, gridDados;
 
-    /** @param ctx contexto injetado */
     public ConfiguracoesController(UiContexto ctx) {
         this.ctx = ctx;
     }

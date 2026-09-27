@@ -15,23 +15,9 @@ import javafx.util.Duration;
 
 import java.util.List;
 
-/**
- * Barras horizontais com rotulo a esquerda e valor escrito no fim de cada barra (sem eixo): ideal
- * para rankings (Top 10 municipios), completude por coluna e importancia de variaveis. Mais
- * legivel que um BarChart horizontal para categorias com nomes longos.
- */
+/** Barras horizontais com rotulo a esquerda e valor escrito no fim de cada barra (sem eixo). */
 public class BarrasHorizontais extends GridPane {
-
-    /**
-     * Item.
-     *
-     * @param rotulo    categoria
-     * @param valor     valor numerico (define o comprimento)
-     * @param texto     valor formatado exibido ao lado da barra
-     * @param classe    classe CSS extra da barra ({@code suave}, {@code sucesso}, classe de bioma...)
-     * @param destaque  rotulo em negrito (ex.: lider)
-     * @param dica      tooltip
-     */
+    /** Item. */
     public record Item(String rotulo, double valor, String texto, String classe, boolean destaque, String dica) { }
 
     private double maximoFixo = Double.NaN;
@@ -53,16 +39,10 @@ public class BarrasHorizontais extends GridPane {
         getColumnConstraints().addAll(c1, c2, c3);
     }
 
-    /**
-     * @param max valor que corresponde a barra cheia (ex.: 100 para percentuais); NaN = maior item
-     */
     public void setMaximo(double max) {
         this.maximoFixo = max;
     }
 
-    /**
-     * @param itens itens na ordem de exibicao
-     */
     public void setItens(List<Item> itens) {
         getChildren().clear();
         double max = Double.isNaN(maximoFixo) ? 0 : maximoFixo;

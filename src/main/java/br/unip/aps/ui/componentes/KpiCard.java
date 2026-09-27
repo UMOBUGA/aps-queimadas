@@ -9,15 +9,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-/**
- * Card de indicador (KPI) padronizado: rotulo em caixa-alta, valor grande, icone em badge
- * colorido suave, linha de contexto (com seta de tendencia e cor semantica) e sparkline opcional.
- *
- * <p>A cor so aparece por regra: {@link Tendencia#ALERTA} (ex.: aumento de focos) pinta o
- * contexto e o icone de vermelho; {@link Tendencia#BOA} de verde; o restante fica neutro.</p>
- */
+/** Card de indicador (KPI) padronizado. */
 public class KpiCard extends VBox {
-
     /** Semantica da linha de contexto. */
     public enum Tendencia { NEUTRA, ALERTA, BOA }
 
@@ -39,10 +32,6 @@ public class KpiCard extends VBox {
     private final HBox base;
     private Sparkline sparkline;
 
-    /**
-     * @param titulo rotulo do indicador
-     * @param icone  codigo do icone
-     */
     public KpiCard(@javafx.beans.NamedArg("titulo") String titulo, @javafx.beans.NamedArg("icone") String icone) {
         getStyleClass().add("kpi-card");
         rotulo.setText(titulo.toUpperCase(java.util.Locale.of("pt", "BR")));
@@ -68,31 +57,18 @@ public class KpiCard extends VBox {
         setFocusTraversable(false);
     }
 
-    /**
-     * @param texto novo rotulo do indicador
-     * @return este card
-     */
     public KpiCard titulo(String texto) {
         rotulo.setText(texto.toUpperCase(java.util.Locale.of("pt", "BR")));
         return this;
     }
 
-    /**
-     * @param texto valor principal
-     * @return este card
-     */
     public KpiCard valor(String texto) {
         valor.setText(texto);
         valor.getStyleClass().remove("kpi-valor-texto");
         return this;
     }
 
-    /**
-     * Valor textual longo (ex.: nome de municipio): fonte menor para caber no card.
-     *
-     * @param texto valor
-     * @return este card
-     */
+    /** Valor textual longo (ex.: nome de municipio): fonte menor para caber no card. */
     public KpiCard valorTexto(String texto) {
         valor.setText(texto);
         if (!valor.getStyleClass().contains("kpi-valor-texto")) valor.getStyleClass().add("kpi-valor-texto");
@@ -100,11 +76,6 @@ public class KpiCard extends VBox {
         return this;
     }
 
-    /**
-     * @param texto     linha de contexto
-     * @param tendencia semantica (define cor e seta)
-     * @return este card
-     */
     public KpiCard contexto(String texto, Tendencia tendencia) {
         contexto.setText(texto);
         contexto.getStyleClass().removeAll("tendencia-alerta", "tendencia-boa");
@@ -123,23 +94,13 @@ public class KpiCard extends VBox {
         return this;
     }
 
-    /**
-     * @param estilo estilo do badge do icone
-     * @return este card
-     */
     public KpiCard icone(EstiloIcone estilo) {
         for (EstiloIcone e : EstiloIcone.values()) if (e.classe != null) badge.getStyleClass().remove(e.classe);
         if (estilo.classe != null) badge.getStyleClass().add(estilo.classe);
         return this;
     }
 
-    /**
-     * Adiciona (ou atualiza) um sparkline ao lado do valor.
-     *
-     * @param valores   serie
-     * @param classeCor classe CSS da cor ({@code spark-recente}, {@code spark-anterior})
-     * @return este card
-     */
+    /** Adiciona (ou atualiza) um sparkline ao lado do valor. */
     public KpiCard sparkline(double[] valores, String classeCor) {
         if (sparkline == null) {
             sparkline = new Sparkline(classeCor);
@@ -151,11 +112,7 @@ public class KpiCard extends VBox {
         return this;
     }
 
-    /**
-     * Oculta o sparkline (quando o indicador nao se aplica ao filtro atual).
-     *
-     * @return este card
-     */
+    /** Oculta o sparkline (quando o indicador nao se aplica ao filtro atual). */
     public KpiCard semSparkline() {
         if (sparkline != null) {
             sparkline.setVisible(false);
@@ -164,16 +121,11 @@ public class KpiCard extends VBox {
         return this;
     }
 
-    /**
-     * @param texto dica completa ao passar o mouse
-     * @return este card
-     */
     public KpiCard dica(String texto) {
         Tooltip.install(this, new Tooltip(texto));
         return this;
     }
 
-    /** @return texto do valor (para testes e acessibilidade) */
     public String getValor() {
         return valor.getText();
     }

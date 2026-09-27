@@ -42,13 +42,8 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Contexto compartilhado pelos controllers do dashboard: sessao (modelo), estado observavel
- * (base carregada, filtro global, lista filtrada, resultado de ML, tela atual), execucao de
- * tarefas em background com progresso e cancelamento, dialogos estilizados e toasts.
- */
+/** Contexto compartilhado pelos controllers do dashboard. */
 public final class UiContexto {
-
     private static final Logger LOG = Logger.getLogger(UiContexto.class.getName());
 
     private final Sessao sessao;
@@ -90,12 +85,6 @@ public final class UiContexto {
         }
     }
 
-    /**
-     * Fabrica de controllers usada pelo FXMLLoader: injeta este contexto no construtor.
-     *
-     * @param tipo classe do controller
-     * @return instancia
-     */
     Object criarController(Class<?> tipo) {
         try {
             try {
@@ -110,28 +99,12 @@ public final class UiContexto {
         }
     }
 
-    /**
-     * Executa uma tarefa em background, atualizando status, progresso e overlay.
-     *
-     * @param descricao  texto exibido no status/overlay
-     * @param trabalho   trabalho (fora da thread da interface)
-     * @param aoConcluir callback na thread da interface com o resultado
-     * @param <T>        tipo do resultado
-     * @return tarefa criada, ou {@code null} se ja houver outra em andamento
-     */
+    /** Executa uma tarefa em background, atualizando status, progresso e overlay. */
     public <T> Task<T> executar(String descricao, Callable<T> trabalho, Consumer<T> aoConcluir) {
         return executar(descricao, p -> trabalho.call(), aoConcluir);
     }
 
-    /**
-     * Variante em que o trabalho recebe um reportador de progresso (0 a 1, mensagem).
-     *
-     * @param descricao  texto
-     * @param trabalho   trabalho com progresso
-     * @param aoConcluir callback com o resultado
-     * @param <T>        tipo
-     * @return tarefa, ou {@code null} se ocupado
-     */
+    /** Variante em que o trabalho recebe um reportador de progresso (0 a 1, mensagem). */
     public <T> Task<T> executar(String descricao, TrabalhoComProgresso<T> trabalho, Consumer<T> aoConcluir) {
         if (ocupado.get()) {
             Feedback.alerta("Aguarde a operação atual", status.get());
@@ -195,18 +168,12 @@ public final class UiContexto {
         if (tarefaAtual != null) tarefaAtual.cancel(true);
     }
 
-    /** Dispara a carga inicial dos dados (feita pela janela principal). */
     void carregarDadosIniciais(Runnable aoTerminar) {
         if (main != null) main.carregarInicial(aoTerminar);
         else aoTerminar.run();
     }
 
-    /**
-     * Mostra erro amigavel; excecoes inesperadas ganham detalhes tecnicos expansiveis.
-     *
-     * @param titulo contexto
-     * @param ex     excecao
-     */
+    /** Mostra erro amigavel; excecoes inesperadas ganham detalhes tecnicos expansiveis. */
     public void erro(String titulo, Throwable ex) {
         Throwable causa = ex;
         while (causa.getCause() != null && !(causa instanceof ApsException) && !(causa instanceof IllegalArgumentException)) {
@@ -225,42 +192,23 @@ public final class UiContexto {
                 : "Ocorreu um erro inesperado: " + causa + "\nOs detalhes foram gravados em logs/aps-0.log.", detalhes);
     }
 
-    /**
-     * @param titulo cabecalho
-     * @param msg    mensagem
-     */
     public void aviso(String titulo, String msg) {
         Dialogos.aviso(stage, titulo, msg);
     }
 
-    /**
-     * @param titulo cabecalho
-     * @param msg    mensagem
-     */
     public void info(String titulo, String msg) {
         Dialogos.info(stage, titulo, msg);
     }
 
-    /**
-     * @param titulo cabecalho
-     * @param msg    pergunta
-     * @return {@code true} se o usuario confirmar
-     */
     public boolean confirmar(String titulo, String msg) {
         return Dialogos.confirmar(stage, titulo, msg, "Continuar");
     }
 
-    /**
-     * Registra um grafico para inclusao (snapshot) nos relatorios PDF.
-     *
-     * @param titulo legenda
-     * @param no     no do grafico (ou card)
-     */
+    /** Registra um grafico para inclusao (snapshot) nos relatorios PDF. */
     public void registrarGrafico(String titulo, Node no) {
         graficos.put(titulo, no);
     }
 
-    /** @return snapshots dos graficos ja exibidos e com dados (thread FX) */
     public List<Map.Entry<String, BufferedImage>> snapshotsGraficos() {
         List<Map.Entry<String, BufferedImage>> r = new ArrayList<>();
         for (Map.Entry<String, Node> e : graficos.entrySet()) {
@@ -270,10 +218,6 @@ public final class UiContexto {
         return r;
     }
 
-    /**
-     * @param node no a capturar
-     * @return imagem, ou {@code null} se o no ainda nao foi exibido
-     */
     public static BufferedImage snapshot(Node node) {
         if (node == null || node.getScene() == null || node.getLayoutBounds().getWidth() < 10) return null;
         SnapshotParameters sp = new SnapshotParameters();
@@ -282,29 +226,17 @@ public final class UiContexto {
         return SwingFXUtils.fromFXImage(img, null);
     }
 
-    /**
-     * Navega para uma tela.
-     *
-     * @param p tela
-     */
+    /** Navega para uma tela. */
     public void navegar(Pagina p) {
         pagina.set(p);
     }
 
-    /**
-     * Compatibilidade: seleciona tela pelo identificador antigo das abas.
-     *
-     * @param id "mapa", "ml"...
-     */
+    /** Compatibilidade: seleciona tela pelo identificador antigo das abas. */
     public void selecionarAba(String id) {
         for (Pagina p : Pagina.values()) if (p.name().equalsIgnoreCase(id)) navegar(p);
     }
 
-    /**
-     * Executa na thread da interface.
-     *
-     * @param r acao
-     */
+    /** Executa na thread da interface. */
     public static void naInterface(Runnable r) {
         if (Platform.isFxApplicationThread()) r.run();
         else Platform.runLater(r);
@@ -321,7 +253,6 @@ public final class UiContexto {
     public ObjectProperty<BaseDeFocos> baseProperty() { return base; }
     public ObjectProperty<Preditor.ResultadoML> mlProperty() { return ml; }
     public ObjectProperty<FiltroGlobal> filtroProperty() { return filtro; }
-    /** @return focos da base apos o filtro global (lista imutavel) */
     public ReadOnlyObjectProperty<List<FocoIncendio>> focosFiltradosProperty() { return focosFiltrados.getReadOnlyProperty(); }
     public ObjectProperty<Pagina> paginaProperty() { return pagina; }
     public StringProperty statusProperty() { return status; }
@@ -331,11 +262,6 @@ public final class UiContexto {
     /** Trabalho que reporta progresso. */
     @FunctionalInterface
     public interface TrabalhoComProgresso<T> {
-        /**
-         * @param progresso reportador (fracao 0-1, mensagem)
-         * @return resultado
-         * @throws Exception qualquer falha (exibida em dialogo)
-         */
         T executar(BiConsumer<Double, String> progresso) throws Exception;
     }
 }

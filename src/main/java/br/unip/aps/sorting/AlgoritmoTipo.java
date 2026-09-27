@@ -13,12 +13,8 @@ import br.unip.aps.sorting.algorithms.TimSortSimplificado;
 
 import java.util.function.Supplier;
 
-/**
- * Catalogo dos algoritmos disponiveis. Cada constante sabe criar sua estrategia
- * (usado pela {@link SortAlgorithmFactory}).
- */
+/** Catalogo dos algoritmos disponiveis. */
 public enum AlgoritmoTipo {
-
     BUBBLE(BubbleSort::new),
     SELECTION(SelectionSort::new),
     INSERTION(InsertionSort::new),
@@ -38,27 +34,22 @@ public enum AlgoritmoTipo {
         this.prototipo = fabrica.get();
     }
 
-    /** @return nova instancia do algoritmo */
     public SortAlgorithm criar() {
         return fabrica.get();
     }
 
-    /** @return nome de exibicao */
     public String nome() {
         return prototipo.nome();
     }
 
-    /** @return ficha de complexidade */
     public Complexidade complexidade() {
         return prototipo.complexidade();
     }
 
-    /** @return {@code true} se o caso medio for O(n²) */
     public boolean quadratico() {
         return prototipo.complexidade().quadratico();
     }
 
-    /** @return {@code true} se exigir chave numerica (Radix) */
     public boolean exigeChaveNumerica() {
         return prototipo.exigeChaveNumerica();
     }

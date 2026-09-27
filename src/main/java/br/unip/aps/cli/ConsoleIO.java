@@ -4,12 +4,8 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Leitura validada de opcoes no terminal: entradas invalidas geram nova pergunta, nunca uma
- * excecao para o usuario.
- */
+/** Leitura validada de opcoes no terminal. */
 final class ConsoleIO {
-
     private final Scanner in;
     private final PrintStream out;
 
@@ -38,7 +34,6 @@ final class ConsoleIO {
                 int v = Integer.parseInt(s.replace(".", "").replace("_", ""));
                 if (v >= min && v <= max) return v;
             } catch (NumberFormatException ignorada) {
-                // pergunta novamente
             }
             out.println("  Valor invalido. Digite um numero entre " + min + " e " + max + ".");
         }

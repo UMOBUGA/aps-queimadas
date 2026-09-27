@@ -24,13 +24,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Estado da aplicacao compartilhado entre o menu de console e o dashboard (camada de aplicacao):
- * configuracao, base carregada, servicos e os ultimos resultados produzidos, que alimentam os
- * relatorios. Nao e thread-safe; o dashboard so a altera na thread da interface.
- */
+/** Estado da aplicacao compartilhado entre o menu de console e o dashboard (camada de aplicacao). */
 public final class Sessao {
-
     private static final DateTimeFormatter CARIMBO = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     private final AppConfig config;
@@ -44,46 +39,27 @@ public final class Sessao {
     private List<BenchmarkResult> ultimoBenchmark;
     private Preditor.ResultadoML ultimoMl;
 
-    /** @param config configuracao carregada */
     public Sessao(AppConfig config) {
         this.config = config;
         this.repositorio = new RepositorioDados(config.diretorioDados());
         this.servicoOrdenacao = new ServicoOrdenacao(config.limiteQuadratico());
     }
 
-    /**
-     * Carrega todos os CSVs da pasta de dados.
-     *
-     * @return base carregada
-     * @throws DataValidationException se nao houver arquivos validos
-     */
+    /** Carrega todos os CSVs da pasta de dados. */
     public BaseDeFocos carregar() throws DataValidationException {
         base = repositorio.carregarTodos();
         limparResultados();
         return base;
     }
 
-    /**
-     * Carrega CSVs escolhidos pelo usuario.
-     *
-     * @param arquivos arquivos
-     * @return base carregada
-     * @throws DataValidationException se a carga falhar
-     */
+    /** Carrega CSVs escolhidos pelo usuario. */
     public BaseDeFocos carregar(List<Path> arquivos) throws DataValidationException {
         base = repositorio.carregar(arquivos);
         limparResultados();
         return base;
     }
 
-    /**
-     * Baixa os arquivos da UF/anos configurados para a pasta de dados.
-     *
-     * @param uf   sigla
-     * @param anos anos
-     * @return CSVs baixados
-     * @throws ApsException se algum download falhar
-     */
+    /** Baixa os arquivos da UF/anos configurados para a pasta de dados. */
     public List<Path> baixarDoInpe(String uf, List<Integer> anos) throws ApsException {
         DownloaderInpe d = new DownloaderInpe(config.urlInpe());
         List<Path> r = new ArrayList<>();
@@ -98,16 +74,11 @@ public final class Sessao {
         ultimoMl = null;
     }
 
-    /**
-     * @return base carregada
-     * @throws ApsException se nenhuma base foi carregada ainda
-     */
     public BaseDeFocos exigirBase() throws ApsException {
         if (base == null) throw new ApsException("Nenhum dado carregado. Carregue os CSVs do INPE primeiro.");
         return base;
     }
 
-    /** @return configuracao de benchmark a partir de application.properties */
     public BenchmarkConfig benchmarkConfig() {
         return new BenchmarkConfig(List.of(AlgoritmoTipo.values()),
                 List.of(CriterioOrdenacao.DATA, CriterioOrdenacao.BIOMA, CriterioOrdenacao.MUNICIPIO),
@@ -117,32 +88,17 @@ public final class Sessao {
                 config.inteiro("aps.benchmark.semente", 42), Integer.MAX_VALUE);
     }
 
-    /**
-     * @param anoTreino ano de treino
-     * @param anoTeste  ano de teste
-     * @return parametros de ML a partir de application.properties
-     */
     public Preditor.Parametros parametrosMl(int anoTreino, int anoTeste) {
         return new Preditor.Parametros(anoTreino, anoTeste, config.inteiro("aps.ml.arvores", 200),
                 config.inteiro("aps.ml.k", 8), config.decimal("aps.ml.epsKm", 10.0), config.inteiro("aps.ml.minPts", 30), 42L);
     }
 
-    /**
-     * Monta o contexto de relatorio com tudo o que foi produzido na sessao.
-     *
-     * @return contexto
-     * @throws ApsException se nenhuma base foi carregada
-     */
+    /** Monta o contexto de relatorio com tudo o que foi produzido na sessao. */
     public ContextoRelatorio contextoRelatorio() throws ApsException {
         return new ContextoRelatorio(exigirBase()).ordenacao(ultimaOrdenacao).comparativo(ultimoComparativo)
                 .benchmark(ultimoBenchmark).ml(ultimoMl);
     }
 
-    /**
-     * @param prefixo   prefixo do nome
-     * @param extensao  extensao com ponto
-     * @return caminho com carimbo de data/hora na pasta de relatorios
-     */
     public Path arquivoRelatorio(String prefixo, String extensao) {
         return config.diretorioRelatorios().resolve(prefixo + "-" + LocalDateTime.now().format(CARIMBO) + extensao);
     }

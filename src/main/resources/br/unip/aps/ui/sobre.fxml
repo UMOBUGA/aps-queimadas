@@ -9,7 +9,6 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- Sobre: sistema, equipe (grupo.properties), disciplina, tecnologias e fonte dos dados -->
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="br.unip.aps.ui.SobreController" fitToWidth="true">
     <VBox styleClass="page">

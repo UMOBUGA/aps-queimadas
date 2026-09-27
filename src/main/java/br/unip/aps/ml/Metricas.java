@@ -1,40 +1,16 @@
 package br.unip.aps.ml;
 
-/**
- * Metricas de avaliacao de modelos, implementadas explicitamente para ficarem transparentes na
- * dissertacao.
- */
+/** Metricas de avaliacao de modelos, implementadas explicitamente para ficarem transparentes na dissertacao. */
 public final class Metricas {
-
     private Metricas() { }
 
-    /**
-     * Metricas de regressao.
-     *
-     * @param mae  erro absoluto medio: media de |y - ŷ| (mesma unidade do alvo: focos)
-     * @param rmse raiz do erro quadratico medio: penaliza mais os erros grandes
-     * @param r2   coeficiente de determinacao: 1 - SQres/SQtot (1 = perfeito; 0 = igual a prever a media)
-     */
+    /** Metricas de regressao. */
     public record Regressao(double mae, double rmse, double r2) { }
 
-    /**
-     * Metricas de classificacao multiclasse.
-     *
-     * @param acuracia  acertos / total
-     * @param f1Macro   media simples do F1 de cada classe (nao favorece a classe majoritaria)
-     * @param precisao  precisao por classe: VP / (VP + FP)
-     * @param revocacao revocacao (recall) por classe: VP / (VP + FN)
-     * @param f1        F1 por classe: media harmonica de precisao e revocacao
-     * @param matriz    matriz de confusao [real][previsto]
-     */
+    /** Metricas de classificacao multiclasse. */
     public record Classificacao(double acuracia, double f1Macro, double[] precisao, double[] revocacao,
                                 double[] f1, int[][] matriz) { }
 
-    /**
-     * @param real     valores observados
-     * @param previsto valores previstos
-     * @return MAE, RMSE e R²
-     */
     public static Regressao regressao(double[] real, double[] previsto) {
         int n = real.length;
         if (n == 0 || n != previsto.length) throw new IllegalArgumentException("Vetores vazios ou de tamanhos diferentes.");
@@ -51,12 +27,6 @@ public final class Metricas {
         return new Regressao(abs / n, Math.sqrt(sq / n), tot == 0 ? 0 : 1 - sq / tot);
     }
 
-    /**
-     * @param real     classes observadas (0..k-1)
-     * @param previsto classes previstas (0..k-1)
-     * @param k        numero de classes
-     * @return metricas de classificacao
-     */
     public static Classificacao classificacao(int[] real, int[] previsto, int k) {
         int[][] m = new int[k][k];
         int acertos = 0;

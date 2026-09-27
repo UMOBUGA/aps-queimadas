@@ -12,30 +12,20 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Localiza os CSVs de focos no diretorio de dados e delega a carga ao {@link CsvLoader}.
- */
+/** Localiza os CSVs de focos no diretorio de dados e delega a carga ao {@link CsvLoader}. */
 public final class RepositorioDados {
-
     private final Path diretorio;
     private final CsvLoader loader = new CsvLoader();
 
-    /** @param diretorio pasta com os CSVs (ex.: data/raw) */
     public RepositorioDados(Path diretorio) {
         this.diretorio = diretorio;
     }
 
-    /** @return pasta de dados */
     public Path getDiretorio() {
         return diretorio;
     }
 
-    /**
-     * Lista os CSVs de focos (nome contendo "focos" e extensao .csv), em ordem alfabetica.
-     *
-     * @return arquivos encontrados (possivelmente vazio)
-     * @throws DataValidationException se a pasta nao puder ser lida
-     */
+    /** Lista os CSVs de focos (nome contendo "focos" e extensao .csv), em ordem alfabetica. */
     public List<Path> localizarArquivos() throws DataValidationException {
         List<Path> r = new ArrayList<>();
         if (!Files.isDirectory(diretorio)) return r;
@@ -49,12 +39,7 @@ public final class RepositorioDados {
         return Ordenacoes.ordenar(r, Comparator.comparing(p -> p.getFileName().toString()));
     }
 
-    /**
-     * Carrega todos os CSVs de focos da pasta de dados.
-     *
-     * @return base unificada
-     * @throws DataValidationException se nao houver arquivos ou se a carga falhar
-     */
+    /** Carrega todos os CSVs de focos da pasta de dados. */
     public BaseDeFocos carregarTodos() throws DataValidationException {
         List<Path> arquivos = localizarArquivos();
         if (arquivos.isEmpty()) {
@@ -65,13 +50,7 @@ public final class RepositorioDados {
         return loader.carregar(arquivos);
     }
 
-    /**
-     * Carrega arquivos especificos escolhidos pelo usuario.
-     *
-     * @param arquivos CSVs
-     * @return base unificada
-     * @throws DataValidationException se a carga falhar
-     */
+    /** Carrega arquivos especificos escolhidos pelo usuario. */
     public BaseDeFocos carregar(List<Path> arquivos) throws DataValidationException {
         return loader.carregar(arquivos);
     }

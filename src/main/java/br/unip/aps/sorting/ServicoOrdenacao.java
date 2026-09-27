@@ -10,59 +10,26 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-/**
- * Servico de aplicacao que atende uma "solicitacao de exibicao ordenada".
- *
- * <p>Fluxo: (1) valida a solicitacao; (2) extrai a amostra do tamanho pedido; (3) prepara o
- * cenario de entrada; (4) copia para um array — os dados originais nunca sao alterados; (5)
- * executa o algoritmo com contagem de operacoes e cronometro; (6) verifica de forma independente
- * se o resultado esta ordenado; (7) devolve dados + metricas + avisos.</p>
- */
+/** Servico de aplicacao que atende uma "solicitacao de exibicao ordenada". */
 public final class ServicoOrdenacao {
-
     private static final Logger LOG = Logger.getLogger(ServicoOrdenacao.class.getName());
 
-    /** Acima deste n, algoritmos O(n²) geram aviso (configuravel em application.properties). */
     private final int limiteQuadratico;
 
-    /** @param limiteQuadratico tamanho a partir do qual algoritmos O(n²) geram aviso */
     public ServicoOrdenacao(int limiteQuadratico) {
         this.limiteQuadratico = limiteQuadratico;
     }
 
-    /**
-     * Parametros de uma solicitacao de ordenacao.
-     *
-     * @param algoritmo algoritmo escolhido
-     * @param criterios criterio simples ou composto
-     * @param tamanho   tamanho da amostra (&lt;= 0 ou maior que a base = base inteira)
-     * @param amostraAleatoria {@code true} para sortear a amostra; {@code false} para os primeiros n
-     * @param cenario   disposicao inicial da entrada
-     * @param semente   semente para amostragem/embaralhamento
-     */
+    /** Parametros de uma solicitacao de ordenacao. */
     public record Solicitacao(AlgoritmoTipo algoritmo, Criterios criterios, int tamanho,
                               boolean amostraAleatoria, CenarioEntrada cenario, long semente) {
-
-        /**
-         * Solicitacao simples: base inteira, ordem original.
-         *
-         * @param algoritmo algoritmo
-         * @param criterios criterio
-         * @return solicitacao
-         */
+        /** Solicitacao simples: base inteira, ordem original. */
         public static Solicitacao de(AlgoritmoTipo algoritmo, Criterios criterios) {
             return new Solicitacao(algoritmo, criterios, 0, false, CenarioEntrada.ORIGINAL, 42L);
         }
     }
 
-    /**
-     * Executa a ordenacao solicitada.
-     *
-     * @param base dados de entrada (nao sao modificados)
-     * @param s    solicitacao
-     * @return dados ordenados e metricas
-     * @throws ApsException se a solicitacao for invalida (ex.: Radix com criterio de texto, base vazia)
-     */
+    /** Executa a ordenacao solicitada. */
     public ResultadoOrdenacao<FocoIncendio> ordenar(List<FocoIncendio> base, Solicitacao s) throws ApsException {
         validar(base, s);
         List<FocoIncendio> amostra = amostrar(base, s.tamanho(), s.amostraAleatoria(), s.semente());
@@ -84,17 +51,7 @@ public final class ServicoOrdenacao {
         return r;
     }
 
-    /**
-     * Executa todos os algoritmos compativeis sobre a MESMA entrada (comparativo rapido).
-     *
-     * @param base      dados
-     * @param criterios criterio
-     * @param tamanho   tamanho da amostra
-     * @param cenario   disposicao inicial
-     * @param incluirQuadraticos se {@code false}, pula algoritmos O(n²) quando n &gt; limite
-     * @return um resultado por algoritmo
-     * @throws ApsException se a base estiver vazia
-     */
+    /** Executa todos os algoritmos compativeis sobre a MESMA entrada (comparativo rapido). */
     public List<ResultadoOrdenacao<FocoIncendio>> compararTodos(List<FocoIncendio> base, Criterios criterios,
                                                                 int tamanho, CenarioEntrada cenario,
                                                                 boolean incluirQuadraticos) throws ApsException {
@@ -121,11 +78,6 @@ public final class ServicoOrdenacao {
         }
     }
 
-    /**
-     * @param alg algoritmo
-     * @param n   tamanho da entrada
-     * @return aviso de custo para algoritmos O(n²) acima do limite, ou {@code null}
-     */
     public String avisoDesempenho(AlgoritmoTipo alg, int n) {
         if (!alg.quadratico() || n <= limiteQuadratico) return null;
         long estimativa = (long) n * (n - 1) / 2;
@@ -134,21 +86,11 @@ public final class ServicoOrdenacao {
                 + "algoritmo O(n log n).";
     }
 
-    /** @return limite de n para avisos de algoritmos O(n²) */
     public int getLimiteQuadratico() {
         return limiteQuadratico;
     }
 
-    /**
-     * Extrai uma amostra da base.
-     *
-     * @param base      base
-     * @param tamanho   tamanho desejado (&lt;= 0 = base inteira)
-     * @param aleatoria sorteia (Fisher-Yates parcial) ou pega os primeiros
-     * @param semente   semente
-     * @param <T>       tipo
-     * @return nova lista com a amostra
-     */
+    /** Extrai uma amostra da base. */
     public static <T> List<T> amostrar(List<T> base, int tamanho, boolean aleatoria, long semente) {
         int n = tamanho <= 0 ? base.size() : Math.min(tamanho, base.size());
         if (!aleatoria || n == base.size()) {

@@ -17,13 +17,8 @@ import javafx.stage.Window;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Dialogos modais com a identidade do sistema (nada de {@code Alert} padrao cru): cabecalho com
- * icone semantico em circulo, texto secundario, botoes do design system e as mesmas folhas de
- * estilo/tema da janela principal.
- */
+/** Dialogos modais com a identidade do sistema (nada de {@code Alert} padrao cru). */
 public final class Dialogos {
-
     private Dialogos() { }
 
     private enum Tipo {
@@ -66,32 +61,15 @@ public final class Dialogos {
         return a;
     }
 
-    /**
-     * @param dono   janela dona
-     * @param titulo titulo
-     * @param texto  mensagem
-     */
     public static void info(Window dono, String titulo, String texto) {
         criar(dono, Tipo.INFO, titulo, texto, new ButtonType("Entendi", ButtonBar.ButtonData.OK_DONE)).show();
     }
 
-    /**
-     * @param dono   janela dona
-     * @param titulo titulo
-     * @param texto  mensagem
-     */
     public static void aviso(Window dono, String titulo, String texto) {
         criar(dono, Tipo.ALERTA, titulo, texto, new ButtonType("Entendi", ButtonBar.ButtonData.OK_DONE)).show();
     }
 
-    /**
-     * Erro com detalhes tecnicos opcionais (expansiveis).
-     *
-     * @param dono     janela dona
-     * @param titulo   titulo
-     * @param texto    mensagem amigavel
-     * @param detalhes stack trace ou detalhes (ou {@code null})
-     */
+    /** Erro com detalhes tecnicos opcionais (expansiveis). */
     public static void erro(Window dono, String titulo, String texto, String detalhes) {
         Alert a = criar(dono, Tipo.ERRO, titulo, texto, new ButtonType("Fechar", ButtonBar.ButtonData.OK_DONE));
         if (detalhes != null) {
@@ -104,13 +82,6 @@ public final class Dialogos {
         a.show();
     }
 
-    /**
-     * @param dono      janela dona
-     * @param titulo    pergunta
-     * @param texto     explicacao
-     * @param confirmar rotulo do botao de confirmacao
-     * @return {@code true} se confirmado
-     */
     public static boolean confirmar(Window dono, String titulo, String texto, String confirmar) {
         ButtonType sim = new ButtonType(confirmar, ButtonBar.ButtonData.YES);
         ButtonType nao = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -118,15 +89,7 @@ public final class Dialogos {
         return r.isPresent() && r.get() == sim;
     }
 
-    /**
-     * Pergunta com varias opcoes.
-     *
-     * @param dono   janela dona
-     * @param titulo titulo
-     * @param texto  explicacao
-     * @param opcoes rotulos (o primeiro e o primario)
-     * @return indice escolhido, ou -1 se fechado
-     */
+    /** Pergunta com varias opcoes. */
     public static int escolher(Window dono, String titulo, String texto, String... opcoes) {
         ButtonType[] bs = new ButtonType[opcoes.length + 1];
         for (int i = 0; i < opcoes.length; i++) {
@@ -139,14 +102,7 @@ public final class Dialogos {
         return -1;
     }
 
-    /**
-     * Exibe os dados de um grafico em tabela (acessibilidade: alternativa textual ao grafico).
-     *
-     * @param dono      janela dona
-     * @param titulo    titulo
-     * @param cabecalho colunas
-     * @param linhas    linhas
-     */
+    /** Mostra os dados de um grafico em tabela. */
     public static void tabela(Window dono, String titulo, String[] cabecalho, List<String[]> linhas) {
         Alert a = criar(dono, Tipo.INFO, titulo, null, new ButtonType("Fechar", ButtonBar.ButtonData.OK_DONE));
         TableView<String[]> t = new TableView<>(FXCollections.observableArrayList(linhas));

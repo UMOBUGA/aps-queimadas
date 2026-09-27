@@ -11,7 +11,6 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- Configuracoes: aparencia (tema, animacoes, menu), dados e atalhos de teclado -->
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="br.unip.aps.ui.ConfiguracoesController" fitToWidth="true">
     <VBox styleClass="page">

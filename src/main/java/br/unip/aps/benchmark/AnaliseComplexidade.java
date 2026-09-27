@@ -10,37 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.ToDoubleFunction;
 
-/**
- * Estima empiricamente a ordem de crescimento de cada algoritmo a partir das medicoes.
- *
- * <p>Se o custo segue T(n) ≈ c·n^k, entao log T = log c + k·log n: uma regressao linear no grafico
- * log-log fornece o expoente k (a inclinacao). Esperamos k ≈ 2 para O(n²), k ≈ 1,0–1,15 para
- * O(n log n) na faixa de tamanhos medida e k ≈ 1 para os lineares (Radix, melhores casos).
- * E a "prova experimental" da analise assintotica, discutida na dissertacao.</p>
- */
+/** Estima empiricamente a ordem de crescimento de cada algoritmo a partir das medicoes. */
 public final class AnaliseComplexidade {
-
     private AnaliseComplexidade() { }
 
-    /**
-     * Expoente empirico de um algoritmo em um criterio/cenario.
-     *
-     * @param algoritmo       nome
-     * @param criterio        criterio
-     * @param cenario         cenario
-     * @param expoenteTempo   inclinacao log-log do tempo
-     * @param expoenteComparacoes inclinacao log-log das comparacoes (NaN se nao houver comparacoes)
-     * @param r2Tempo         qualidade do ajuste do tempo
-     * @param classificacao   interpretacao ("~O(n²)", "~O(n log n)", "~O(n)")
-     */
+    /** Expoente empirico de um algoritmo em um criterio/cenario. */
     public record Estimativa(String algoritmo, CriterioOrdenacao criterio, CenarioEntrada cenario,
                              double expoenteTempo, double expoenteComparacoes, double r2Tempo,
                              String classificacao) { }
 
-    /**
-     * @param resultados medicoes do benchmark
-     * @return uma estimativa por (algoritmo, criterio, cenario) com ao menos 3 tamanhos distintos
-     */
     public static List<Estimativa> estimar(List<BenchmarkResult> resultados) {
         Map<String, List<BenchmarkResult>> grupos = new LinkedHashMap<>();
         for (BenchmarkResult r : resultados) {
@@ -62,10 +40,6 @@ public final class AnaliseComplexidade {
         return est;
     }
 
-    /**
-     * @param k expoente estimado
-     * @return classe de complexidade mais proxima
-     */
     public static String classificar(double k) {
         if (Double.isNaN(k)) return "indeterminado";
         if (k < 0.5) return "~O(1)/sublinear";

@@ -23,13 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Testes parametrizados: TODOS os algoritmos sao executados sobre os mesmos casos e comparados
- * com uma ordenacao de referencia ({@link Collections#sort}, permitido apenas nos testes).
- */
+/** Todos os algoritmos contra uma ordenacao de referencia. */
 @DisplayName("Algoritmos de ordenacao")
 class SortAlgorithmsTest {
-
     private static final Comparator<Integer> NATURAL = Comparator.naturalOrder();
 
     static Stream<Arguments> casosInteiros() {
@@ -88,7 +84,6 @@ class SortAlgorithmsTest {
     @EnumSource(AlgoritmoTipo.class)
     @DisplayName("estabilidade conforme a ficha de complexidade")
     void estabilidade(AlgoritmoTipo tipo) {
-        // registros (chave, posicao original): muitos empates de chave
         int n = 400;
         Random r = new Random(11);
         int[][] dados = new int[n][];
@@ -102,7 +97,6 @@ class SortAlgorithmsTest {
         if (tipo.complexidade().estavel()) {
             assertTrue(estavel, tipo.nome() + " declara ser estavel mas nao preservou a ordem dos empates");
         } else {
-            // algoritmos instaveis: com esta entrada, todos inverteram algum empate
             assertTrue(!estavel, tipo.nome() + " declarado instavel preservou os empates (ajuste o teste ou a ficha)");
         }
     }
@@ -157,7 +151,6 @@ class SortAlgorithmsTest {
         Integer[] a = sequencia(200_000, false);
         OperationMetrics m = AlgoritmoTipo.QUICK.criar().ordenar(a, NATURAL);
         assertArrayEquals(sequencia(200_000, false), a);
-        // mediana de tres => O(n log n): muito abaixo de n²/2 = 2*10^10
         assertTrue(m.comparacoes() < 10_000_000L, "comparacoes = " + m.comparacoes());
     }
 

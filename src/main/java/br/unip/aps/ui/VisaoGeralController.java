@@ -28,12 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Tela "Visao geral": KPIs, focos por mes (area, 2023 x 2024), donut de biomas, Top 10
- * municipios, focos por hora local e calendario diario. Reage ao filtro global.
- */
+/** Tela Visao geral. */
 public class VisaoGeralController implements Pagina.Controlador {
-
     private final UiContexto ctx;
 
     @FXML private KpiCard kTotal, kAnoAnterior, kAnoRecente, kVariacao, kMunicipios, kPico, kLider, kBioma;
@@ -47,7 +43,6 @@ public class VisaoGeralController implements Pagina.Controlador {
     private boolean pendente = true;
     private boolean visivel;
 
-    /** @param ctx contexto injetado */
     public VisaoGeralController(UiContexto ctx) {
         this.ctx = ctx;
     }
@@ -112,8 +107,6 @@ public class VisaoGeralController implements Pagina.Controlador {
         montarHoras(est);
         montarCalendario(focos, anos);
     }
-
-    // ------------------------------------------------------------------ KPIs
 
     private void montarKpis(Estatisticas est, List<Integer> anos) {
         Map<Integer, Long> porAno = est.porAno();
@@ -194,7 +187,6 @@ public class VisaoGeralController implements Pagina.Controlador {
         return Estatisticas.MESES[ym.getMonthValue() - 1] + "/" + ym.getYear();
     }
 
-    /** "SÃO JOSÉ DO RIO PRETO" -&gt; "São José do Rio Preto" (preposicoes em minusculas). */
     static String capitalizar(String s) {
         StringBuilder sb = new StringBuilder();
         for (String p : s.toLowerCase(br.unip.aps.util.Textos.PT_BR).split(" ")) {
@@ -204,8 +196,6 @@ public class VisaoGeralController implements Pagina.Controlador {
         }
         return sb.toString();
     }
-
-    // ------------------------------------------------------------------ graficos
 
     private void montarMensal(Estatisticas est, List<Integer> anos, int anoMax) {
         mensal.getData().clear();

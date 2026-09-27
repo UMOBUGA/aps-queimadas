@@ -14,14 +14,9 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Regra do enunciado verificada automaticamente: nenhum codigo de producao pode usar as
- * ordenacoes prontas da plataforma Java. Se alguem do grupo usar Collections.sort "sem querer",
- * o build falha.
- */
+/** Regra do enunciado verificada automaticamente. */
 @DisplayName("Regras de arquitetura")
 class ArquiteturaTest {
-
     private static final List<Pattern> PROIBIDOS = List.of(
             Pattern.compile("Collections\\s*\\.\\s*sort\\s*\\("),
             Pattern.compile("Arrays\\s*\\.\\s*(sort|parallelSort)\\s*\\("),

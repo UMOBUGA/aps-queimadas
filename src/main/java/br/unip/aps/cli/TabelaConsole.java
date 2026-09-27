@@ -6,20 +6,11 @@ import br.unip.aps.util.Formatos;
 import java.io.PrintStream;
 import java.util.List;
 
-/**
- * Impressao de tabelas de largura fixa no terminal.
- */
+/** Impressao de tabelas de largura fixa no terminal. */
 public final class TabelaConsole {
-
     private TabelaConsole() { }
 
-    /**
-     * Imprime as primeiras linhas de uma lista de focos.
-     *
-     * @param out    saida
-     * @param focos  focos (ja ordenados)
-     * @param limite maximo de linhas exibidas
-     */
+    /** Imprime as primeiras linhas de uma lista de focos. */
     public static void focos(PrintStream out, List<FocoIncendio> focos, int limite) {
         String fmt = "%6s  %-16s  %-32s  %-15s  %10s  %10s%n";
         out.printf(fmt, "#", "Data/hora (GMT)", "Municipio", "Bioma", "Latitude", "Longitude");
@@ -35,13 +26,7 @@ public final class TabelaConsole {
         }
     }
 
-    /**
-     * Imprime uma tabela generica.
-     *
-     * @param out       saida
-     * @param cabecalho titulos das colunas
-     * @param linhas    linhas (mesmo numero de colunas)
-     */
+    /** Imprime uma tabela generica. */
     public static void imprimir(PrintStream out, String[] cabecalho, List<String[]> linhas) {
         int[] larg = new int[cabecalho.length];
         for (int i = 0; i < cabecalho.length; i++) larg[i] = cabecalho[i].length();

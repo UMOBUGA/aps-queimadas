@@ -8,13 +8,9 @@ import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Confere a contagem de operacoes contra os valores teoricos conhecidos — garante que os numeros
- * exibidos ao usuario (e usados na dissertacao) estao corretos.
- */
+/** Confere a contagem de operacoes contra os valores teoricos. */
 @DisplayName("Contagem de operacoes")
 class OperationCounterTest {
-
     private static final Comparator<Integer> NATURAL = Comparator.naturalOrder();
     private static final int N = 100;
 

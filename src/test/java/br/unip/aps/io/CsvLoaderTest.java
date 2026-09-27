@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Leitura e limpeza do CSV")
 class CsvLoaderTest {
-
     private static final String CABECALHO = "id_bdq,foco_id,lat,lon,data_pas,pais,estado,municipio,bioma";
 
     @TempDir

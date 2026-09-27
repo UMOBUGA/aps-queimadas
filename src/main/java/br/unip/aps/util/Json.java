@@ -2,18 +2,10 @@ package br.unip.aps.util;
 
 import java.util.Locale;
 
-/**
- * Serializacao JSON minima (strings e numeros) para enviar dados ao mapa Leaflet, sem depender
- * de bibliotecas externas.
- */
+/** Serializacao JSON minima (strings e numeros) para enviar dados ao mapa Leaflet, sem depender de bibliotecas externas. */
 public final class Json {
-
     private Json() { }
 
-    /**
-     * @param s texto
-     * @return literal JSON entre aspas, com escapes (inclusive &lt;/script&gt; e separadores Unicode)
-     */
     public static String texto(String s) {
         if (s == null) return "null";
         StringBuilder sb = new StringBuilder(s.length() + 2).append('"');
@@ -37,11 +29,6 @@ public final class Json {
         return sb.append('"').toString();
     }
 
-    /**
-     * @param v     numero
-     * @param casas casas decimais
-     * @return literal numerico com ponto decimal (independente do locale)
-     */
     public static String numero(double v, int casas) {
         if (!Double.isFinite(v)) return "null";
         return String.format(Locale.ROOT, "%." + casas + "f", v);

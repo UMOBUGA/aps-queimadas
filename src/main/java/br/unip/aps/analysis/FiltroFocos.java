@@ -8,20 +8,9 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Filtro combinavel de focos (ano, bioma, municipio e periodo), usado no mapa, nas tabelas e nos
- * graficos do dashboard. Campos {@code null}/vazios nao filtram.
- *
- * @param anos        anos aceitos (vazio = todos)
- * @param biomas      biomas aceitos (vazio = todos)
- * @param municipio   trecho do nome do municipio, sem diferenciar acentos/caixa ({@code null} = todos)
- * @param dataInicio  data minima inclusiva ({@code null} = sem limite)
- * @param dataFim     data maxima inclusiva ({@code null} = sem limite)
- */
+/** Filtro combinavel de focos (ano, bioma, municipio e periodo), usado no mapa, nas tabelas e nos graficos do dashboard. */
 public record FiltroFocos(Set<Integer> anos, Set<String> biomas, String municipio,
                           LocalDate dataInicio, LocalDate dataFim) implements Predicate<FocoIncendio> {
-
-    /** Filtro que aceita tudo. */
     public static final FiltroFocos TODOS = new FiltroFocos(Set.of(), Set.of(), null, null, null);
 
     public FiltroFocos {
@@ -44,7 +33,6 @@ public record FiltroFocos(Set<Integer> anos, Set<String> biomas, String municipi
         return dataFim == null || !d.isAfter(dataFim);
     }
 
-    /** @return descricao do filtro para relatorios */
     public String descricao() {
         StringBuilder sb = new StringBuilder();
         if (!anos.isEmpty()) sb.append("anos=").append(anos).append("; ");

@@ -1,9 +1,3 @@
-/* =====================================================================
-   Tema ESCURO — tokens semanticos (-aps-*) e mapeamento para o AtlantaFX.
-   Selecionado (nao e inversao automatica): cada cor foi escolhida e
-   validada contra a superficie escura #151B23 (texto terciario 5,85:1;
-   botao primario 6,86:1 com texto escuro sobre brasa).
-   ===================================================================== */
 .root {
     -aps-bg-app:          -ink-950;
     -aps-surface:         -ink-900;
@@ -50,7 +44,6 @@
     -aps-bioma-pantanal: #9085E9;
     -aps-bioma-pampa:    #199E70;
     -aps-bioma-outro:    #8C97A6;
-    /* no escuro, mais focos = mais claro (brilho) */
     -aps-heat-vazio: #1F2833;
     -aps-heat-1: #8A3208;
     -aps-heat-2: #B8440A;

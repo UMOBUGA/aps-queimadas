@@ -2,11 +2,8 @@ package br.unip.aps.ui;
 
 import br.unip.aps.ui.componentes.Icones;
 
-/**
- * Telas do dashboard (navegacao pela sidebar). A ordem define os atalhos Ctrl+1..6.
- */
+/** Telas do dashboard (navegacao pela sidebar). */
 public enum Pagina {
-
     VISAO_GERAL("Visão geral", Icones.VISAO_GERAL, "visao-geral.fxml", true, false,
             "Indicadores e distribuição dos focos de queimadas"),
     ORDENACAO("Ordenação", Icones.ORDENACAO, "ordenacao.fxml", true, false,
@@ -43,15 +40,11 @@ public enum Pagina {
     public String titulo() { return titulo; }
     public String icone() { return icone; }
     public String fxml() { return fxml; }
-    /** @return {@code true} se a tela usa a barra de filtros global */
     public boolean usaFiltro() { return usaFiltro; }
-    /** @return {@code true} se fica no rodape da sidebar */
     public boolean rodape() { return rodape; }
     public String descricao() { return descricao; }
 
-    /**
-     * Contrato opcional dos controllers de pagina.
-     */
+    /** Contrato opcional dos controllers de pagina. */
     public interface Controlador {
         /** Chamado sempre que a tela passa a ser exibida. */
         default void aoExibir() { }
@@ -59,11 +52,7 @@ public enum Pagina {
         /** Chamado quando a tela deixa de ser exibida. */
         default void aoOcultar() { }
 
-        /**
-         * Prepara um estado demonstrativo (usado pela captura automatica de telas).
-         *
-         * @param concluido chamado quando a demonstracao estiver pronta
-         */
+        /** Prepara um estado demonstrativo (usado pela captura automatica de telas). */
         default void demonstrar(Runnable concluido) {
             concluido.run();
         }

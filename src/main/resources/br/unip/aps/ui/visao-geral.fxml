@@ -6,7 +6,6 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- Visao geral: KPIs (4/3/2 colunas) + graficos (2/1 colunas) + calendario em largura total -->
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="br.unip.aps.ui.VisaoGeralController" fitToWidth="true" styleClass="pagina-scroll">
     <VBox styleClass="page">

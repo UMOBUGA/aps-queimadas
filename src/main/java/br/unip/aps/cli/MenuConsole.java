@@ -35,22 +35,14 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Menu interativo em terminal: alternativa ao dashboard para demonstrar o sistema em qualquer
- * maquina (inclusive sem interface grafica).
- */
+/** Menu interativo em terminal. */
 public final class MenuConsole {
-
     private static final Logger LOG = Logger.getLogger(MenuConsole.class.getName());
 
     private final Sessao sessao;
     private final ConsoleIO io;
     private final PrintStream out;
 
-    /**
-     * @param sessao sessao da aplicacao
-     * @param out    saida (System.out)
-     */
     public MenuConsole(Sessao sessao, PrintStream out) {
         this.sessao = sessao;
         this.out = out;

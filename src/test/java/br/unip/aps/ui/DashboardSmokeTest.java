@@ -27,14 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-/**
- * Teste de fumaca da interface: monta o shell (sidebar, top bar, filtros), injeta uma base,
- * navega por todas as telas nos temas claro e escuro e aplica um filtro global, verificando que
- * nada lanca excecao. Requer ambiente grafico: e ignorado em CI/headless.
- */
+/** Teste de fumaca da interface. */
 @DisplayName("Dashboard (smoke test)")
 class DashboardSmokeTest {
-
     @Test
     void navegaPorTodasAsTelasNosDoisTemas() throws Exception {
         assumeFalse(System.getenv("CI") != null || java.awt.GraphicsEnvironment.isHeadless(), "sem ambiente grafico");
@@ -99,7 +94,6 @@ class DashboardSmokeTest {
         try {
             Platform.exit();
         } catch (IllegalStateException ignorada) {
-            // toolkit nao iniciado (teste ignorado)
         }
     }
 }

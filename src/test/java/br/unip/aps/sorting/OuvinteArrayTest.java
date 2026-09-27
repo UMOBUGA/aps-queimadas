@@ -10,13 +10,9 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * O ouvinte do {@link InstrumentedArray} (usado pela visualizacao animada) nao pode alterar a
- * ordenacao nem a contagem, e a reproducao dos eventos gravados deve reconstruir o vetor ordenado.
- */
+/** O ouvinte nao altera a ordenacao nem a contagem. */
 @DisplayName("Ouvinte de operacoes (visualizacao animada)")
 class OuvinteArrayTest {
-
     @ParameterizedTest(name = "{0}")
     @EnumSource(AlgoritmoTipo.class)
     void eventosReconstroemAOrdenacaoSemAlterarAContagem(AlgoritmoTipo tipo) {

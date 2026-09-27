@@ -6,14 +6,9 @@ import javafx.scene.layout.Pane;
 
 import java.util.List;
 
-/**
- * Grade responsiva: distribui os filhos em colunas de MESMA largura, recalculando o numero de
- * colunas conforme a largura disponivel (ex.: KPIs em 4/3/2 colunas; graficos em 2/1). Todas as
- * celulas de uma linha recebem a mesma altura, o que mantem os cards alinhados.
- */
+/** Grade de colunas iguais que se ajusta a largura disponivel. */
 @javafx.beans.DefaultProperty("children")
 public class GradeResponsiva extends Pane {
-
     private double larguraMinima = 240;
     private int maxColunas = 4;
     private double hgap = 16;
@@ -22,7 +17,6 @@ public class GradeResponsiva extends Pane {
     /** Cria a grade com os valores padrao (colunas de 240 px, ate 4, espaco de 16 px). */
     public GradeResponsiva() {
         getStyleClass().add("grade-responsiva");
-        // quando a largura muda o numero de colunas, a altura preferida muda: avisa o pai
         widthProperty().addListener((o, a, n) -> {
             int c = colunas(n.doubleValue() - getInsets().getLeft() - getInsets().getRight());
             if (c != ultimasColunas) {
@@ -35,11 +29,6 @@ public class GradeResponsiva extends Pane {
 
     private int ultimasColunas = -1;
 
-    /**
-     * @param larguraMinima largura minima de cada coluna (px)
-     * @param maxColunas    numero maximo de colunas
-     * @param gap           espaco horizontal e vertical entre celulas
-     */
     public GradeResponsiva(double larguraMinima, int maxColunas, double gap) {
         this();
         setLarguraMinima(larguraMinima);
@@ -47,32 +36,18 @@ public class GradeResponsiva extends Pane {
         setGap(gap);
     }
 
-    /** @param v largura minima de cada coluna (px) */
     public void setLarguraMinima(double v) { larguraMinima = v; requestLayout(); }
-    /** @return largura minima de cada coluna */
     public double getLarguraMinima() { return larguraMinima; }
-    /** @param v numero maximo de colunas */
     public void setMaxColunas(int v) { maxColunas = Math.max(1, v); requestLayout(); }
-    /** @return numero maximo de colunas */
     public int getMaxColunas() { return maxColunas; }
-    /** @param v espaco entre celulas (px) */
     public void setGap(double v) { hgap = v; vgap = v; requestLayout(); }
-    /** @return espaco entre celulas */
     public double getGap() { return hgap; }
 
-    /**
-     * @param nos celulas
-     * @return a propria grade (encadeamento)
-     */
     public GradeResponsiva com(Node... nos) {
         getChildren().addAll(nos);
         return this;
     }
 
-    /**
-     * @param largura largura disponivel
-     * @return numero de colunas para essa largura
-     */
     public int colunas(double largura) {
         int n = (int) Math.floor((largura + hgap) / (larguraMinima + hgap));
         return Math.max(1, Math.min(maxColunas, Math.min(n, Math.max(1, visiveis().size()))));

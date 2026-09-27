@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Relatorios (CSV, Excel, PDF, codigo-fonte)")
 class ReportExporterTest {
-
     @TempDir
     Path dir;
 

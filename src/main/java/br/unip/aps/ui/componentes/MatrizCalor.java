@@ -7,22 +7,14 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
-/**
- * Matriz de confusao como heatmap: intensidade proporcional ao percentual da classe real
- * (normalizacao por linha), exibindo contagem e percentual em cada celula.
- */
+/** Matriz de confusao como heatmap. */
 public class MatrizCalor extends GridPane {
-
     /** Cria o componente vazio. */
     public MatrizCalor() {
         setHgap(4);
         setVgap(4);
     }
 
-    /**
-     * @param rotulos rotulos das classes
-     * @param matriz  matriz [real][previsto]
-     */
     public void setDados(String[] rotulos, int[][] matriz) {
         getChildren().clear();
         getColumnConstraints().clear();

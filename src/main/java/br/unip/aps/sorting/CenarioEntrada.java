@@ -5,19 +5,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Cenario (disposicao inicial) da entrada entregue aos algoritmos, para estudar melhor, medio e
- * pior caso.
- */
+/** Cenario (disposicao inicial) da entrada entregue aos algoritmos, para estudar melhor, medio e pior caso. */
 public enum CenarioEntrada {
-
     /** Ordem original dos arquivos do INPE (cronologica por passagem do satelite). */
     ORIGINAL("Original (arquivo)"),
-    /** Embaralhada (Fisher-Yates com semente fixa: reprodutivel). Caso medio. */
+    /** Embaralhada com semente fixa. */
     ALEATORIO("Aleatória"),
-    /** Ja ordenada pelo criterio. Melhor caso de Insertion/Bubble; pior caso do Quick ingenuo. */
+    /** Ja ordenada pelo criterio. */
     ORDENADO("Já ordenada"),
-    /** Ordenada de tras para frente. Pior caso de Insertion/Bubble. */
+    /** Ordenada de tras para frente. */
     INVERSO("Inversamente ordenada"),
     /** Ordenada com 5% de pares trocados aleatoriamente (dados "quase ordenados"). */
     QUASE_ORDENADO("Quase ordenada (5%)");
@@ -28,15 +24,7 @@ public enum CenarioEntrada {
         this.rotulo = rotulo;
     }
 
-    /**
-     * Prepara uma nova lista com a disposicao do cenario (a lista base nao e alterada).
-     *
-     * @param base       elementos
-     * @param comparador criterio (usado nos cenarios ordenado/inverso/quase ordenado)
-     * @param semente    semente do gerador aleatorio
-     * @param <T>        tipo
-     * @return nova lista preparada
-     */
+    /** Prepara uma nova lista com a disposicao do cenario (a lista base nao e alterada). */
     public <T> List<T> preparar(List<T> base, Comparator<? super T> comparador, long semente) {
         List<T> r = new ArrayList<>(base);
         Random rnd = new Random(semente);
@@ -63,13 +51,7 @@ public enum CenarioEntrada {
         return r;
     }
 
-    /**
-     * Embaralhamento de Fisher-Yates (Knuth, algoritmo P): O(n), permutacoes equiprovaveis.
-     *
-     * @param lista lista a embaralhar
-     * @param rnd   gerador
-     * @param <T>   tipo
-     */
+    /** Embaralhamento de Fisher-Yates (Knuth, algoritmo P). */
     public static <T> void embaralhar(List<T> lista, Random rnd) {
         for (int i = lista.size() - 1; i > 0; i--) {
             int j = rnd.nextInt(i + 1);

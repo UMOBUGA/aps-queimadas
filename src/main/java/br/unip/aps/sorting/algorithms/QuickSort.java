@@ -4,30 +4,8 @@ import br.unip.aps.sorting.Complexidade;
 import br.unip.aps.sorting.InstrumentedArray;
 import br.unip.aps.sorting.SortAlgorithm;
 
-/**
- * <b>Quick Sort</b> (C. A. R. Hoare, 1961) com pivo mediana-de-tres e particao de Hoare/Sedgewick.
- *
- * <p>Escolhe um pivo, particiona o vetor em "menores ou iguais" | pivo | "maiores ou iguais" e
- * ordena recursivamente as duas partes. Decisoes de projeto que evitam o pior caso:</p>
- * <ol>
- *   <li><b>Mediana de tres</b> (primeiro, meio, ultimo): com pivo fixo no primeiro elemento, um
- *       vetor ja ordenado gera particoes 0 | n-1, custo O(n²) e recursao com profundidade n —
- *       {@code StackOverflowError} com dezenas de milhares de registros. A mediana-de-tres torna
- *       esse caso O(n log n).</li>
- *   <li><b>Particao de Hoare</b> (os ponteiros param em chaves iguais ao pivo): com muitas chaves
- *       repetidas — o criterio "bioma" desta base tem so 2 valores! — a particao continua
- *       balanceada. A particao de Lomuto degeneraria para O(n²) nesse cenario.</li>
- *   <li><b>Recursao na menor parte e laco na maior</b>: garante pilha O(log n) no pior caso.</li>
- * </ol>
- *
- * <ul>
- *   <li>Melhor caso e caso medio: O(n log n) (~1,39·n·log2 n comparacoes em media).</li>
- *   <li>Pior caso: O(n²) — raro com mediana-de-tres, mas ainda possivel com entradas adversarias.</li>
- *   <li>Espaco: O(log n) de pilha. Estavel: <b>nao</b>.</li>
- * </ul>
- */
+/** Quick Sort (Hoare, 1962). */
 public final class QuickSort implements SortAlgorithm {
-
     @Override
     public String nome() {
         return "Quick Sort";
@@ -64,11 +42,10 @@ public final class QuickSort implements SortAlgorithm {
 
     private <T> int particionar(InstrumentedArray<T> a, int lo, int hi) {
         int mid = lo + (hi - lo) / 2;
-        // mediana de tres: deixa a[lo] <= a[mid] <= a[hi]
         if (a.less(mid, lo)) a.swap(mid, lo);
         if (a.less(hi, lo)) a.swap(hi, lo);
         if (a.less(hi, mid)) a.swap(hi, mid);
-        if (mid != lo) a.swap(lo, mid); // pivo (mediana) vai para a[lo]; a[hi] >= pivo serve de sentinela
+        if (mid != lo) a.swap(lo, mid);
 
         T pivo = a.get(lo);
         int i = lo;

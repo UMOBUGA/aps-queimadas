@@ -1,27 +1,4 @@
-/* =====================================================================
-   APS Queimadas — Design tokens (paleta bruta e escalas)
-   ---------------------------------------------------------------------
-   Camadas do design system (carregadas nesta ordem):
-     1. tokens.css        paleta bruta (este arquivo)  -> NUNCA usada direto nos componentes
-     2. theme-light.css / theme-dark.css
-                          tokens semanticos (-aps-*) + sobrescrita dos tokens do AtlantaFX
-     3. base.css          tipografia e elementos base
-     4. components.css    componentes (.kpi-card, .chart-card, .btn-primary, ...)
-     5. charts.css        graficos
-   Componentes so referenciam tokens SEMANTICOS (-aps-*), por isso trocar o
-   tema e apenas trocar o arquivo 2.
-
-   Escalas (JavaFX CSS nao tem variaveis de tamanho; os valores abaixo sao
-   a regra seguida no CSS e na classe Java ui.Espaco):
-     espacamento: 4 · 8 · 12 · 16 · 24 · 32 px
-     raios:       6 (controles) · 10 (cards pequenos, chips) · 14 (cards, dialogos)
-     sombras:     nivel 1 (cards) · nivel 2 (popups, toasts)
-     tipografia:  display 28 · h1 22 · h2 16 · h3 14 · corpo 14 · pequeno 13 · legenda 12
-   Paleta de dados validada para daltonismo (CVD) e contraste WCAG
-   (ver docs/DESIGN.md).
-   ===================================================================== */
 .root {
-    /* Neutros (slate) */
     -slate-0:   #FFFFFF;
     -slate-25:  #FAFBFC;
     -slate-50:  #F5F6F8;
@@ -44,7 +21,6 @@
     -ink-300: #B4BDC9;
     -ink-100: #F2F4F7;
 
-    /* Brasa (destaque) */
     -brasa-50:  #FFF4ED;
     -brasa-100: #FFE6D5;
     -brasa-300: #FDBA8C;
@@ -55,7 +31,6 @@
     -brasa-800: #9A3412;
     -brasa-950: #2A1A12;
 
-    /* Semanticas */
     -verde-700:    #067647;
     -verde-50:     #ECFDF3;
     -verde-400:    #47CD89;

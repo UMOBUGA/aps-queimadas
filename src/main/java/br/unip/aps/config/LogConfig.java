@@ -6,12 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.LogManager;
 
-/**
- * Inicializa o {@code java.util.logging} a partir de {@code logging.properties}
- * (console + arquivo rotativo em {@code logs/aps-N.log}).
- */
+/** Configura o java.util.logging (console e arquivo em logs/). */
 public final class LogConfig {
-
     private static volatile boolean inicializado;
 
     private LogConfig() { }

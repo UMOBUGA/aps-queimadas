@@ -42,13 +42,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Tela "Machine Learning": previsao de focos (Random Forest de regressao, treino fixo e janela
- * expansivel), classificacao do nivel de atividade (Random Forest balanceado) e hotspots
- * (DBSCAN / K-Means). As metricas sempre aparecem comparadas a um baseline.
- */
+/** Tela Machine Learning. */
 public class MlController implements Pagina.Controlador {
-
     private final UiContexto ctx;
 
     @FXML private ComboBox<Integer> cbTreino, cbTeste;
@@ -68,7 +63,6 @@ public class MlController implements Pagina.Controlador {
     private final ToggleGroup metodo = new ToggleGroup();
     private Preditor.ResultadoML resultado;
 
-    /** @param ctx contexto injetado */
     public MlController(UiContexto ctx) {
         this.ctx = ctx;
     }

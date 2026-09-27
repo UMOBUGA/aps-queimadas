@@ -14,12 +14,8 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-/**
- * Notificacao nao bloqueante (toast) exibida no canto inferior direito, com icone e cor
- * semanticos. Some sozinha apos alguns segundos ou ao clicar no "x".
- */
+/** Notificacao nao bloqueante (toast) exibida no canto inferior direito, com icone e cor semanticos. */
 public final class Toast extends HBox {
-
     /** Tipo semantico. */
     public enum Tipo {
         SUCESSO("sucesso", Icones.SUCESSO), ERRO("erro", Icones.ERRO), ALERTA("alerta", Icones.ALERTA), INFO("info", Icones.INFO);
@@ -59,14 +55,7 @@ public final class Toast extends HBox {
         setAccessibleText(titulo + (texto != null ? ". " + texto : ""));
     }
 
-    /**
-     * Mostra um toast no container (VBox alinhado embaixo a direita).
-     *
-     * @param container pilha de toasts
-     * @param tipo      tipo
-     * @param titulo    titulo
-     * @param texto     detalhe
-     */
+    /** Mostra um toast no container (VBox alinhado embaixo a direita). */
     public static void mostrar(VBox container, Tipo tipo, String titulo, String texto) {
         Toast[] ref = new Toast[1];
         Runnable fechar = () -> {

@@ -4,23 +4,8 @@ import br.unip.aps.sorting.Complexidade;
 import br.unip.aps.sorting.InstrumentedArray;
 import br.unip.aps.sorting.SortAlgorithm;
 
-/**
- * <b>Quick Sort 3-Way</b> (particao em tres vias de Dijkstra — "bandeira holandesa").
- *
- * <p>Divide o vetor em tres faixas: menores que o pivo | iguais ao pivo | maiores. A faixa dos
- * iguais ja fica na posicao final e nao entra na recursao. Com muitas chaves repetidas o custo
- * cai drasticamente: ordenar esta base por <b>bioma</b> (apenas 2 valores distintos) exige apenas
- * ~2 passadas lineares, contra ~n·log n do Quick Sort classico.</p>
- *
- * <ul>
- *   <li>Melhor caso: O(n) (todas as chaves iguais, ou poucas chaves distintas: O(n·k)).</li>
- *   <li>Caso medio: O(n log n); proporcional a entropia das chaves quando ha repeticoes.</li>
- *   <li>Pior caso: O(n²) (improvavel com mediana de tres).</li>
- *   <li>Espaco: O(log n) de pilha. Estavel: <b>nao</b>.</li>
- * </ul>
- */
+/** Quick Sort 3-Way (particao em tres vias de Dijkstra, "bandeira holandesa"). */
 public final class QuickSort3Way implements SortAlgorithm {
-
     @Override
     public String nome() {
         return "Quick Sort 3-Way";
@@ -54,7 +39,6 @@ public final class QuickSort3Way implements SortAlgorithm {
             int lt = lo;
             int gt = hi;
             int i = lo + 1;
-            // invariante: a[lo..lt-1] < pivo, a[lt..i-1] == pivo, a[gt+1..hi] > pivo
             while (i <= gt) {
                 int c = a.compareValues(a.get(i), pivo);
                 if (c < 0) {

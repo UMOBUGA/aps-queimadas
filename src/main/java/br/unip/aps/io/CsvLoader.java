@@ -29,37 +29,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-/**
- * Leitura, validacao e limpeza dos arquivos CSV de focos de queimadas do INPE.
- *
- * <h2>Plano de limpeza implementado</h2>
- * <ol>
- *   <li><b>Encoding</b>: detecta UTF-8 (decodificacao estrita) e recorre a ISO-8859-1 (Latin-1)
- *       quando o arquivo nao e UTF-8 valido; remove BOM e corrige mojibake ("SÃƒO" -&gt; "SÃO").</li>
- *   <li><b>Separador</b>: detectado no cabecalho (virgula no INPE; ponto e virgula se o arquivo
- *       foi reexportado pelo Excel). Aceita virgula decimal nesse caso.</li>
- *   <li><b>Cabecalho</b>: mapeado por nome (sem depender da posicao), com sinonimos
- *       ({@code data_pas}, {@code data_hora_gmt}, {@code datahora}...). A ausencia de uma coluna
- *       obrigatoria gera {@link DataValidationException} com mensagem amigavel.</li>
- *   <li><b>Valores ausentes/sentinela</b>: campos vazios, {@code -999} e negativos em colunas
- *       fisicas (FRP, precipitacao, risco, dias sem chuva) viram {@code null} e sao contados.</li>
- *   <li><b>Validacao</b>: data/hora em varios formatos e ano plausivel; latitude/longitude dentro
- *       da caixa envolvente do Brasil; municipio e bioma obrigatorios.</li>
- *   <li><b>Padronizacao</b>: espacos colapsados, municipio em MAIUSCULAS (padrao IBGE),
- *       bioma em "Primeira Maiuscula".</li>
- *   <li><b>Unificacao</b>: varios arquivos (2023 e 2024) viram uma unica base, sem duplicatas
- *       ({@code foco_id} repetido entre arquivos e descartado).</li>
- * </ol>
- * Linhas invalidas nao interrompem a carga: sao descartadas e registradas no {@link RelatorioCarga}.
- */
+/** Leitura, validacao e limpeza dos CSVs de focos do INPE. */
 public final class CsvLoader {
-
     private static final Logger LOG = Logger.getLogger(CsvLoader.class.getName());
 
-    /** Caixa envolvente aproximada do territorio brasileiro (com folga). */
     static final double LAT_MIN = -34.5, LAT_MAX = 6.0, LON_MIN = -74.5, LON_MAX = -28.0;
 
-    /** Valor-sentinela usado pelo INPE para "sem dado". */
     static final double SENTINELA = -999.0;
 
     private static final List<DateTimeFormatter> FORMATOS_DATA = List.of(
@@ -70,7 +45,7 @@ public final class CsvLoader {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"),
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
-    /** Colunas logicas reconhecidas e seus sinonimos (ja normalizados: minusculas, sem acento). */
+    /** Colunas reconhecidas e seus sinonimos. */
     enum Coluna {
         ID_BDQ(false, "id_bdq", "id"),
         FOCO_ID(false, "foco_id", "focoid", "uuid"),
@@ -96,14 +71,7 @@ public final class CsvLoader {
         }
     }
 
-    /**
-     * Carrega e unifica varios arquivos CSV.
-     *
-     * @param arquivos caminhos dos CSVs (ex.: 2023 e 2024)
-     * @return base unificada, deduplicada, com o relatorio de qualidade
-     * @throws DataValidationException se algum arquivo nao existir, nao puder ser lido, nao tiver
-     *                                 as colunas obrigatorias ou se nenhum registro valido restar
-     */
+    /** Carrega e unifica varios arquivos CSV. */
     public BaseDeFocos carregar(List<Path> arquivos) throws DataValidationException {
         if (arquivos == null || arquivos.isEmpty()) {
             throw new DataValidationException("Nenhum arquivo CSV foi informado para carga.");
@@ -129,13 +97,7 @@ public final class CsvLoader {
         return new BaseDeFocos(focos, relatorio, arquivos);
     }
 
-    /**
-     * Carrega um unico arquivo.
-     *
-     * @param arquivo caminho do CSV
-     * @return base com os focos do arquivo
-     * @throws DataValidationException em caso de falha de leitura ou validacao
-     */
+    /** Carrega um unico arquivo. */
     public BaseDeFocos carregar(Path arquivo) throws DataValidationException {
         return carregar(List.of(arquivo));
     }
@@ -194,14 +156,6 @@ public final class CsvLoader {
         LOG.fine(() -> arquivo.getFileName() + ": " + a + "/" + l + " linhas aceitas (" + charset + ")");
     }
 
-    /**
-     * Detecta o encoding do arquivo: UTF-8 se todo o conteudo decodificar sem erros; caso
-     * contrario ISO-8859-1 (Latin-1), que aceita qualquer sequencia de bytes.
-     *
-     * @param arquivo arquivo a analisar
-     * @return charset detectado
-     * @throws DataValidationException se o arquivo nao puder ser lido
-     */
     static Charset detectarCharset(Path arquivo) throws DataValidationException {
         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
@@ -310,7 +264,6 @@ public final class CsvLoader {
         }
     }
 
-    /** Colunas fisicas opcionais: vazio, -999 ou negativo -&gt; null (contabilizado no relatorio). */
     private static Double opcional(List<String> campos, Map<Coluna, Integer> idx, Coluna c,
                                    boolean virgulaDecimal, RelatorioCarga rel) {
         if (!idx.containsKey(c)) return null;
@@ -340,7 +293,6 @@ public final class CsvLoader {
                 }
                 return d;
             } catch (DateTimeParseException ignorada) {
-                // tenta o proximo formato
             }
         }
         throw new RegistroInvalidoException("data/hora invalida");

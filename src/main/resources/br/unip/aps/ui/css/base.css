@@ -1,8 +1,3 @@
-/* =====================================================================
-   Base: tipografia (Inter embarcada), fundo e controles padrao.
-   Pesos: o JavaFX registra "Inter Medium" e "Inter SemiBold" como familias
-   proprias; por isso os pesos intermediarios trocam a -fx-font-family.
-   ===================================================================== */
 .root {
     -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", sans-serif;
     -fx-font-size: 13.5px;
@@ -12,7 +7,6 @@
 
 .text { -fx-font-smoothing-type: gray; }
 
-/* Escala tipografica */
 .t-display { -fx-font-family: "Inter"; -fx-font-weight: bold; -fx-font-size: 28px; -fx-text-fill: -aps-text-1; }
 .t-h1      { -fx-font-family: "Inter SemiBold"; -fx-font-size: 20px; -fx-text-fill: -aps-text-1; }
 .t-h2      { -fx-font-family: "Inter SemiBold"; -fx-font-size: 15px; -fx-text-fill: -aps-text-1; }
@@ -32,15 +26,12 @@
 .t-danger  { -fx-text-fill: -aps-danger; }
 .t-warning { -fx-text-fill: -aps-warning; }
 
-/* Hyperlink sem sublinhado agressivo */
 .hyperlink { -fx-text-fill: -aps-accent-text; -fx-border-color: transparent; -fx-padding: 0; }
 .hyperlink:hover { -fx-underline: true; }
 
-/* ScrollPane: sem moldura, fundo do app */
 .scroll-pane, .scroll-pane > .viewport { -fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 0; }
 .scroll-pane { -fx-border-width: 0; }
 
-/* Scrollbars finas e discretas */
 .scroll-bar { -fx-background-color: transparent; -fx-pref-width: 10; -fx-pref-height: 10; }
 .scroll-bar .thumb { -fx-background-color: -aps-border-strong; -fx-background-radius: 5; -fx-background-insets: 2; }
 .scroll-bar .thumb:hover { -fx-background-color: -aps-text-3; }
@@ -48,7 +39,6 @@
 .scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-pref-width: 0; -fx-pref-height: 0; -fx-padding: 0; }
 .scroll-bar .increment-arrow, .scroll-bar .decrement-arrow { -fx-shape: null; -fx-padding: 0; }
 
-/* Tooltips */
 .tooltip {
     -fx-background-color: -aps-text-1;
     -fx-text-fill: -aps-surface;
@@ -58,7 +48,6 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 8, 0, 0, 2);
 }
 
-/* Campos */
 .text-field, .combo-box-base, .spinner, .date-picker {
     -fx-background-radius: 6;
     -fx-font-size: 13px;
@@ -66,9 +55,7 @@
 .text-field { -fx-pref-height: 34; }
 .combo-box-base { -fx-pref-height: 34; }
 
-/* Separadores */
 .separator .line { -fx-border-color: -aps-border; -fx-border-width: 1 0 0 0; }
 .separator:vertical .line { -fx-border-width: 0 1 0 0; }
 
-/* Tabelas (base; variacao .data-table em components.css) */
 .table-view { -fx-background-color: -aps-surface; -fx-border-color: -aps-border; -fx-border-radius: 10; -fx-background-radius: 10; }

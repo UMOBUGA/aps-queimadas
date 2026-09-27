@@ -17,16 +17,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.logging.Logger;
 
-/**
- * Captura automatica de todas as telas do dashboard, nos temas claro e escuro, em PNG
- * ({@code java -Daps.capturas=docs/prints -jar ... } ou modo {@code capturas} do Main).
- *
- * <p>Serve para dois fins: revisao visual (alinhamento, contraste, hierarquia) e os prints
- * recomendados para a dissertacao. Antes de cada captura a tela executa sua demonstracao
- * ({@link Pagina.Controlador#demonstrar}), por exemplo ordenar ou treinar os modelos.</p>
- */
+/** Captura as telas do dashboard em PNG nos temas claro e escuro. */
 final class CapturaTelas {
-
     private static final Logger LOG = Logger.getLogger(CapturaTelas.class.getName());
 
     private final UiContexto ctx;
@@ -89,7 +81,6 @@ final class CapturaTelas {
         esperar(600, this::proximo);
     }
 
-    /** Capturas extras para a dissertacao: filtros ativos, comparativo, animacao e modos do mapa. */
     private void adicionarExtras(int inicio) {
         int[] n = {inicio};
         passos.add(() -> {

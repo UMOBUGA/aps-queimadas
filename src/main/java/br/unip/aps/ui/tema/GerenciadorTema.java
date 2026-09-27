@@ -18,17 +18,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
-/**
- * Gerencia o tema visual da aplicacao (claro/escuro), as fontes embarcadas e as preferencias de
- * interface do usuario, persistidas com {@link Preferences} entre execucoes.
- *
- * <p>Camadas: o AtlantaFX (Primer) e o <i>user-agent stylesheet</i> (base de todos os controles);
- * por cima, cada cena recebe as folhas do design system do projeto: {@code tokens.css},
- * {@code theme-light.css} ou {@code theme-dark.css}, {@code base.css}, {@code components.css} e
- * {@code charts.css}. Trocar de tema substitui apenas o UA stylesheet e o arquivo de tema.</p>
- */
+/** Tema, fontes e preferencias da interface. */
 public final class GerenciadorTema {
-
     /** Temas disponiveis. */
     public enum Tema {
         CLARO("theme-light.css"),
@@ -40,7 +31,6 @@ public final class GerenciadorTema {
             this.arquivo = arquivo;
         }
 
-        /** @return o outro tema */
         public Tema oposto() {
             return this == CLARO ? ESCURO : CLARO;
         }
@@ -70,7 +60,6 @@ public final class GerenciadorTema {
         sidebarRecolhida.addListener((o, a, n) -> prefs.putBoolean("sidebarRecolhida", n));
     }
 
-    /** @return instancia unica (criada na primeira chamada, carregando fontes e preferencias) */
     public static synchronized GerenciadorTema get() {
         if (instancia == null) {
             carregarFontes();
@@ -94,7 +83,6 @@ public final class GerenciadorTema {
         }
     }
 
-    /** Carrega a fonte Inter (4 pesos) embarcada em {@code resources/fonts}. */
     static void carregarFontes() {
         for (String f : FONTES) {
             try (InputStream in = GerenciadorTema.class.getResourceAsStream("/fonts/" + f)) {
@@ -115,26 +103,17 @@ public final class GerenciadorTema {
         for (Scene s : cenas) s.getStylesheets().setAll(folhas());
     }
 
-    /**
-     * Registra uma cena para receber (e acompanhar) o tema atual.
-     *
-     * @param cena cena
-     */
+    /** Registra uma cena para receber (e acompanhar) o tema atual. */
     public void registrar(Scene cena) {
         cena.getStylesheets().setAll(folhas());
         if (!cenas.contains(cena)) cenas.add(cena);
     }
 
-    /**
-     * Aplica as folhas do design system a um no raiz fora de cena registrada (ex.: DialogPane).
-     *
-     * @param raiz no raiz
-     */
+    /** Aplica as folhas de estilo a um no fora de uma cena registrada. */
     public void aplicar(Parent raiz) {
         raiz.getStylesheets().setAll(folhas());
     }
 
-    /** @return URLs das folhas do tema atual, na ordem de aplicacao */
     public List<String> folhas() {
         List<String> r = new ArrayList<>();
         for (String f : List.of("tokens.css", tema.get().arquivo, "base.css", "components.css", "charts.css")) {
@@ -149,7 +128,6 @@ public final class GerenciadorTema {
         tema.set(tema.get().oposto());
     }
 
-    /** @return {@code true} se o tema atual for escuro */
     public boolean escuro() {
         return tema.get() == Tema.ESCURO;
     }

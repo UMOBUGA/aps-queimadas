@@ -7,28 +7,9 @@ import smile.data.formula.Formula;
 
 import java.util.List;
 
-/**
- * Classificacao do nivel de atividade de fogo (baixo/medio/alto) por municipio e mes com
- * <b>Random Forest de classificacao</b> (criterio de Gini).
- *
- * <p>Mesmo protocolo temporal da {@link PrevisaoFocos}: treino em um ano, teste no seguinte.
- * O baseline e a <b>classe majoritaria</b> (sempre prever "baixo") — como a maioria dos
- * municipios-mes nao tem focos, a acuracia sozinha engana; por isso reportamos tambem o
- * F1 macro, que da o mesmo peso as tres classes.</p>
- */
+/** Classifica o nivel de atividade (baixo/medio/alto) com Random Forest. */
 public final class ClassificadorNivel {
-
-    /**
-     * Resultado da classificacao.
-     *
-     * @param anoTreino         ano de treino
-     * @param anoTeste          ano de teste
-     * @param metricas          metricas do Random Forest
-     * @param baselineAcuracia  acuracia de prever sempre a classe majoritaria do treino
-     * @param baselineF1Macro   F1 macro do baseline
-     * @param distribuicaoTeste quantidade de observacoes por classe no teste
-     * @param importancia       importancia das variaveis
-     */
+    /** Resultado da classificacao. */
     public record Resultado(int anoTreino, int anoTeste, Metricas.Classificacao metricas,
                             double baselineAcuracia, double baselineF1Macro, int[] distribuicaoTeste,
                             double[] importancia) { }
@@ -36,21 +17,11 @@ public final class ClassificadorNivel {
     private final int arvores;
     private final long semente;
 
-    /**
-     * @param arvores numero de arvores
-     * @param semente semente (reprodutibilidade)
-     */
     public ClassificadorNivel(int arvores, long semente) {
         this.arvores = arvores;
         this.semente = semente;
     }
 
-    /**
-     * @param base      base mensal
-     * @param anoTreino ano de treino
-     * @param anoTeste  ano de teste
-     * @return metricas e matriz de confusao
-     */
     public Resultado executar(BaseMensal base, int anoTreino, int anoTeste) {
         List<BaseMensal.Linha> treino = base.linhasDoAno(anoTreino);
         List<BaseMensal.Linha> teste = base.linhasDoAno(anoTeste);
@@ -82,18 +53,6 @@ public final class ClassificadorNivel {
                 baseline.acuracia(), baseline.f1Macro(), dist, rf.importance());
     }
 
-    /**
-     * Balanceamento de classes. A classe "baixo" domina os dados (~88% no treino) e, sem ajuste,
-     * a floresta aprende a prever quase sempre "baixo" (acuracia alta, F1 macro igual ao baseline).
-     *
-     * <p>No Smile, {@code classWeight} e a <b>proporcao</b> de cada classe usada na amostragem
-     * estratificada de cada arvore: cada classe j contribui com n_j / w_j amostras. Usando
-     * w_j = n_j / n_min, todas as classes entram com o mesmo numero de amostras (balanceamento
-     * completo por subamostragem da classe majoritaria).</p>
-     *
-     * @param contagem observacoes por classe no treino
-     * @return proporcao inteira por classe
-     */
     static int[] pesos(int[] contagem) {
         int min = Integer.MAX_VALUE;
         for (int c : contagem) if (c > 0) min = Math.min(min, c);

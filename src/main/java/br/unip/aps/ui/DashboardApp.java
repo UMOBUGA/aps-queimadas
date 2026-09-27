@@ -30,30 +30,13 @@ import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Aplicacao JavaFX do dashboard (padrao <b>MVC</b>).
- *
- * <ul>
- *   <li><b>Model</b>: {@link Sessao} e as classes de dominio;</li>
- *   <li><b>View</b>: FXML em {@code src/main/resources/br/unip/aps/ui} + design system em
- *       {@code ui/css} (tema AtlantaFX personalizado);</li>
- *   <li><b>Controller</b>: {@link MainController} (shell) e um controller por tela, que recebem o
- *       {@link UiContexto} por injecao de dependencia.</li>
- * </ul>
- * Fluxo de inicio: splash -&gt; montagem da interface -&gt; carga dos CSVs em background -&gt;
- * janela principal. Operacoes demoradas rodam em {@link javafx.concurrent.Task}.
- */
+/** Aplicacao JavaFX do dashboard (padrao MVC). */
 public class DashboardApp extends Application {
-
     private static final Logger LOG = Logger.getLogger(DashboardApp.class.getName());
 
     private UiContexto contexto;
 
-    /**
-     * Inicia o JavaFX (chamado por {@link br.unip.aps.Main}).
-     *
-     * @param args argumentos
-     */
+    /** Inicia o JavaFX (chamado por {@link br.unip.aps.Main}). */
     public static void iniciar(String[] args) {
         launch(DashboardApp.class, args);
     }
@@ -137,7 +120,6 @@ public class DashboardApp extends Application {
         f.play();
     }
 
-    /** @return icone da janela (chama da marca sobre fundo brasa), gerado a partir do Ikonli */
     static Image icone() {
         StackPane p = new StackPane(Icones.de(Icones.MARCA, 40));
         p.getStyleClass().add("brand-mark");

@@ -13,7 +13,6 @@ public enum Ordem {
         this.simbolo = simbolo;
     }
 
-    /** @return simbolo de seta para descricoes compactas */
     public String simbolo() {
         return simbolo;
     }

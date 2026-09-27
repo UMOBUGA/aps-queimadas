@@ -18,7 +18,6 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- Ordenacao: configuracao a esquerda, resultado a direita -->
 <HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="br.unip.aps.ui.OrdenacaoController" spacing="16" styleClass="page">
 

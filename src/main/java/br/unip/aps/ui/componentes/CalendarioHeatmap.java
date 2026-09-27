@@ -15,14 +15,8 @@ import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Calendario de focos por dia (heatmap), no estilo "contribution graph": uma linha por ano,
- * 7 linhas (dias da semana) x ~53 colunas (semanas). A intensidade usa a escala sequencial de
- * calor em 6 faixas com limites fixos (0, 1-2, 3-9, 10-29, 30-99, 100+), legendados abaixo.
- */
+/** Calendario de focos por dia (heatmap), no estilo "contribution graph". */
 public class CalendarioHeatmap extends VBox {
-
-    /** Limites inferiores das faixas 1..5. */
     static final int[] LIMITES = {1, 3, 10, 30, 100};
     private static final double CELULA = 11;
     private static final double GAP = 2.5;
@@ -32,20 +26,12 @@ public class CalendarioHeatmap extends VBox {
         setSpacing(Espaco.M);
     }
 
-    /**
-     * @param n focos no dia
-     * @return faixa 0..5
-     */
     static int faixa(long n) {
         int f = 0;
         for (int i = 0; i < LIMITES.length; i++) if (n >= LIMITES[i]) f = i + 1;
         return f;
     }
 
-    /**
-     * @param porDia focos por dia
-     * @param anos   anos a exibir (ordem crescente)
-     */
     public void setDados(Map<LocalDate, Long> porDia, List<Integer> anos) {
         getChildren().clear();
         for (int ano : anos) getChildren().add(ano(ano, porDia));
@@ -57,7 +43,7 @@ public class CalendarioHeatmap extends VBox {
         g.setHgap(GAP);
         g.setVgap(GAP);
         LocalDate d = LocalDate.of(ano, 1, 1);
-        int offset = d.getDayOfWeek().getValue() % 7; // domingo = 0
+        int offset = d.getDayOfWeek().getValue() % 7;
         long total = 0;
         int mesAnterior = 0;
         while (d.getYear() == ano) {

@@ -19,20 +19,9 @@ import javafx.util.Duration;
 
 import java.util.List;
 
-/**
- * Grafico de rosca (donut) com o total no centro e legenda lateral com valores e percentuais.
- * Substitui o PieChart padrao (que sobrepunha os rotulos). Cada segmento tem 2 px de folga e
- * tooltip com valor exato e percentual; a cor vem da classe CSS do item (ex.: bioma).
- */
+/** Grafico de rosca (donut) com o total no centro e legenda lateral com valores e percentuais. */
 public class DonutChart extends HBox {
-
-    /**
-     * Item do grafico.
-     *
-     * @param nome   rotulo
-     * @param valor  quantidade
-     * @param classe classe CSS de cor (ex.: {@code bioma-cerrado})
-     */
+    /** Item do grafico. */
     public record Item(String nome, long valor, String classe) { }
 
     private static final double RAIO = 74;
@@ -62,9 +51,6 @@ public class DonutChart extends HBox {
         getChildren().addAll(grafico, legendaLateral);
     }
 
-    /**
-     * @param itens itens (ja na ordem desejada, normalmente decrescente)
-     */
     public void setItens(List<Item> itens) {
         anel.getChildren().clear();
         legendaLateral.getChildren().clear();

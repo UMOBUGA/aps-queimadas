@@ -8,7 +8,6 @@
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- Qualidade dos dados: resumo, completude por coluna, problemas por severidade, arquivos -->
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="br.unip.aps.ui.QualidadeController" fitToWidth="true">
     <VBox styleClass="page">

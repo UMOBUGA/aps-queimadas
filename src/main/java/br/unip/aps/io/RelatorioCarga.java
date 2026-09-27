@@ -8,17 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Relatorio de qualidade da carga de dados (data quality report).
- *
- * <p>Registra, por arquivo, quantas linhas foram lidas, aceitas e rejeitadas, o motivo de cada
- * rejeicao e os valores ausentes/sentinela encontrados. E exibido no console, no dashboard (aba
- * "Qualidade dos dados") e exportado nos relatorios, servindo de evidencia da etapa de limpeza
- * na dissertacao.</p>
- */
+/** Relatorio de qualidade da carga de dados (data quality report). */
 public final class RelatorioCarga {
-
-    /** Numero maximo de rejeicoes detalhadas guardadas (as demais sao apenas contadas). */
     public static final int MAX_DETALHES = 500;
 
     /** Detalhe de uma linha rejeitada. */
@@ -55,39 +46,30 @@ public final class RelatorioCarga {
         duplicadosRemovidos++;
     }
 
-    /** @return resumos por arquivo, na ordem de leitura */
     public List<ResumoArquivo> getArquivos() { return Collections.unmodifiableList(arquivos); }
 
-    /** @return ate {@value #MAX_DETALHES} rejeicoes detalhadas */
     public List<Rejeicao> getRejeicoes() { return Collections.unmodifiableList(rejeicoes); }
 
-    /** @return contagem de rejeicoes por motivo */
     public Map<String, Long> getMotivos() { return Collections.unmodifiableMap(motivos); }
 
-    /** @return contagem de valores ausentes/sentinela (-999) por coluna opcional */
     public Map<String, Long> getValoresAusentes() { return Collections.unmodifiableMap(valoresAusentes); }
 
-    /** @return total de linhas rejeitadas */
     public long getTotalRejeitadas() { return totalRejeitadas; }
 
-    /** @return registros descartados por repetirem um {@code foco_id} ja carregado */
     public long getDuplicadosRemovidos() { return duplicadosRemovidos; }
 
-    /** @return total de linhas de dados lidas (todas as fontes) */
     public long getTotalLidas() {
         long t = 0;
         for (ResumoArquivo a : arquivos) t += a.linhasLidas();
         return t;
     }
 
-    /** @return total de linhas aceitas antes da deduplicacao */
     public long getTotalAceitas() {
         long t = 0;
         for (ResumoArquivo a : arquivos) t += a.aceitas();
         return t;
     }
 
-    /** @return texto multilinha com o resumo da carga */
     public String resumoTexto() {
         StringBuilder sb = new StringBuilder();
         for (ResumoArquivo a : arquivos) {

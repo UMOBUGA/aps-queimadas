@@ -7,24 +7,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-/**
- * Registro imutavel de um foco de incendio detectado por satelite (base de queimadas do INPE).
- *
- * <p>E a estrutura de dados central do sistema: cada linha valida do CSV vira uma instancia.
- * Os campos obrigatorios existem em todos os arquivos {@code focos_br_XX_ref_AAAA.csv}
- * (id, coordenadas, data/hora, pais, estado, municipio e bioma). Os campos meteorologicos e de
- * radiacao ({@code satelite}, {@code numeroDiasSemChuva}, {@code precipitacao}, {@code riscoFogo},
- * {@code frp}) so aparecem em outros conjuntos do INPE e por isso sao opcionais ({@code null}
- * quando ausentes ou quando o INPE informa o valor-sentinela {@code -999}).</p>
- *
- * <p>Para acelerar as ordenacoes alfabeticas, as chaves de colacao (pt-BR) de municipio e bioma
- * sao calculadas uma unica vez na construcao do objeto: comparar duas {@link CollationKey}
- * e muito mais barato do que chamar {@code Collator.compare} a cada comparacao do algoritmo.</p>
- *
- * <p>Instancias sao criadas pelo {@link Builder}.</p>
- */
+/** Registro imutavel de um foco de incendio detectado por satelite (base de queimadas do INPE). */
 public final class FocoIncendio {
-
     private final long idBdq;
     private final String focoId;
     private final double latitude;
@@ -63,66 +47,46 @@ public final class FocoIncendio {
         this.chaveBioma = Textos.chaveColacao(bioma);
     }
 
-    /** @return novo construtor de focos */
     public static Builder builder() {
         return new Builder();
     }
 
-    /** @return identificador numerico do banco de dados de queimadas (coluna {@code id_bdq}) */
     public long getIdBdq() { return idBdq; }
 
-    /** @return identificador unico (UUID) do foco (coluna {@code foco_id}) */
     public String getFocoId() { return focoId; }
 
-    /** @return latitude em graus decimais (WGS84) */
     public double getLatitude() { return latitude; }
 
-    /** @return longitude em graus decimais (WGS84) */
     public double getLongitude() { return longitude; }
 
-    /** @return data e hora da passagem do satelite, em GMT/UTC (coluna {@code data_pas}) */
     public LocalDateTime getDataHora() { return dataHora; }
 
-    /** @return data (sem hora) da deteccao */
     public LocalDate getData() { return dataHora.toLocalDate(); }
 
-    /** @return ano da deteccao */
     public int getAno() { return dataHora.getYear(); }
 
-    /** @return mes da deteccao (1 a 12) */
     public int getMes() { return dataHora.getMonthValue(); }
 
-    /** @return pais (normalmente "Brasil") */
     public String getPais() { return pais; }
 
-    /** @return unidade federativa por extenso, em maiusculas */
     public String getEstado() { return estado; }
 
-    /** @return nome do municipio, em maiusculas e sem espacos redundantes */
     public String getMunicipio() { return municipio; }
 
-    /** @return bioma do IBGE (Cerrado, Mata Atlantica, Amazonia...) */
     public String getBioma() { return bioma; }
 
-    /** @return satelite que detectou o foco, ou {@code null} se a coluna nao existir no arquivo */
     public String getSatelite() { return satelite; }
 
-    /** @return numero de dias sem chuva, ou {@code null} se indisponivel */
     public Integer getNumeroDiasSemChuva() { return numeroDiasSemChuva; }
 
-    /** @return precipitacao (mm), ou {@code null} se indisponivel */
     public Double getPrecipitacao() { return precipitacao; }
 
-    /** @return risco de fogo (0 a 1), ou {@code null} se indisponivel */
     public Double getRiscoFogo() { return riscoFogo; }
 
-    /** @return potencia radiativa do fogo (MW), ou {@code null} se indisponivel */
     public Double getFrp() { return frp; }
 
-    /** @return chave de colacao pt-BR do municipio (ignora acentos/caixa na comparacao primaria) */
     public CollationKey getChaveMunicipio() { return chaveMunicipio; }
 
-    /** @return chave de colacao pt-BR do bioma */
     public CollationKey getChaveBioma() { return chaveBioma; }
 
     @Override
@@ -177,10 +141,6 @@ public final class FocoIncendio {
         public Builder riscoFogo(Double v) { this.riscoFogo = v; return this; }
         public Builder frp(Double v) { this.frp = v; return this; }
 
-        /**
-         * @return foco imutavel
-         * @throws NullPointerException se data/hora, municipio ou bioma nao foram informados
-         */
         public FocoIncendio build() {
             return new FocoIncendio(this);
         }

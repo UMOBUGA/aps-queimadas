@@ -25,13 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-/**
- * Testes de integracao com os CSVs reais do INPE (SP 2023-2024) em data/raw. Sao ignorados se os
- * arquivos nao estiverem presentes.
- */
+/** Testes de integracao com os CSVs reais do INPE (SP 2023-2024) em data/raw. */
 @DisplayName("Integracao com os dados reais do INPE")
 class DadosReaisTest {
-
     private static BaseDeFocos base;
 
     @BeforeAll

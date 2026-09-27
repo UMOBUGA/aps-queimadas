@@ -2,12 +2,8 @@ package br.unip.aps.ui.componentes;
 
 import org.kordamp.ikonli.javafx.FontIcon;
 
-/**
- * Catalogo de icones (Ikonli · Material Design Icons 2). Centralizar os codigos garante que a
- * mesma acao tenha sempre o mesmo icone em toda a interface.
- */
+/** Catalogo de icones (Ikonli · Material Design Icons 2). */
 public final class Icones {
-
     public static final String MARCA = "mdi2f-fire";
     public static final String VISAO_GERAL = "mdi2v-view-dashboard-outline";
     public static final String ORDENACAO = "mdi2s-sort-ascending";
@@ -93,21 +89,12 @@ public final class Icones {
 
     private Icones() { }
 
-    /**
-     * @param codigo  codigo Ikonli (ex.: {@link #MARCA})
-     * @param tamanho tamanho em px
-     * @return icone pronto para usar como {@code graphic}
-     */
     public static FontIcon de(String codigo, int tamanho) {
         FontIcon i = new FontIcon(codigo);
         i.setIconSize(tamanho);
         return i;
     }
 
-    /**
-     * @param codigo codigo Ikonli
-     * @return icone de 18 px
-     */
     public static FontIcon de(String codigo) {
         return de(codigo, 18);
     }

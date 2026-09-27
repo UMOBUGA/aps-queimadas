@@ -34,30 +34,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Ponto de entrada do sistema.
- *
- * <pre>
- *   (sem argumentos)      abre o dashboard JavaFX
- *   cli                   menu interativo no terminal
- *   ordenar [opcoes]      ordena e exibe (ex.: ordenar --criterios bioma,municipio,data:desc --algoritmo quick --linhas 30)
- *   comparar [opcoes]     roda todos os algoritmos sobre a mesma entrada
- *   benchmark [--rapido]  bateria completa + CSV/Excel/PDF em relatorios/
- *   ml                    previsao, classificacao e hotspots + Excel
- *   resultados            benchmark + ML + comparativos + relatorios (tudo o que a dissertacao usa)
- *   relatorio-codigo      gera relatorios/codigo-fonte.pdf e .txt
- *   baixar [--uf SP] [--anos 2023,2024]   baixa os CSVs do INPE para data/raw
- * </pre>
- */
+/** Ponto de entrada do sistema. */
 public final class Main {
-
     private static final Logger LOG = Logger.getLogger(Main.class.getName());
 
     private Main() { }
 
-    /**
-     * @param args modo e opcoes (ver documentacao da classe)
-     */
     public static void main(String[] args) {
         LogConfig.inicializar();
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
@@ -207,12 +189,6 @@ public final class Main {
         for (Path p : s.baixarDoInpe(uf, anos)) out.println("Baixado: " + p.toAbsolutePath());
     }
 
-    /**
-     * Converte "bioma,municipio:asc,data:desc" em criterio composto.
-     *
-     * @param texto lista de criterios
-     * @return criterio composto
-     */
     static Criterios criterios(String texto) {
         List<Criterios.Nivel> niveis = new ArrayList<>();
         for (String parte : texto.split(",")) {

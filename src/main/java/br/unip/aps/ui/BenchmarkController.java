@@ -44,14 +44,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Tela "Benchmark": configura e executa a bateria de medicoes e mostra custo x n em dois graficos
- * (O(n²) e O(n log n)/lineares), com escala linear/log, curvas teoricas tracejadas, vencedores
- * por criterio/cenario e a complexidade empirica. Tambem abre resultados salvos em CSV.
- */
+/** Tela Benchmark. */
 public class BenchmarkController implements Pagina.Controlador {
-
-    /** Cor fixa (classe .serie-N) de cada algoritmo dentro do seu grafico. */
     private static final Map<AlgoritmoTipo, String> SERIE = new EnumMap<>(Map.of(
             AlgoritmoTipo.BUBBLE, "serie-1", AlgoritmoTipo.SELECTION, "serie-2", AlgoritmoTipo.INSERTION, "serie-3",
             AlgoritmoTipo.SHELL, "serie-1", AlgoritmoTipo.MERGE, "serie-2", AlgoritmoTipo.QUICK, "serie-3",
@@ -81,7 +75,6 @@ public class BenchmarkController implements Pagina.Controlador {
     private final TableView<AnaliseComplexidade.Estimativa> tabComplexidade = new TableView<>();
     private List<BenchmarkResult> resultados = List.of();
 
-    /** @param ctx contexto injetado */
     public BenchmarkController(UiContexto ctx) {
         this.ctx = ctx;
     }
@@ -163,8 +156,6 @@ public class BenchmarkController implements Pagina.Controlador {
         }
     }
 
-    // ------------------------------------------------------------------ execucao
-
     @FXML
     private void configRapida() {
         tfTamanhos.setText("100, 500, 1000, 2000");
@@ -236,11 +227,6 @@ public class BenchmarkController implements Pagina.Controlador {
         if (f != null) carregarCsv(f.toPath());
     }
 
-    /**
-     * Le um CSV gerado por {@code ReportExporter.exportarBenchmarkCsv}.
-     *
-     * @param arquivo CSV
-     */
     void carregarCsv(Path arquivo) {
         try {
             List<String> linhas = Files.readAllLines(arquivo, StandardCharsets.UTF_8);
@@ -313,8 +299,6 @@ public class BenchmarkController implements Pagina.Controlador {
         }
         return v;
     }
-
-    // ------------------------------------------------------------------ graficos
 
     private void desenhar() {
         if (resultados.isEmpty() || gCriterio.getSelectedToggle() == null || gCenario.getSelectedToggle() == null) {
@@ -406,8 +390,6 @@ public class BenchmarkController implements Pagina.Controlador {
     private static String formatar(String metrica, double v) {
         return metrica.startsWith("Tempo") ? Formatos.decimal(v, 3) + " ms" : Formatos.inteiro(Math.round(v));
     }
-
-    // ------------------------------------------------------------------ tabelas
 
     private void configurarTabelas() {
         Tabelas.preparar(tabela, "Execute o benchmark ou abra resultados salvos.");

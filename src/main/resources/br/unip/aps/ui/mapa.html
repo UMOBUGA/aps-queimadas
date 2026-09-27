@@ -6,12 +6,10 @@
 <title>Mapa de focos</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
-<!-- A WebView do JavaFX desenha tiles fora de posicao com transformacoes 3D: usa 2D -->
 <script>window.L_DISABLE_3D = true;</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
 <style>
-  /* Paleta espelhada dos tokens do design system (theme-light.css / theme-dark.css) */
   :root {
     --surface: #FFFFFF; --text-1: #101828; --text-2: #475467; --text-3: #667085; --border: #E4E7EC;
     --accent: #E8590C; --accent-subtle: #FFF4ED; --shadow: 0 8px 24px rgba(16,24,40,.14);
@@ -70,8 +68,6 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
   }
   var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 }, hotspots: [], ajustar: true };
   var mapa = L.map('mapa', { preferCanvas: true, zoomControl: true, attributionControl: true }).setView([-22.3, -48.6], 7);
-  /* Mapas-base neutros (claro/escuro) da Esri, gratuitos e sem chave de API.
-     Obs.: os basemaps CARTO Positron/Dark Matter passaram a exigir chave de API. */
   var atrib = 'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, HERE, Garmin, &copy; colaboradores do OpenStreetMap';
   var base = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
   var tiles = {
@@ -113,7 +109,6 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     camada.clearLayers();
     var focos = estado.dados.focos, p = pal();
     if (estado.modo === 'calor') {
-      /* Grade de densidade (~9 km): cada celula mostra a contagem exata; cor pela escala sequencial */
       var grade = {};
       focos.forEach(function (f) {
         var k = Math.floor(f[0] / TAM) + ':' + Math.floor(f[1] / TAM);

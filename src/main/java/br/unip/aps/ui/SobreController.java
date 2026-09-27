@@ -20,12 +20,8 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
-/**
- * Tela "Sobre": identificacao do sistema, equipe (lida de {@code grupo.properties}), disciplina,
- * tecnologias e fonte dos dados.
- */
+/** Tela Sobre. */
 public class SobreController implements Pagina.Controlador {
-
     private final UiContexto ctx;
 
     @FXML private StackPane marca;
@@ -34,7 +30,6 @@ public class SobreController implements Pagina.Controlador {
     @FXML private Label lblCurso, lblOrientador, lblDisciplina;
     @FXML private Hyperlink linkInpe;
 
-    /** @param ctx contexto injetado */
     public SobreController(UiContexto ctx) {
         this.ctx = ctx;
     }

@@ -10,18 +10,9 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Tudo o que pode entrar em um relatorio. Apenas a base e obrigatoria; as demais secoes aparecem
- * quando preenchidas (padrao <b>Builder</b>).
- */
+/** Tudo o que pode entrar em um relatorio. */
 public final class ContextoRelatorio {
-
-    /**
-     * Grafico ja renderizado (snapshot do JavaFX) para inclusao no PDF.
-     *
-     * @param titulo legenda
-     * @param imagem imagem
-     */
+    /** Grafico ja renderizado (snapshot do JavaFX) para inclusao no PDF. */
     public record Grafico(String titulo, BufferedImage imagem) { }
 
     private final BaseDeFocos base;
@@ -34,7 +25,6 @@ public final class ContextoRelatorio {
     private Preditor.ResultadoML ml;
     private final List<Grafico> graficos = new ArrayList<>();
 
-    /** @param base base carregada (obrigatoria) */
     public ContextoRelatorio(BaseDeFocos base) {
         this.base = base;
         this.focosFiltrados = base.getFocos();

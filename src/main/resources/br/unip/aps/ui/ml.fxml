@@ -13,7 +13,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.TextFlow?>
 
-<!-- Machine Learning: parametros, metricas, previsao, matriz de confusao, importancia, hotspots -->
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="br.unip.aps.ui.MlController" fitToWidth="true">
     <VBox styleClass="page">

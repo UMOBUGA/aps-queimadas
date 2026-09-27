@@ -24,13 +24,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-/**
- * Gera o "Relatorio com as linhas de codigo" exigido na APS: todo o codigo-fonte do projeto,
- * com numeracao de linhas, sumario e contagem de linhas por arquivo, em PDF e em texto puro
- * (para anexar a dissertacao e publicar no Microsoft Teams).
- */
+/** Gera o "Relatorio com as linhas de codigo" exigido na APS. */
 public final class CodigoFonteReport {
-
     private static final Logger LOG = Logger.getLogger(CodigoFonteReport.class.getName());
 
     private static final List<String> PASTAS = List.of("src/main/java", "src/main/resources", "src/test/java");
@@ -39,13 +34,7 @@ public final class CodigoFonteReport {
     /** Arquivo do relatorio com a quantidade de linhas. */
     public record Arquivo(Path caminho, List<String> linhas) { }
 
-    /**
-     * Coleta os arquivos-fonte do projeto (pom.xml + src), em ordem alfabetica de caminho.
-     *
-     * @param raiz raiz do projeto
-     * @return arquivos e seus conteudos
-     * @throws ApsException se a leitura falhar ou nenhum fonte for encontrado
-     */
+    /** Coleta os arquivos-fonte do projeto (pom.xml + src), em ordem alfabetica de caminho. */
     public List<Arquivo> coletar(Path raiz) throws ApsException {
         List<Path> caminhos = new ArrayList<>();
         if (Files.isRegularFile(raiz.resolve("pom.xml"))) caminhos.add(raiz.resolve("pom.xml"));
@@ -77,15 +66,7 @@ public final class CodigoFonteReport {
         return r;
     }
 
-    /**
-     * Gera o relatorio em PDF e TXT.
-     *
-     * @param raiz  raiz do projeto
-     * @param pdf   arquivo PDF de saida
-     * @param txt   arquivo texto de saida
-     * @return total de linhas de codigo
-     * @throws ApsException se a leitura ou a escrita falharem
-     */
+    /** Gera o relatorio em PDF e TXT. */
     public long gerar(Path raiz, Path pdf, Path txt) throws ApsException {
         List<Arquivo> arquivos = coletar(raiz);
         long total = 0;
@@ -151,7 +132,6 @@ public final class CodigoFonteReport {
         }
     }
 
-    /** Usa Consolas (Windows) com Unicode completo se disponivel; senao Courier. */
     private static Font fonteMonoespacada(float tamanho) {
         for (String f : List.of("C:/Windows/Fonts/consola.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
                 "/System/Library/Fonts/Menlo.ttc")) {
@@ -159,7 +139,6 @@ public final class CodigoFonteReport {
                 try {
                     return new Font(BaseFont.createFont(f, BaseFont.IDENTITY_H, BaseFont.EMBEDDED), tamanho);
                 } catch (IOException | DocumentException ignorada) {
-                    // tenta a proxima fonte
                 }
             }
         }

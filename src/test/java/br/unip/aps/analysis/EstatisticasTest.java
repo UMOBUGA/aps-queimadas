@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Estatisticas e filtros")
 class EstatisticasTest {
-
     private final List<FocoIncendio> focos = List.of(
             Focos.foco("ITU", "Cerrado", LocalDateTime.of(2023, 8, 1, 17, 0), 1),
             Focos.foco("ITU", "Cerrado", LocalDateTime.of(2024, 8, 2, 17, 0), 2),

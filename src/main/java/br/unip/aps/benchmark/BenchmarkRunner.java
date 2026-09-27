@@ -23,50 +23,18 @@ import java.util.function.Consumer;
 import java.util.function.ToLongFunction;
 import java.util.logging.Logger;
 
-/**
- * Executor do benchmark de algoritmos de ordenacao.
- *
- * <h2>Cuidados metodologicos (JVM)</h2>
- * <ul>
- *   <li><b>Aquecimento do JIT</b>: a JVM comeca interpretando o bytecode e so depois compila os
- *       metodos "quentes" para codigo nativo (C1/C2). Medir as primeiras execucoes mede o
- *       interpretador. Por isso ha um aquecimento global (todos os algoritmos em uma entrada
- *       pequena) e {@code aquecimentos} execucoes descartadas antes de cada caso.</li>
- *   <li><b>Repeticoes</b>: cada caso roda {@code repeticoes} vezes; reportamos media, desvio-padrao
- *       amostral, minimo e maximo. O minimo e o estimador menos sensivel a ruido (GC, SO).</li>
- *   <li><b>Mesma entrada</b>: para cada (criterio, cenario, n) a entrada e preparada uma unica vez
- *       e cada execucao recebe uma copia identica — todos os algoritmos competem em igualdade.</li>
- *   <li><b>Reprodutibilidade</b>: amostragem e embaralhamento usam semente fixa.</li>
- *   <li><b>Verificacao</b>: toda execucao e conferida como ordenada; uma falha e reportada.</li>
- * </ul>
- */
+/** Executa o benchmark dos algoritmos com aquecimento do JIT e repeticoes. */
 public final class BenchmarkRunner {
-
     private static final Logger LOG = Logger.getLogger(BenchmarkRunner.class.getName());
 
-    /**
-     * Progresso para barras de progresso (dashboard) ou console.
-     *
-     * @param concluidos casos concluidos
-     * @param total      total de casos
-     * @param mensagem   caso atual
-     */
+    /** Progresso para barras de progresso (dashboard) ou console. */
     public record Progresso(int concluidos, int total, String mensagem) {
-        /** @return fracao concluida (0 a 1) */
         public double fracao() {
             return total == 0 ? 1 : (double) concluidos / total;
         }
     }
 
-    /**
-     * Executa a bateria configurada.
-     *
-     * @param base     focos (a base inteira; as amostras sao extraidas dela)
-     * @param config   configuracao
-     * @param progresso ouvinte de progresso (pode ser {@code null})
-     * @return uma medicao por caso executado
-     * @throws CancellationException se a thread for interrompida (botao Cancelar)
-     */
+    /** Executa a bateria configurada. */
     public List<BenchmarkResult> executar(List<FocoIncendio> base, BenchmarkConfig config,
                                           Consumer<Progresso> progresso) {
         if (base == null || base.isEmpty()) {
@@ -138,7 +106,6 @@ public final class BenchmarkRunner {
         return r;
     }
 
-    /** Executa cada algoritmo algumas vezes em uma entrada pequena para disparar a compilacao JIT. */
     private void aquecimentoGlobal(List<FocoIncendio> base, BenchmarkConfig config) {
         if (config.aquecimentos() == 0) return;
         List<FocoIncendio> amostra = ServicoOrdenacao.amostrar(base, 1_000, true, config.semente() + 1);

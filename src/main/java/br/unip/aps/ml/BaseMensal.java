@@ -11,42 +11,12 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Tabela municipio x mes (contagem de focos) com as variaveis explicativas usadas pelos modelos.
- *
- * <h2>Como a ordenacao prepara os dados para o ML</h2>
- * <p>Os focos sao ordenados por <b>municipio → data</b> com o Merge Sort do projeto (estavel,
- * O(n log n)). Com a base ordenada, a agregacao vira uma unica varredura linear: todos os focos
- * de um municipio estao contiguos e em ordem cronologica, entao basta detectar a troca de
- * municipio e de mes ("control break"). Esta e a etapa de pre-processamento que o enunciado
- * descreve — a ordenacao prepara os dados para as tecnicas de aprendizado de maquina.</p>
- *
- * <h2>Variaveis (features) de cada linha municipio/mes t</h2>
- * <ul>
- *   <li>{@code mes_sin}, {@code mes_cos}: sazonalidade codificada no circulo (dez fica perto de jan);</li>
- *   <li>{@code lat}, {@code lon}: centroide dos focos do municipio;</li>
- *   <li>{@code frac_cerrado}: fracao dos focos do municipio no bioma Cerrado;</li>
- *   <li>{@code lag1..lag3}: focos do municipio em t-1, t-2 e t-3;</li>
- *   <li>{@code media_hist}: media mensal do municipio em todos os meses anteriores a t;</li>
- *   <li>{@code estado_lag1}: total de focos do estado em t-1 (intensidade regional da estacao).</li>
- * </ul>
- * <p>Nenhuma variavel usa informacao do proprio mes t ou do futuro (sem vazamento de dados). Meses
- * anteriores ao inicio da serie contam como zero.</p>
- */
+/** Tabela municipio x mes com as variaveis usadas pelos modelos. */
 public final class BaseMensal {
-
-    /** Nomes das variaveis explicativas, na ordem do vetor {@link Linha#x()}. */
     public static final String[] VARIAVEIS = {"mes_sin", "mes_cos", "lat", "lon", "frac_cerrado",
             "lag1", "lag2", "lag3", "media_hist", "estado_lag1"};
 
-    /**
-     * Uma observacao municipio/mes.
-     *
-     * @param municipio nome
-     * @param mes       ano-mes
-     * @param x         variaveis explicativas (ordem de {@link #VARIAVEIS})
-     * @param focos     focos observados no mes (alvo)
-     */
+    /** Uma observacao municipio/mes. */
     public record Linha(String municipio, YearMonth mes, double[] x, int focos) { }
 
     private final List<String> municipios = new ArrayList<>();
@@ -59,12 +29,7 @@ public final class BaseMensal {
     private final long[] totalEstado;
     private final OperationMetrics metricasOrdenacao;
 
-    /**
-     * Constroi a tabela a partir dos focos.
-     *
-     * @param focos focos (qualquer ordem; serao ordenados por municipio e data)
-     * @throws IllegalArgumentException se a lista estiver vazia
-     */
+    /** Constroi a tabela a partir dos focos. */
     public BaseMensal(List<FocoIncendio> focos) {
         if (focos.isEmpty()) throw new IllegalArgumentException("Sem focos para montar a base mensal.");
         Criterios crit = Criterios.composto(List.of(
@@ -82,7 +47,6 @@ public final class BaseMensal {
         inicio = YearMonth.of(min.getYear(), 1);
         nMeses = (int) (inicio.until(YearMonth.of(max.getYear(), 12), java.time.temporal.ChronoUnit.MONTHS) + 1);
 
-        // contagem de municipios distintos: numa base ordenada, e o numero de "quebras"
         int nMun = 0;
         for (int i = 0; i < ord.length; i++) {
             if (i == 0 || !ord[i].getMunicipio().equals(ord[i - 1].getMunicipio())) nMun++;
@@ -93,7 +57,6 @@ public final class BaseMensal {
         fracCerrado = new double[nMun];
         totalEstado = new long[nMeses];
 
-        // varredura unica com "control break" por municipio
         int m = -1;
         int focosMun = 0, cerrado = 0;
         double somaLat = 0, somaLon = 0;
@@ -127,23 +90,12 @@ public final class BaseMensal {
         return (int) inicio.until(ym, java.time.temporal.ChronoUnit.MONTHS);
     }
 
-    /**
-     * Gera as observacoes de todos os municipios nos meses do ano informado.
-     *
-     * @param ano ano
-     * @return linhas (municipios x 12 meses)
-     */
+    /** Gera as observacoes de todos os municipios nos meses do ano informado. */
     public List<Linha> linhasDoAno(int ano) {
         return linhasEntre(YearMonth.of(ano, 1), YearMonth.of(ano, 12));
     }
 
-    /**
-     * Gera as observacoes de todos os municipios no intervalo [de, ate].
-     *
-     * @param de  mes inicial
-     * @param ate mes final
-     * @return linhas
-     */
+    /** Gera as observacoes de todos os municipios no intervalo [de, ate]. */
     public List<Linha> linhasEntre(YearMonth de, YearMonth ate) {
         List<Linha> r = new ArrayList<>();
         for (YearMonth ym = de; !ym.isAfter(ate); ym = ym.plusMonths(1)) {
@@ -171,31 +123,23 @@ public final class BaseMensal {
         return t - k >= 0 ? contagem[m][t - k] : 0;
     }
 
-    /** @return municipios, em ordem alfabetica pt-BR */
     public List<String> municipios() {
         return List.copyOf(municipios);
     }
 
-    /** @return primeiro mes da serie */
     public YearMonth inicio() {
         return inicio;
     }
 
-    /** @return numero de meses da serie */
     public int meses() {
         return nMeses;
     }
 
-    /**
-     * @param ym ano-mes
-     * @return total de focos no estado naquele mes
-     */
     public long totalEstado(YearMonth ym) {
         int t = indice(ym);
         return t < 0 || t >= nMeses ? 0 : totalEstado[t];
     }
 
-    /** @return metricas da ordenacao (municipio → data) usada no pre-processamento */
     public OperationMetrics metricasOrdenacao() {
         return metricasOrdenacao;
     }

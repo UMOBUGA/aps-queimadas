@@ -17,23 +17,13 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/**
- * Baixa e extrai os arquivos anuais de focos do INPE (funcao extra do sistema).
- *
- * <p>URL: {@code <base>/<UF>/focos_br_<uf>_ref_<ano>.zip}, por exemplo
- * {@code .../EstadosBr_sat_ref/SP/focos_br_sp_ref_2024.zip}. Cada ZIP contem um unico CSV.</p>
- *
- * <p>Seguranca: somente entradas {@code .csv} sem componentes de diretorio sao extraidas, o que
- * impede ataques de "zip slip" (arquivos gravados fora da pasta de destino).</p>
- */
+/** Baixa e extrai os arquivos anuais de focos do INPE (funcao extra do sistema). */
 public final class DownloaderInpe {
-
     private static final Logger LOG = Logger.getLogger(DownloaderInpe.class.getName());
 
     private final String urlBase;
     private final HttpClient http;
 
-    /** @param urlBase URL do diretorio EstadosBr_sat_ref (com ou sem barra final) */
     public DownloaderInpe(String urlBase) {
         this.urlBase = urlBase.endsWith("/") ? urlBase : urlBase + "/";
         this.http = HttpClient.newBuilder()
@@ -42,25 +32,12 @@ public final class DownloaderInpe {
                 .build();
     }
 
-    /**
-     * @param uf  sigla da UF (ex.: "SP")
-     * @param ano ano
-     * @return URL do ZIP correspondente
-     */
     public String url(String uf, int ano) {
         String u = uf.strip().toUpperCase(Locale.ROOT);
         return urlBase + u + "/focos_br_" + u.toLowerCase(Locale.ROOT) + "_ref_" + ano + ".zip";
     }
 
-    /**
-     * Baixa o ZIP do ano/UF e extrai o CSV para a pasta de destino.
-     *
-     * @param uf      sigla da UF
-     * @param ano     ano
-     * @param destino pasta de destino (criada se necessario)
-     * @return caminho do CSV extraido
-     * @throws ApsException se o download falhar (sem internet, arquivo inexistente) ou o ZIP for invalido
-     */
+    /** Baixa o ZIP do ano/UF e extrai o CSV para a pasta de destino. */
     public Path baixar(String uf, int ano, Path destino) throws ApsException {
         if (uf == null || !uf.strip().matches("[A-Za-z]{2}")) {
             throw new ApsException("UF invalida: '" + uf + "'. Use a sigla com 2 letras, ex.: SP.");

@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Criterios de ordenacao")
 class CriteriosTest {
-
     private static final LocalDateTime D = LocalDateTime.of(2024, 8, 20, 17, 0);
 
     @Test

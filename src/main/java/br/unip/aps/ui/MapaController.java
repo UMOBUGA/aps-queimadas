@@ -21,15 +21,8 @@ import javafx.scene.web.WebView;
 import java.util.List;
 import java.util.logging.Logger;
 
-/**
- * Tela "Mapa": focos sobre mapa Leaflet (WebView) com mapas-base CARTO claro/escuro que
- * acompanham o tema, modos Pontos / Agrupado (cluster) / Calor (heatmap), cor por bioma ou ano e
- * sobreposicao dos hotspots do DBSCAN. Os focos exibidos seguem o filtro global.
- *
- * <p>Comunicacao Java → JavaScript via {@link WebEngine#executeScript} ({@code window.APS}).</p>
- */
+/** Tela Mapa. */
 public class MapaController implements Pagina.Controlador {
-
     private static final Logger LOG = Logger.getLogger(MapaController.class.getName());
 
     private final UiContexto ctx;
@@ -44,7 +37,6 @@ public class MapaController implements Pagina.Controlador {
     private boolean pendente = true;
     private boolean visivel;
 
-    /** @param ctx contexto injetado */
     public MapaController(UiContexto ctx) {
         this.ctx = ctx;
     }
@@ -115,9 +107,6 @@ public class MapaController implements Pagina.Controlador {
         visivel = false;
     }
 
-    /**
-     * @param modo "pontos", "cluster" ou "calor" (demonstracoes e capturas)
-     */
     void modo(String modo) {
         (modo.equals("cluster") ? tgCluster : modo.equals("calor") ? tgCalor : tgPontos).setSelected(true);
     }

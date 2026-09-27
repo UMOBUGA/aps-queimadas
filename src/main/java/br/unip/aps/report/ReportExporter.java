@@ -50,27 +50,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-/**
- * Exportacao de relatorios em CSV, Excel (.xlsx, Apache POI) e PDF (OpenPDF).
- *
- * <p>Os CSVs usam ponto e virgula e BOM UTF-8, para abrirem corretamente no Excel em portugues.</p>
- */
+/** Exportacao de relatorios em CSV, Excel (.xlsx, Apache POI) e PDF (OpenPDF). */
 public final class ReportExporter {
-
     private static final Logger LOG = Logger.getLogger(ReportExporter.class.getName());
     private static final char SEP = ';';
     private static final int MAX_LINHAS_PDF = 300;
 
-    // ------------------------------------------------------------------ CSV
-
-    /**
-     * Exporta focos (por exemplo, o resultado de uma ordenacao) em CSV.
-     *
-     * @param focos   focos, na ordem em que devem aparecer
-     * @param destino arquivo de saida
-     * @return caminho gravado
-     * @throws ApsException se nao for possivel gravar
-     */
+    /** Exporta focos (por exemplo, o resultado de uma ordenacao) em CSV. */
     public Path exportarFocosCsv(List<FocoIncendio> focos, Path destino) throws ApsException {
         try (BufferedWriter w = abrirCsv(destino)) {
             w.write(String.join(String.valueOf(SEP), "posicao", "id_bdq", "foco_id", "data_hora_gmt", "municipio",
@@ -92,14 +78,7 @@ public final class ReportExporter {
         return destino;
     }
 
-    /**
-     * Exporta as medicoes do benchmark em CSV.
-     *
-     * @param resultados medicoes
-     * @param destino    arquivo
-     * @return caminho gravado
-     * @throws ApsException se nao for possivel gravar
-     */
+    /** Exporta as medicoes do benchmark em CSV. */
     public Path exportarBenchmarkCsv(List<BenchmarkResult> resultados, Path destino) throws ApsException {
         try (BufferedWriter w = abrirCsv(destino)) {
             w.write(String.join(String.valueOf(SEP), "algoritmo", "criterio", "cenario", "n", "repeticoes",
@@ -146,16 +125,7 @@ public final class ReportExporter {
         return o instanceof Double d ? num(d) : o.toString();
     }
 
-    // ---------------------------------------------------------------- EXCEL
-
-    /**
-     * Gera uma pasta de trabalho Excel com uma aba por secao disponivel.
-     *
-     * @param ctx     conteudo
-     * @param destino arquivo .xlsx
-     * @return caminho gravado
-     * @throws ApsException se nao for possivel gravar
-     */
+    /** Gera uma pasta de trabalho Excel com uma aba por secao disponivel. */
     public Path exportarExcel(ContextoRelatorio ctx, Path destino) throws ApsException {
         try (Workbook wb = new XSSFWorkbook()) {
             Estilos es = new Estilos(wb);
@@ -184,7 +154,6 @@ public final class ReportExporter {
         final CellStyle titulo, cabecalho, inteiro, decimal, texto;
 
         Estilos(Workbook wb) {
-            // Mesma identidade da interface: fonte Inter, cabecalho brasa, texto slate
             org.apache.poi.xssf.usermodel.XSSFFont ft = (org.apache.poi.xssf.usermodel.XSSFFont) wb.createFont();
             ft.setBold(true);
             ft.setFontHeightInPoints((short) 14);
@@ -451,16 +420,7 @@ public final class ReportExporter {
         a.linha(nome, m.mae(), m.rmse(), m.r2());
     }
 
-    // ------------------------------------------------------------------ PDF
-
-    /**
-     * Gera o relatorio em PDF (A4, retrato).
-     *
-     * @param ctx     conteudo
-     * @param destino arquivo .pdf
-     * @return caminho gravado
-     * @throws ApsException se nao for possivel gravar
-     */
+    /** Gera o relatorio em PDF (A4, retrato). */
     public Path exportarPdf(ContextoRelatorio ctx, Path destino) throws ApsException {
         Document doc = new Document(PageSize.A4, 50, 50, 50, 50);
         try {
@@ -653,7 +613,6 @@ public final class ReportExporter {
         }
 
         static void linha(PdfPTable t, String... v) {
-            // linhas zebradas: a linha atual e deduzida pelo numero de celulas ja adicionadas
             boolean par = (t.size() - t.getHeaderRows()) % 2 == 1;
             for (String s : v) {
                 PdfPCell cell = new PdfPCell(new Phrase(limpar(s == null ? "" : s), CELULA));
@@ -664,16 +623,13 @@ public final class ReportExporter {
             }
         }
 
-        /** Troca simbolos fora do Cp1252 (fontes padrao do PDF) por equivalentes ASCII. */
         static String limpar(String s) {
             if (s == null) return "";
-            if (Identidade.interDisponivel()) return s; // Inter embarcada cobre setas e simbolos
+            if (Identidade.interDisponivel()) return s;
             return s.replace("→", "->").replace("↑", "(cresc.)").replace("↓", "(decresc.)")
                     .replace("≈", "~").replace("·", ".").replace("Ω", "Omega").replace("✔", "OK");
         }
     }
-
-    // ------------------------------------------------------------ utilitarios
 
     private static List<String> nomes(List<Path> paths) {
         List<String> r = new ArrayList<>();

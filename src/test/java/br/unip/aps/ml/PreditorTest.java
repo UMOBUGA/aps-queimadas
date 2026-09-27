@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Machine Learning")
 class PreditorTest {
-
     @Test
     @DisplayName("base mensal: agregacao por municipio/mes e variaveis sem vazamento do futuro")
     void baseMensal() {
@@ -111,7 +110,6 @@ class PreditorTest {
 
     @Test
     void haversine() {
-        // Sao Paulo (Se) -> Campinas: ~84 km
         assertEquals(84, ClusterizacaoHotspots.distanciaKm(-23.5505, -46.6333, -22.9056, -47.0608), 3);
     }
 }

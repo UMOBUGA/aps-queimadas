@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Benchmark")
 class BenchmarkRunnerTest {
-
     @Test
     @DisplayName("executa todos os casos, verifica os resultados e estima o expoente")
     void bateriaPequena() {
@@ -28,7 +27,6 @@ class BenchmarkRunnerTest {
                 Integer.MAX_VALUE);
         List<BenchmarkRunner.Progresso> progresso = new ArrayList<>();
         List<BenchmarkResult> r = new BenchmarkRunner().executar(Focos.aleatorios(2_000, 3), cfg, progresso::add);
-        // Radix so roda com DATA: 3 algs * 4 n * 2 cenarios (DATA) + 2 algs * 4 n * 2 cenarios (BIOMA)
         assertEquals(24 + 16, r.size());
         assertTrue(r.stream().allMatch(BenchmarkResult::verificado));
         assertEquals(1.0, progresso.get(progresso.size() - 1).fracao());

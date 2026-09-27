@@ -36,13 +36,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Barra de filtros global, fixa no topo do conteudo: bioma (multiplo), ano (multiplo), municipio
- * (busca com autocompletar), periodo (mes inicial e final), botao Limpar e chips dos filtros
- * ativos com "x" para remover. Publica o estado em {@link #filtroProperty()}.
- */
+/** Barra de filtros global, fixa no topo do conteudo. */
 public class FilterBar extends VBox {
-
     private final ObjectProperty<FiltroGlobal> filtro = new SimpleObjectProperty<>(FiltroGlobal.VAZIO);
     private final MenuButton mbBioma = new MenuButton();
     private final MenuButton mbAno = new MenuButton();
@@ -147,23 +142,15 @@ public class FilterBar extends VBox {
         atualizarRotulos();
     }
 
-    /** @return filtro atual (observavel) */
     public ObjectProperty<FiltroGlobal> filtroProperty() {
         return filtro;
     }
 
-    /**
-     * @param n quantidade de focos apos o filtro
-     */
     public void setContagem(int n) {
         contagem.setText(Formatos.inteiro(n) + (n == 1 ? " foco" : " focos"));
     }
 
-    /**
-     * Preenche as opcoes com os valores presentes na base.
-     *
-     * @param b base carregada (ou {@code null})
-     */
+    /** Preenche as opcoes com os valores presentes na base. */
     public void setOpcoes(BaseDeFocos b) {
         atualizando = true;
         mbBioma.getItems().clear();
@@ -247,12 +234,7 @@ public class FilterBar extends VBox {
         atualizarRotulos();
     }
 
-    /**
-     * Seleciona biomas e anos programaticamente (demonstracoes e capturas de tela).
-     *
-     * @param biomas biomas a marcar
-     * @param anos   anos a marcar
-     */
+    /** Seleciona biomas e anos programaticamente (demonstracoes e capturas de tela). */
     public void selecionar(Set<String> biomas, Set<Integer> anos) {
         atualizando = true;
         checksBioma.forEach(c -> c.setSelected(biomas.contains(c.getText())));

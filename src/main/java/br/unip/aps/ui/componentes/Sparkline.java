@@ -4,17 +4,12 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polyline;
 
-/**
- * Minigrafico de linha (sparkline) sem eixos, usado nos cards de KPI para mostrar a tendencia
- * mensal. O ultimo ponto e marcado. A cor vem da classe CSS informada.
- */
+/** Minigrafico de linha (sparkline) sem eixos, usado nos cards de KPI para mostrar a tendencia mensal. */
 public class Sparkline extends Region {
-
     private final Polyline linha = new Polyline();
     private final Circle ponto = new Circle(2.5);
     private double[] valores = new double[0];
 
-    /** @param classeCor classe CSS de cor (ex.: {@code spark-recente}) */
     public Sparkline(String classeCor) {
         linha.getStyleClass().addAll("sparkline-linha", classeCor);
         ponto.getStyleClass().add("sparkline-ponto");
@@ -25,7 +20,6 @@ public class Sparkline extends Region {
         setMouseTransparent(true);
     }
 
-    /** @param v serie de valores (ordem cronologica) */
     public void setValores(double[] v) {
         this.valores = v == null ? new double[0] : v.clone();
         requestLayout();

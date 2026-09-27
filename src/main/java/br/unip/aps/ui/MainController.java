@@ -57,13 +57,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Controller do shell da aplicacao: sidebar de navegacao, top bar (titulo, breadcrumb, chips de
- * contexto, acoes), barra de filtros global, area de conteudo com estado vazio e overlay de
- * carregamento, toasts e atalhos de teclado.
- */
+/** Controller do shell da aplicacao. */
 public class MainController {
-
     private final UiContexto ctx;
 
     @FXML private StackPane raiz;
@@ -91,7 +86,6 @@ public class MainController {
     private EmptyState vazio;
     private Pagina exibida;
 
-    /** @param ctx contexto injetado */
     public MainController(UiContexto ctx) {
         this.ctx = ctx;
     }
@@ -135,8 +129,6 @@ public class MainController {
         br.unip.aps.ui.componentes.Layout.naoEncolher(filtroHost);
         exibir(Pagina.VISAO_GERAL);
     }
-
-    // ------------------------------------------------------------------ sidebar
 
     private void montarSidebar() {
         StackPane marca = new StackPane(Icones.de(Icones.MARCA, 20));
@@ -197,8 +189,6 @@ public class MainController {
         btnRecolher.setGraphic(Icones.de(recolhida ? Icones.EXPANDIR : Icones.RECOLHER, 18));
         btnRecolher.setContentDisplay(recolhida ? javafx.scene.control.ContentDisplay.GRAPHIC_ONLY : javafx.scene.control.ContentDisplay.LEFT);
     }
-
-    // ------------------------------------------------------------------ top bar
 
     private void montarTopbar() {
         breadcrumb.getStyleClass().add("breadcrumb");
@@ -278,8 +268,6 @@ public class MainController {
         chipsContexto.getChildren().addAll(cUf, cAnos, cReg, cArq);
     }
 
-    // ------------------------------------------------------------------ navegacao
-
     private void exibir(Pagina p) {
         if (p == null) return;
         SidebarItem it = itens.get(p);
@@ -320,7 +308,7 @@ public class MainController {
             br.unip.aps.ui.componentes.Layout.naoEncolher(raizPagina);
             nos.put(p, raizPagina);
             controllers.put(p, loader.getController());
-            conteudo.getChildren().add(conteudo.getChildren().size() - 1, raizPagina); // abaixo do overlay
+            conteudo.getChildren().add(conteudo.getChildren().size() - 1, raizPagina);
             return raizPagina;
         } catch (IOException e) {
             ctx.erro("Não foi possível abrir a tela " + p.titulo(), e);
@@ -328,10 +316,6 @@ public class MainController {
         }
     }
 
-    /**
-     * @param p tela
-     * @return controller da tela (carregando-a se preciso)
-     */
     Object controllerDe(Pagina p) {
         carregar(p);
         return controllers.get(p);
@@ -353,13 +337,6 @@ public class MainController {
         }
     }
 
-    // ------------------------------------------------------------------ carga de dados
-
-    /**
-     * Carga automatica ao abrir. Se nao houver CSVs, oferece baixar do INPE ou abrir arquivos.
-     *
-     * @param aoTerminar chamado ao final (sucesso ou falha), usado para fechar o splash
-     */
     void carregarInicial(Runnable aoTerminar) {
         String[] falha = new String[1];
         var t = ctx.executar("Carregando dados do INPE", () -> {
@@ -432,8 +409,6 @@ public class MainController {
         });
     }
 
-    // ------------------------------------------------------------------ exportacao
-
     private void exportarRelatorio(String tipo) {
         ContextoRelatorio rel;
         try {
@@ -480,20 +455,14 @@ public class MainController {
         }
     }
 
-    /**
-     * @param p tela
-     * @return no raiz ja carregado da tela (ou {@code null})
-     */
     Node noDe(Pagina p) {
         return nos.get(p);
     }
 
-    /** @return barra de filtros (para demonstracoes e testes) */
     FilterBar filterBar() {
         return filterBar;
     }
 
-    /** @return raiz visual da janela */
     StackPane raiz() {
         return raiz;
     }

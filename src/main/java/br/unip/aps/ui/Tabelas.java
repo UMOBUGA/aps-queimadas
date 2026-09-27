@@ -10,25 +10,10 @@ import javafx.scene.layout.Region;
 
 import java.util.function.Function;
 
-/**
- * Fabrica de colunas para as tabelas do design system ({@code .data-table}): numeros alinhados a
- * direita em pt-BR, coluna de indice, badges de bioma e tabelas com estado vazio amigavel.
- *
- * <p>A ordenacao por clique no cabecalho fica desabilitada: o {@code TableView} ordena com
- * {@code FXCollections.sort} (Collections.sort) internamente; toda ordenacao exibida vem dos
- * algoritmos do projeto.</p>
- */
+/** Fabrica de colunas para as tabelas do design system ({@code .data-table}). */
 final class Tabelas {
-
     private Tabelas() { }
 
-    /**
-     * Prepara uma tabela no estilo do design system.
-     *
-     * @param t           tabela
-     * @param placeholder texto quando vazia
-     * @param <S>         tipo das linhas
-     */
     static <S> void preparar(TableView<S> t, String placeholder) {
         if (!t.getStyleClass().contains("data-table")) t.getStyleClass().add("data-table");
         Label l = new Label(placeholder);
@@ -37,14 +22,6 @@ final class Tabelas {
         t.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_SUBSEQUENT_COLUMNS);
     }
 
-    /**
-     * @param titulo  cabecalho
-     * @param valor   extrator do valor exibido
-     * @param largura largura preferida
-     * @param <S>     tipo da linha
-     * @param <T>     tipo da celula
-     * @return coluna configurada
-     */
     static <S, T> TableColumn<S, T> coluna(String titulo, Function<S, T> valor, double largura) {
         TableColumn<S, T> c = new TableColumn<>(titulo);
         c.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue() == null ? null : valor.apply(cd.getValue())));
@@ -55,17 +32,6 @@ final class Tabelas {
         return c;
     }
 
-    /**
-     * Coluna numerica alinhada a direita com formatacao propria.
-     *
-     * @param titulo   cabecalho
-     * @param valor    extrator
-     * @param formatar formatacao do texto
-     * @param largura  largura
-     * @param <S>      tipo da linha
-     * @param <T>      tipo numerico
-     * @return coluna
-     */
     static <S, T extends Number> TableColumn<S, T> numero(String titulo, Function<S, T> valor,
                                                            Function<T, String> formatar, double largura) {
         TableColumn<S, T> c = coluna(titulo, valor, largura);
@@ -85,12 +51,6 @@ final class Tabelas {
         return c;
     }
 
-    /**
-     * Coluna com a posicao (1, 2, 3...) da linha.
-     *
-     * @param <S> tipo da linha
-     * @return coluna de indice
-     */
     static <S> TableColumn<S, Void> indice() {
         TableColumn<S, Void> c = new TableColumn<>("#");
         c.setSortable(false);
@@ -112,15 +72,6 @@ final class Tabelas {
         return c;
     }
 
-    /**
-     * Coluna de bioma exibida como badge com ponto colorido (cor fixa do bioma).
-     *
-     * @param titulo  cabecalho
-     * @param valor   extrator do nome do bioma
-     * @param largura largura
-     * @param <S>     tipo da linha
-     * @return coluna
-     */
     static <S> TableColumn<S, String> bioma(String titulo, Function<S, String> valor, double largura) {
         TableColumn<S, String> c = coluna(titulo, valor, largura);
         c.setCellFactory(col -> new TableCell<>() {

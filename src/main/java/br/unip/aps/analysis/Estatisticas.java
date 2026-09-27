@@ -14,15 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Agregacoes e indicadores sobre um conjunto de focos (graficos do dashboard e relatorios).
- *
- * <p>Os rankings (top municipios, biomas) sao ordenados com os algoritmos do proprio projeto
- * ({@link Ordenacoes}), nunca com {@code Collections.sort}.</p>
- */
+/** Agregacoes e indicadores sobre um conjunto de focos (graficos do dashboard e relatorios). */
 public final class Estatisticas {
-
-    /** Nomes abreviados dos meses em portugues. */
     public static final String[] MESES = {"jan", "fev", "mar", "abr", "mai", "jun",
             "jul", "ago", "set", "out", "nov", "dez"};
 
@@ -33,17 +26,14 @@ public final class Estatisticas {
 
     private final List<FocoIncendio> focos;
 
-    /** @param focos conjunto analisado */
     public Estatisticas(List<FocoIncendio> focos) {
         this.focos = focos;
     }
 
-    /** @return total de focos */
     public int total() {
         return focos.size();
     }
 
-    /** @return focos por ano, em ordem crescente de ano */
     public Map<Integer, Long> porAno() {
         Map<Integer, Long> m = new HashMap<>();
         for (FocoIncendio f : focos) m.merge(f.getAno(), 1L, Long::sum);
@@ -54,17 +44,12 @@ public final class Estatisticas {
         return r;
     }
 
-    /**
-     * @param ano ano desejado
-     * @return vetor de 12 posicoes com os focos de cada mes (indice 0 = janeiro)
-     */
     public long[] porMes(int ano) {
         long[] v = new long[12];
         for (FocoIncendio f : focos) if (f.getAno() == ano) v[f.getMes() - 1]++;
         return v;
     }
 
-    /** @return serie mensal (ano-mes) em ordem cronologica, incluindo meses sem focos */
     public Map<YearMonth, Long> serieMensal() {
         Map<YearMonth, Long> m = new HashMap<>();
         YearMonth min = null, max = null;
@@ -82,52 +67,33 @@ public final class Estatisticas {
         return r;
     }
 
-    /** @return focos por bioma, do maior para o menor */
     public List<Contagem> porBioma() {
         Map<String, Long> m = new HashMap<>();
         for (FocoIncendio f : focos) m.merge(f.getBioma(), 1L, Long::sum);
         return ranking(m, Integer.MAX_VALUE);
     }
 
-    /**
-     * @param n quantidade maxima
-     * @return os n municipios com mais focos (desempate alfabetico)
-     */
     public List<Contagem> topMunicipios(int n) {
         Map<String, Long> m = new HashMap<>();
         for (FocoIncendio f : focos) m.merge(f.getMunicipio(), 1L, Long::sum);
         return ranking(m, n);
     }
 
-    /** @return focos por hora local (UTC-3), indice 0 a 23 */
     public long[] porHoraLocal() {
         long[] v = new long[24];
         for (FocoIncendio f : focos) v[f.getDataHora().minusHours(3).getHour()]++;
         return v;
     }
 
-    /** @return numero de municipios distintos com focos */
     public int municipiosAfetados() {
         Set<String> s = new HashSet<>();
         for (FocoIncendio f : focos) s.add(f.getMunicipio());
         return s.size();
     }
 
-    /**
-     * Linha do comparativo mensal entre dois anos.
-     *
-     * @param mes       1 a 12
-     * @param anoA      focos no primeiro ano
-     * @param anoB      focos no segundo ano
-     * @param variacao  variacao percentual (B-A)/A, ou {@code NaN} se A = 0
-     */
+    /** Linha do comparativo mensal entre dois anos. */
     public record LinhaComparativo(int mes, long anoA, long anoB, double variacao) { }
 
-    /**
-     * @param anoA primeiro ano (ex.: 2023)
-     * @param anoB segundo ano (ex.: 2024)
-     * @return 12 linhas (jan-dez) + total na posicao 12 (mes = 0)
-     */
     public List<LinhaComparativo> comparativo(int anoA, int anoB) {
         long[] a = porMes(anoA);
         long[] b = porMes(anoB);
@@ -142,7 +108,6 @@ public final class Estatisticas {
         return r;
     }
 
-    /** @return mes (ano-mes) com mais focos, ou {@code null} se vazio */
     public Map.Entry<YearMonth, Long> mesPico() {
         Map.Entry<YearMonth, Long> pico = null;
         for (Map.Entry<YearMonth, Long> e : serieMensal().entrySet()) {

@@ -27,13 +27,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
 
-/**
- * Card de grafico: titulo, subtitulo explicativo, legenda em linha, chip de destaque opcional e
- * menu de acoes (exportar PNG, ver dados em tabela). Tem tres estados: conteudo, carregando
- * (skeleton) e vazio.
- */
+/** Card de grafico com titulo, legenda e menu de acoes. */
 public class ChartCard extends VBox {
-
     /** Estado visual do card. */
     public enum Estado { CONTEUDO, CARREGANDO, VAZIO }
 
@@ -50,10 +45,6 @@ public class ChartCard extends VBox {
     private Animation pulso;
     private MenuItem itemTabela;
 
-    /**
-     * @param titulo    titulo
-     * @param subtitulo explicacao curta
-     */
     public ChartCard(@javafx.beans.NamedArg("titulo") String titulo, @javafx.beans.NamedArg("subtitulo") String subtitulo) {
         getStyleClass().add("chart-card");
         this.titulo.setText(titulo);
@@ -111,10 +102,6 @@ public class ChartCard extends VBox {
         skeleton.setVisible(false);
     }
 
-    /**
-     * @param n conteudo (grafico ou componente)
-     * @return este card
-     */
     public ChartCard conteudo(Node n) {
         if (conteudo != null) corpo.getChildren().remove(conteudo);
         conteudo = n;
@@ -123,14 +110,10 @@ public class ChartCard extends VBox {
         return this;
     }
 
-    /** @return conteudo atual */
     public Node getConteudo() {
         return conteudo;
     }
 
-    /**
-     * @param e novo estado
-     */
     public void estado(Estado e) {
         if (conteudo != null) conteudo.setVisible(e == Estado.CONTEUDO);
         skeleton.setVisible(e == Estado.CARREGANDO);
@@ -156,13 +139,7 @@ public class ChartCard extends VBox {
         legenda.setManaged(false);
     }
 
-    /**
-     * Adiciona item de legenda (marca colorida + texto). A legenda fica sempre visivel quando ha
-     * duas ou mais series, para que a identidade nunca dependa so da cor.
-     *
-     * @param texto        rotulo
-     * @param classesMarca classes CSS da marca (ex.: {@code ano-recente}, {@code linha})
-     */
+    /** Adiciona item de legenda (marca colorida + texto). */
     public void adicionarLegenda(String texto, String... classesMarca) {
         Region marca = new Region();
         marca.getStyleClass().add("legenda-marca");
@@ -174,33 +151,21 @@ public class ChartCard extends VBox {
         legenda.setManaged(true);
     }
 
-    /**
-     * @param n no exibido a direita do titulo (ex.: chip "Pico: ago/2024 — 3.612")
-     */
     public void setExtra(Node... n) {
         extras.getChildren().setAll(n);
     }
 
-    /**
-     * @param t novo subtitulo
-     */
     public void setSubtitulo(String t) {
         subtitulo.setText(t);
     }
 
-    /**
-     * Define os dados exibidos em "Ver dados em tabela".
-     *
-     * @param cabecalho colunas
-     * @param dados     fornecedor das linhas
-     */
+    /** Define os dados exibidos em "Ver dados em tabela". */
     public void setDados(String[] cabecalho, Supplier<List<String[]>> dados) {
         this.cabecalho = cabecalho;
         this.dados = dados;
         itemTabela.setDisable(dados == null);
     }
 
-    /** @return titulo do card */
     public String getTitulo() {
         return titulo.getText();
     }

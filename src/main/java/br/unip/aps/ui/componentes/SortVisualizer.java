@@ -23,16 +23,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Visualizacao animada de um algoritmo de ordenacao em uma amostra pequena (barras).
- *
- * <p>O algoritmo roda de verdade sobre o {@link InstrumentedArray} com um
- * {@link InstrumentedArray.Ouvinte} que grava cada comparacao, troca e atribuicao; depois a
- * gravacao e reproduzida passo a passo: azul = comparando, brasa = movendo, verde = ordenado.
- * Os contadores exibidos sao os mesmos do sistema, acumulados ate o passo atual.</p>
- */
+/** Visualizacao animada de um algoritmo de ordenacao em uma amostra pequena (barras). */
 public class SortVisualizer extends VBox {
-
     private static final int N = 32;
 
     private record Evento(int tipo, int i, int j, int valor) {
@@ -66,7 +58,7 @@ public class SortVisualizer extends VBox {
         for (int i = 0; i < N; i++) {
             Region r = new Region();
             r.getStyleClass().add("viz-barra");
-            r.setManaged(false); // posicionadas manualmente em desenhar()
+            r.setManaged(false);
             barras.add(r);
         }
         palco.getChildren().addAll(barras);
@@ -116,11 +108,7 @@ public class SortVisualizer extends VBox {
         return h;
     }
 
-    /**
-     * Define o algoritmo e prepara a gravacao.
-     *
-     * @param tipo algoritmo
-     */
+    /** Define o algoritmo e prepara a gravacao. */
     public void setAlgoritmo(AlgoritmoTipo tipo) {
         this.algoritmo = tipo;
         preparar(false);

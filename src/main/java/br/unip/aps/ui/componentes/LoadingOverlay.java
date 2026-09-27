@@ -12,20 +12,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-/**
- * Sobreposicao de carregamento: escurece o conteudo e mostra progresso, mensagem e botao
- * Cancelar. So aparece se a tarefa demorar mais de 300 ms (evita "piscar" em operacoes rapidas).
- */
+/** Sobreposicao de carregamento. */
 public class LoadingOverlay extends StackPane {
-
     private final PauseTransition atraso = new PauseTransition(Duration.millis(300));
 
-    /**
-     * @param ocupado   indica tarefa em andamento
-     * @param mensagem  texto de status
-     * @param progresso progresso 0..1 (ou negativo = indeterminado)
-     * @param cancelar  acao do botao Cancelar
-     */
     public LoadingOverlay(BooleanProperty ocupado, StringProperty mensagem, DoubleProperty progresso, Runnable cancelar) {
         getStyleClass().add("overlay");
         Label titulo = new Label("Processando…");

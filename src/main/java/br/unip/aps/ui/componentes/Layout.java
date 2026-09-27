@@ -7,20 +7,11 @@ import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 
-/**
- * Regras de layout globais. Por padrao o JavaFX encolhe botoes e rotulos ate virarem "…" quando
- * falta espaco; no design system, acoes, chips e segmentos NUNCA encolhem abaixo do tamanho
- * natural — quem cede espaco sao campos de texto, graficos e textos com quebra de linha.
- */
+/** Regras de layout globais. */
 public final class Layout {
-
     private Layout() { }
 
-    /**
-     * Aplica a regra "nao encolher" a toda a arvore (inclusive a nos adicionados depois).
-     *
-     * @param raiz no raiz
-     */
+    /** Aplica a regra "nao encolher" a toda a arvore (inclusive a nos adicionados depois). */
     public static void naoEncolher(Node raiz) {
         aplicar(raiz);
         if (raiz instanceof Parent p) {

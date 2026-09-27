@@ -1,10 +1,4 @@
-/* =====================================================================
-   Tema CLARO — tokens semanticos (-aps-*) e mapeamento para o AtlantaFX.
-   Contraste WCAG AA verificado (texto terciario 4,97:1 sobre a superficie;
-   botao primario 5,18:1). Paleta de dados validada (CVD / contraste).
-   ===================================================================== */
 .root {
-    /* Superficies e texto */
     -aps-bg-app:          -slate-50;
     -aps-surface:         -slate-0;
     -aps-surface-muted:   -slate-25;
@@ -21,7 +15,6 @@
     -aps-shadow-1:        rgba(16, 24, 40, 0.06);
     -aps-shadow-2:        rgba(16, 24, 40, 0.16);
 
-    /* Destaque (brasa) */
     -aps-accent:          -brasa-600;
     -aps-accent-strong:   -brasa-700;
     -aps-accent-hover:    -brasa-800;
@@ -29,7 +22,6 @@
     -aps-accent-muted:    -brasa-100;
     -aps-accent-text:     -brasa-700;
 
-    /* Semanticas: texto / fundo suave */
     -aps-success:        -verde-700;
     -aps-success-subtle: -verde-50;
     -aps-warning:        -ambar-700;
@@ -39,7 +31,6 @@
     -aps-info:           -azul-700;
     -aps-info-subtle:    -azul-50;
 
-    /* ---- Paleta de DADOS (significado fixo em graficos, mapa e relatorios) ---- */
     -aps-ano-recente:        #E8590C;
     -aps-ano-recente-area:   rgba(232, 89, 12, 0.22);
     -aps-ano-recente-area-0: rgba(232, 89, 12, 0.00);
@@ -53,7 +44,6 @@
     -aps-bioma-pantanal: #4A3AA7;
     -aps-bioma-pampa:    #1BAF7A;
     -aps-bioma-outro:    #98A2B3;
-    /* escala sequencial (1 matiz, claro -> escuro = menos -> mais) */
     -aps-heat-vazio: #EEF1F4;
     -aps-heat-1: #F0975C;
     -aps-heat-2: #E8590C;
@@ -65,7 +55,6 @@
     -aps-heat-tinta-4: #FFFFFF;
     -aps-heat-tinta-5: #FFFFFF;
     -aps-heat-5: #662405;
-    /* series categoricas (ordem fixa por algoritmo) */
     -aps-serie-1: #2A78D6;
     -aps-serie-2: #EB6834;
     -aps-serie-3: #1BAF7A;
@@ -78,7 +67,6 @@
     -aps-skeleton-1: #EEF1F4;
     -aps-skeleton-2: #F7F8FA;
 
-    /* ---- Sobrescrita dos tokens do AtlantaFX (Primer) ---- */
     -color-fg-default:      -aps-text-1;
     -color-fg-muted:        -aps-text-2;
     -color-fg-subtle:       -aps-text-3;

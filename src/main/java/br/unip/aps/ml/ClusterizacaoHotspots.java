@@ -14,63 +14,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
-/**
- * Clusterizacao geografica dos focos para identificar <b>hotspots</b> (aprendizado nao supervisionado).
- *
- * <ul>
- *   <li><b>K-Means</b> (Lloyd, 1982; inicializacao K-Means++): particiona os focos em k grupos
- *       minimizando a soma dos quadrados das distancias ao centroide. Exige escolher k — o
- *       "metodo do cotovelo" ({@link #cotovelo}) ajuda nessa escolha.</li>
- *   <li><b>DBSCAN</b> (Ester et al., 1996): agrupa pontos com pelo menos {@code minPts} vizinhos num
- *       raio {@code eps}; descobre sozinho o numero de grupos, aceita formatos irregulares e marca
- *       focos isolados como ruido — mais adequado a hotspots de queimada.</li>
- * </ul>
- * <p>Distancias em graus nao sao isotropicas (1° de longitude encolhe com a latitude), entao as
- * coordenadas sao projetadas para quilometros (projecao equirretangular local) antes de agrupar.</p>
- */
+/** Clusterizacao geografica dos focos para identificar hotspots (aprendizado nao supervisionado). */
 public final class ClusterizacaoHotspots {
-
     private static final double KM_POR_GRAU_LAT = 110.574;
     private static final double KM_POR_GRAU_LON_EQUADOR = 111.320;
 
-    /**
-     * Um hotspot (grupo de focos).
-     *
-     * @param id                  identificador (1 = maior grupo)
-     * @param latitude            centroide
-     * @param longitude           centroide
-     * @param focos               quantidade de focos
-     * @param raioKm              raio medio quadratico (km) dos focos ao centroide
-     * @param municipioPrincipal  municipio com mais focos no grupo
-     * @param biomaPredominante   bioma com mais focos no grupo
-     * @param focosPorAno         focos do grupo por ano (ordem crescente)
-     */
+    /** Um hotspot (grupo de focos). */
     public record Hotspot(int id, double latitude, double longitude, int focos, double raioKm,
                           String municipioPrincipal, String biomaPredominante, Map<Integer, Integer> focosPorAno) { }
 
-    /**
-     * Resultado de uma clusterizacao.
-     *
-     * @param metodo    descricao do metodo e parametros
-     * @param hotspots  grupos, do maior para o menor
-     * @param rotulos   grupo de cada foco (indice de {@code focos}); -1 = ruido
-     * @param ruido     focos isolados (DBSCAN)
-     * @param focos     focos agrupados (mesma ordem de {@code rotulos})
-     */
+    /** Resultado de uma clusterizacao. */
     public record Resultado(String metodo, List<Hotspot> hotspots, int[] rotulos, int ruido, List<FocoIncendio> focos) { }
 
     private final long semente;
 
-    /** @param semente semente do gerador do Smile (K-Means++ e reprodutivel) */
     public ClusterizacaoHotspots(long semente) {
         this.semente = semente;
     }
 
-    /**
-     * @param focos focos
-     * @param k     numero de grupos
-     * @return hotspots
-     */
     public Resultado kMeans(List<FocoIncendio> focos, int k) {
         validar(focos, k);
         double[][] pts = projetar(focos);
@@ -81,12 +42,6 @@ public final class ClusterizacaoHotspots {
         return montar("K-Means (k=" + k + ")", focos, g, k);
     }
 
-    /**
-     * @param focos  focos
-     * @param epsKm  raio de vizinhanca em km
-     * @param minPts minimo de vizinhos para um ponto central
-     * @return hotspots e ruido
-     */
     public Resultado dbscan(List<FocoIncendio> focos, double epsKm, int minPts) {
         validar(focos, 1);
         if (epsKm <= 0 || minPts < 1) throw new IllegalArgumentException("eps deve ser > 0 e minPts >= 1.");
@@ -101,18 +56,11 @@ public final class ClusterizacaoHotspots {
                 focos, g, db.k());
     }
 
-    /**
-     * Metodo do cotovelo: distorcao (WCSS medio por foco, km²) para k = 1..kMax.
-     *
-     * @param focos focos
-     * @param kMax  maior k testado
-     * @return vetor com WCSS na posicao k-1
-     */
+    /** Metodo do cotovelo: distorcao (WCSS medio por foco, km²) para k = 1..kMax. */
     public double[] cotovelo(List<FocoIncendio> focos, int kMax) {
         validar(focos, kMax);
         double[][] pts = projetar(focos);
         double[] wcss = new double[kMax];
-        // k = 1: um unico grupo cujo centroide e a media de todos os pontos (o Smile exige k >= 2)
         double mx = 0, my = 0;
         for (double[] p : pts) {
             mx += p[0];
@@ -121,7 +69,7 @@ public final class ClusterizacaoHotspots {
         mx /= pts.length;
         my /= pts.length;
         for (double[] p : pts) wcss[0] += (p[0] - mx) * (p[0] - mx) + (p[1] - my) * (p[1] - my);
-        wcss[0] /= pts.length; // mesma escala do Smile: distorcao media por ponto
+        wcss[0] /= pts.length;
         for (int k = 2; k <= kMax; k++) {
             MathEx.setSeed(semente);
             wcss[k - 1] = KMeans.fit(pts, k, 100).distortion();
@@ -134,7 +82,6 @@ public final class ClusterizacaoHotspots {
         if (k < 1 || k > focos.size()) throw new IllegalArgumentException("k deve estar entre 1 e o numero de focos (" + focos.size() + ").");
     }
 
-    /** Projecao equirretangular local em km, centrada na latitude media. */
     static double[][] projetar(List<FocoIncendio> focos) {
         double latMedia = 0;
         for (FocoIncendio f : focos) latMedia += f.getLatitude();
@@ -187,7 +134,6 @@ public final class ClusterizacaoHotspots {
                     maisFrequente(mun.get(c)), maisFrequente(bio.get(c)), porAnoOrdenado(anos.get(c))));
         }
         Ordenacoes.ordenar(hs, (a, b) -> Integer.compare(b.focos(), a.focos()));
-        // renumera: 1 = maior hotspot; rotulos acompanham a nova numeracao
         int[] novoId = new int[k];
         List<Hotspot> renumerados = new ArrayList<>();
         for (int i = 0; i < hs.size(); i++) {
@@ -201,7 +147,6 @@ public final class ClusterizacaoHotspots {
         return new Resultado(metodo, renumerados, rotulos, ruido, List.copyOf(focos));
     }
 
-    /** Copia o mapa ano -> focos com as chaves em ordem crescente (ordenadas pelo Merge Sort do projeto). */
     private static Map<Integer, Integer> porAnoOrdenado(Map<Integer, Integer> m) {
         Map<Integer, Integer> r = new LinkedHashMap<>();
         for (Integer ano : Ordenacoes.ordenar(new ArrayList<>(m.keySet()), Integer::compare)) r.put(ano, m.get(ano));
@@ -220,15 +165,7 @@ public final class ClusterizacaoHotspots {
         return melhor;
     }
 
-    /**
-     * Distancia de grande circulo (formula de haversine).
-     *
-     * @param lat1 latitude 1 (graus)
-     * @param lon1 longitude 1
-     * @param lat2 latitude 2
-     * @param lon2 longitude 2
-     * @return distancia em km
-     */
+    /** Distancia de grande circulo (formula de haversine). */
     public static double distanciaKm(double lat1, double lon1, double lat2, double lon2) {
         double r = 6371.0088;
         double dLat = Math.toRadians(lat2 - lat1), dLon = Math.toRadians(lon2 - lon1);

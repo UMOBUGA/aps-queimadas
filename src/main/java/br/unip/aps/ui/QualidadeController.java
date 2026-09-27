@@ -28,13 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Tela "Qualidade dos dados": evidencia da etapa de leitura, validacao e limpeza (encoding,
- * separador, colunas, completude, rejeicoes e duplicatas), com problemas classificados por
- * severidade.
- */
+/** Tela "Qualidade dos dados". */
 public class QualidadeController implements Pagina.Controlador {
-
     private final UiContexto ctx;
 
     @FXML private KpiCard kLidos, kValidos, kDescartados, kDuplicados, kCompletude;
@@ -65,7 +60,6 @@ public class QualidadeController implements Pagina.Controlador {
             new Coluna("risco_fogo", false, f -> f.getRiscoFogo() != null),
             new Coluna("numero_dias_sem_chuva", false, f -> f.getNumeroDiasSemChuva() != null));
 
-    /** @param ctx contexto injetado */
     public QualidadeController(UiContexto ctx) {
         this.ctx = ctx;
     }
