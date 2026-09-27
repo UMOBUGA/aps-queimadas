@@ -4,29 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa de focos</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
+<link rel="stylesheet" href="web/leaflet.css">
+<link rel="stylesheet" href="web/MarkerCluster.css">
 <script>window.L_DISABLE_3D = true;</script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
+<script src="web/leaflet.js"></script>
+<script src="web/leaflet.markercluster.js"></script>
 <style>
   :root {
     --surface: #FFFFFF; --text-1: #15100D; --text-2: #4A413B; --text-3: #6E635B; --border: #E2DFDB;
     --accent: #D9480F; --accent-subtle: #FFF1E8; --shadow: 0 10px 28px rgba(21,16,13,.18);
+    --terra: #ECEAE7; --terra-borda: #CFCAC4; --fora: #F7F6F4;
   }
   body.escuro {
     --surface: #15100E; --text-1: #F6EEE7; --text-2: #CDBDB1; --text-3: #A08D80; --border: #3F332D;
     --accent: #FF6B1A; --accent-subtle: #2B150A; --shadow: 0 10px 28px rgba(0,0,0,.6);
+    --terra: #1E1714; --terra-borda: #3F332D; --fora: #0D0A09;
   }
   html, body, #mapa { height: 100%; margin: 0; padding: 0; font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--surface); }
   .leaflet-container { background: var(--surface); font-family: inherit; }
+  body.offline .leaflet-container { background: var(--fora); }
   .legenda {
     background: var(--surface); color: var(--text-2); padding: 12px 14px; border-radius: 5px; line-height: 1.7;
     box-shadow: var(--shadow); border: 1px solid var(--border); font-size: 12px; min-width: 150px;
   }
   .legenda b { color: var(--text-1); font-size: 13px; }
   .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; }
-  .legenda .grad { height: 8px; border-radius: 2px; margin: 6px 0 2px; }
+  .legenda .sep { display: block; height: 6px; }
+  .selo-offline {
+    background: var(--surface); color: var(--text-2); border: 1px solid var(--border); border-radius: 4px;
+    padding: 4px 9px; font-size: 11.5px; box-shadow: var(--shadow); display: none;
+  }
+  body.offline .selo-offline { display: block; }
+  .selo-offline b { color: var(--text-1); }
   .leaflet-popup-content-wrapper { background: var(--surface); color: var(--text-1); border-radius: 5px; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .leaflet-popup-tip { background: var(--surface); border: 1px solid var(--border); }
   .leaflet-popup-content { margin: 12px 14px; font-size: 12.5px; line-height: 1.5; }
@@ -35,7 +44,7 @@
   .pop-bioma { display: inline-block; padding: 1px 8px; border-radius: 3px; background: var(--accent-subtle); color: var(--text-1); font-size: 11.5px; margin-top: 4px; }
   .leaflet-control-zoom a, .leaflet-control-layers { background: var(--surface) !important; color: var(--text-1) !important; border-color: var(--border) !important; }
   .leaflet-control-attribution { background: rgba(255,255,255,.7) !important; }
-  body.escuro .leaflet-control-attribution { background: rgba(21,27,35,.75) !important; color: var(--text-3); }
+  body.escuro .leaflet-control-attribution { background: rgba(21,16,14,.78) !important; color: var(--text-3); }
   body.escuro .leaflet-control-attribution a { color: var(--text-2); }
   .cluster { background: rgba(255, 107, 26, .25); border-radius: 50%; }
   .cluster div { background: var(--accent); color: #1A0B02; border-radius: 50%; width: 30px; height: 30px; margin: 5px;
@@ -47,27 +56,30 @@
 </head>
 <body>
 <div id="mapa"></div>
-<div id="aviso"><div><b>Não foi possível carregar o mapa</b><br>
-  O mapa usa a biblioteca Leaflet e mapas-base da Esri e dados do OpenStreetMap, que exigem internet.<br>
-  Verifique a conexão; as demais telas funcionam normalmente offline.</div></div>
+<div id="aviso"><div><b>Não foi possível iniciar o mapa</b><br>
+  A biblioteca de mapas embarcada não carregou. As demais telas funcionam normalmente.</div></div>
 <script>
 window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + ':' + l); } catch (e) {} };
 (function () {
   var PALETA = {
-    claro:  { bioma: {"Mata Atlântica": "#1F6E45", "Cerrado": "#C48E22", "Amazônia": "#2A78D6", "Caatinga": "#E87BA4", "Pantanal": "#4A3AA7", "Pampa": "#1BAF7A"},
+    claro:  { bioma: {"Mata Atlântica": "#1F6E45", "Cerrado": "#96650E", "Amazônia": "#2A78D6", "Caatinga": "#E87BA4", "Pantanal": "#4A3AA7", "Pampa": "#1BAF7A"},
               outro: "#8C8178", anoRecente: "#D9480F", anoAnterior: "#3D6DB5", borda: "#FFFFFF",
-              heat: ["#FDDCA0", "#FCA50A", "#DD513A", "#932667", "#420A68"], hotspot: "#15100D" },
-    escuro: { bioma: {"Mata Atlântica": "#2E9E63", "Cerrado": "#D6A03A", "Amazônia": "#3987E5", "Caatinga": "#D55181", "Pantanal": "#9085E9", "Pampa": "#199E70"},
+              heat: ["#F6C26B", "#E0691C", "#A8263B", "#6E1B5E", "#2E0A4F"], hotspot: "#15100D" },
+    escuro: { bioma: {"Mata Atlântica": "#2E9E63", "Cerrado": "#E8C15A", "Amazônia": "#3987E5", "Caatinga": "#D55181", "Pantanal": "#9085E9", "Pampa": "#199E70"},
               outro: "#A08D80", anoRecente: "#FF6B1A", anoAnterior: "#7FA3D1", borda: "#15100E",
               heat: ["#420A68", "#932667", "#DD513A", "#FCA50A", "#FCFFA4"], hotspot: "#FCFFA4" }
   };
   if (typeof L === 'undefined') {
     document.getElementById('aviso').style.display = 'flex';
-    window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, setTema: function () {}, setModo: function () {}, setCorPor: function () {} };
+    window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, setTema: function () {}, setModo: function () {},
+                   setCorPor: function () {}, setMalha: function () {}, forcarOffline: function () {}, setCoropletico: function () {} };
     return;
   }
-  var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 }, hotspots: [], ajustar: true };
-  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: false, attributionControl: true }).setView([-22.3, -48.9], 7);
+  var SP = L.latLngBounds([-25.35, -53.15], [-19.75, -44.15]);
+  var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 },
+                 hotspots: [], offline: false, malha: null, coro: null };
+  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: false, attributionControl: true });
+  mapa.fitBounds(SP, { paddingTopLeft: [20, 110], paddingBottomRight: [20, 20] });
   L.control.zoom({ position: 'topright' }).addTo(mapa);
   var atrib = 'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, HERE, Garmin, &copy; colaboradores do OpenStreetMap';
   var base = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
@@ -75,21 +87,37 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     claro: L.tileLayer(base + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: atrib }),
     escuro: L.tileLayer(base + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: atrib })
   };
-  tiles.claro.addTo(mapa);
-  var erroTile = false;
+  var tilesCarregados = 0, tilesComErro = 0;
   ['claro', 'escuro'].forEach(function (k) {
-    tiles[k].on('tileerror', function () { if (!erroTile) { erroTile = true; alert('TILE: falha ao carregar mapa-base'); } });
+    tiles[k].on('tileload', function () { tilesCarregados++; });
+    tiles[k].on('tileerror', function () {
+      tilesComErro++;
+      if (tilesCarregados === 0 && tilesComErro >= 3) entrarOffline('falha ao baixar o mapa-base');
+    });
   });
+  tiles.claro.addTo(mapa);
+  setTimeout(function () { if (tilesCarregados === 0) entrarOffline('mapa-base sem resposta'); }, 6000);
+
   var renderer = L.canvas({ padding: 0.5 });
+  var camadaBase = L.layerGroup().addTo(mapa);
+  var camadaCoro = L.layerGroup().addTo(mapa);
   var camada = L.layerGroup().addTo(mapa);
   var camadaHot = L.layerGroup().addTo(mapa);
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(mapa);
+  var selo = L.control({ position: 'bottomleft' });
+  selo.onAdd = function () {
+    var d = L.DomUtil.create('div', 'selo-offline');
+    d.innerHTML = '<b>Modo offline</b> · malha municipal do IBGE';
+    return d;
+  };
+  selo.addTo(mapa);
   var legenda = L.control({ position: 'bottomright' });
   var legendaDiv;
   legenda.onAdd = function () { legendaDiv = L.DomUtil.create('div', 'legenda'); return legendaDiv; };
   legenda.addTo(mapa);
 
   function pal() { return PALETA[estado.tema]; }
+  function css(v) { return getComputedStyle(document.body).getPropertyValue(v).trim(); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmt(n) { return n.toLocaleString('pt-BR'); }
   function cor(f) {
@@ -103,12 +131,57 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
          + '<span class="pop-bioma">' + esc(estado.dados.biomas[f[2]]) + '</span>';
   }
 
+  function entrarOffline(motivo) {
+    if (estado.offline) return;
+    estado.offline = true;
+    mapa.removeLayer(tiles.claro);
+    mapa.removeLayer(tiles.escuro);
+    document.body.classList.add('offline');
+    desenharBase();
+    try { alert('OFFLINE: ' + motivo); } catch (e) {}
+  }
+
+  function desenharBase() {
+    camadaBase.clearLayers();
+    if (!estado.malha || !estado.offline) return;
+    L.geoJSON(estado.malha, {
+      renderer: renderer,
+      style: function () { return { color: css('--terra-borda'), weight: 0.6, fillColor: css('--terra'), fillOpacity: 1 }; },
+      interactive: false
+    }).addTo(camadaBase);
+  }
+
+  function desenharCoropletico() {
+    camadaCoro.clearLayers();
+    var c = estado.coro;
+    if (!c || !estado.malha) return;
+    L.geoJSON(estado.malha, {
+      renderer: renderer,
+      style: function (f) {
+        var v = c.valores[f.properties.chave];
+        var classe = v === undefined ? -1 : c.classeDe[f.properties.chave];
+        return { color: css('--terra-borda'), weight: 0.5, fillOpacity: classe < 0 ? 0.0 : 0.88,
+                 fillColor: classe < 0 ? 'transparent' : c.cores[classe] };
+      },
+      onEachFeature: function (f, l) {
+        var v = c.valores[f.properties.chave];
+        l.bindTooltip('<b>' + esc(f.properties.nome) + '</b><br>' + (v === undefined ? 'sem focos' : c.formatar[f.properties.chave])
+          + '<br>' + fmt(Math.round(f.properties.areaKm2)) + ' km²', { sticky: true });
+      }
+    }).addTo(camadaCoro);
+  }
+
   var TAM = 0.08, LIMITES = [1, 3, 10, 25, 60];
   function faixa(n) { var r = 0; for (var i = 0; i < LIMITES.length; i++) if (n >= LIMITES[i]) r = i; return r; }
 
   function desenhar() {
     camada.clearLayers();
     var focos = estado.dados.focos, p = pal();
+    if (estado.modo === 'coropletico') {
+      desenharCoropletico();
+    } else {
+      camadaCoro.clearLayers();
+    }
     if (estado.modo === 'calor') {
       var grade = {};
       focos.forEach(function (f) {
@@ -117,7 +190,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
       });
       Object.keys(grade).forEach(function (k) {
         var n = grade[k], q = k.split(':'), la = +q[0] * TAM, lo = +q[1] * TAM;
-        L.rectangle([[la, lo], [la + TAM, lo + TAM]], { renderer: renderer, stroke: false, fillColor: p.heat[faixa(n)], fillOpacity: 0.82 })
+        L.rectangle([[la, lo], [la + TAM, lo + TAM]], { renderer: renderer, stroke: false, fillColor: p.heat[faixa(n)], fillOpacity: 0.85 })
           .bindTooltip(fmt(n) + (n === 1 ? ' foco' : ' focos') + ' nesta célula (~9 km)', { sticky: true })
           .addTo(camada);
       });
@@ -131,7 +204,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
         grupo.addLayer(L.circleMarker([f[0], f[1]], { renderer: renderer, radius: 5, weight: 1, color: p.borda, fillColor: cor(f), fillOpacity: 0.9 }).bindPopup(popup(f)));
       });
       camada.addLayer(grupo);
-    } else {
+    } else if (estado.modo === 'pontos') {
       focos.forEach(function (f) {
         L.circleMarker([f[0], f[1]], { renderer: renderer, radius: 3.6, weight: 0.8, color: p.borda, fillColor: cor(f), fillOpacity: 0.85 })
           .bindPopup(popup(f)).addTo(camada);
@@ -142,7 +215,11 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
 
   function desenharLegenda() {
     var p = pal(), html = '<b>' + fmt(estado.dados.focos.length) + ' focos</b><br>';
-    if (estado.modo === 'calor') {
+    if (estado.modo === 'coropletico' && estado.coro) {
+      html += esc(estado.coro.titulo) + '<br>';
+      estado.coro.cores.forEach(function (c, i) { html += '<i style="background:' + c + ';border-radius:2px"></i>' + esc(estado.coro.rotulos[i]) + '<br>'; });
+      html += '<span class="sep"></span>' + esc(estado.coro.metodo);
+    } else if (estado.modo === 'calor') {
       html += 'Focos por célula (~9 km)<br>';
       var rot = ['1–2', '3–9', '10–24', '25–59', '60+'];
       p.heat.forEach(function (c, i) { html += '<i style="background:' + c + ';border-radius:2px"></i>' + rot[i] + '<br>'; });
@@ -151,7 +228,8 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     } else {
       estado.dados.biomas.forEach(function (b) { html += '<i style="background:' + (p.bioma[b] || p.outro) + '"></i>' + esc(b) + '<br>'; });
     }
-    if (estado.hotspots.length) html += '<br><i style="background:transparent;border:2px solid ' + p.hotspot + '"></i>Hotspots (DBSCAN)';
+    if (estado.modo === 'cluster') html += '<span class="sep"></span>Círculo laranja = grupo de focos próximos';
+    if (estado.hotspots.length) html += '<span class="sep"></span><i style="background:transparent;border:2px dashed ' + p.hotspot + '"></i>Hotspots (DBSCAN)';
     legendaDiv.innerHTML = html;
   }
 
@@ -174,17 +252,26 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
       estado.dados = dados;
       desenhar();
       if (dados.focos.length) {
-        mapa.fitBounds(dados.focos.map(function (f) { return [f[0], f[1]]; }), { padding: [24, 24], maxZoom: 11 });
+        mapa.fitBounds(dados.focos.map(function (f) { return [f[0], f[1]]; }), { paddingTopLeft: [24, 110], paddingBottomRight: [24, 24], maxZoom: 11 });
+      } else {
+        mapa.fitBounds(SP, { paddingTopLeft: [20, 110], paddingBottomRight: [20, 20] });
       }
     },
     setHotspots: function (h) { estado.hotspots = h; desenharHotspots(); },
     setModo: function (m) { estado.modo = m; desenhar(); },
     setCorPor: function (c) { estado.corPor = c; desenhar(); },
+    setMalha: function (geo) { estado.malha = geo; desenharBase(); desenhar(); },
+    setCoropletico: function (c) { estado.coro = c; if (estado.modo === 'coropletico') desenhar(); },
+    forcarOffline: function () { entrarOffline('modo offline solicitado'); },
+    offline: function () { return estado.offline; },
     setTema: function (escuro) {
       estado.tema = escuro ? 'escuro' : 'claro';
       document.body.classList.toggle('escuro', escuro);
-      mapa.removeLayer(escuro ? tiles.claro : tiles.escuro);
-      (escuro ? tiles.escuro : tiles.claro).addTo(mapa);
+      if (!estado.offline) {
+        mapa.removeLayer(escuro ? tiles.claro : tiles.escuro);
+        (escuro ? tiles.escuro : tiles.claro).addTo(mapa);
+      }
+      desenharBase();
       desenhar();
       desenharHotspots();
     }

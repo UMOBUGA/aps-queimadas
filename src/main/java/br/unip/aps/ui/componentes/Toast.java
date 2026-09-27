@@ -57,6 +57,7 @@ public final class Toast extends HBox {
 
     /** Mostra um toast no container (VBox alinhado embaixo a direita). */
     public static void mostrar(VBox container, Tipo tipo, String titulo, String texto) {
+        if (System.getProperty("aps.capturas") != null) return;
         Toast[] ref = new Toast[1];
         Runnable fechar = () -> {
             if (ref[0] == null || !container.getChildren().contains(ref[0])) return;

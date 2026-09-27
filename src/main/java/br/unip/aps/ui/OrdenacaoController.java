@@ -89,6 +89,9 @@ public class OrdenacaoController implements Pagina.Controlador {
     private final ObservableList<NivelEditavel> niveis = FXCollections.observableArrayList();
     private final List<CriterioOrdenacao> disponiveis = new ArrayList<>();
     private final BarrasHorizontais barrasComparativo = new BarrasHorizontais();
+    {
+        barrasComparativo.setEscalaLog(true);
+    }
     private final TableView<ResultadoOrdenacao<FocoIncendio>> tabelaComparativo = new TableView<>();
     private final ToggleGroup metrica = new ToggleGroup();
     private final SortVisualizer visualizador = new SortVisualizer();
@@ -540,7 +543,7 @@ public class OrdenacaoController implements Pagina.Controlador {
         }
         barrasComparativo.setItens(itens);
         cardComparativo.setSubtitulo(ord.get(0).criterio() + " · " + ord.get(0).cenario() + " · n = "
-                + Formatos.inteiro(ord.get(0).tamanho()) + " · menor é melhor (destaque = vencedor)");
+                + Formatos.inteiro(ord.get(0).tamanho()) + " · menor é melhor · escala logarítmica");
         List<String[]> linhas = new ArrayList<>();
         for (ResultadoOrdenacao<FocoIncendio> r : ord) {
             linhas.add(new String[]{r.algoritmo(), Formatos.inteiro(r.metricas().comparacoes()), Formatos.inteiro(r.metricas().trocas()),

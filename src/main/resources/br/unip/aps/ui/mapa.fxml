@@ -3,7 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -12,28 +11,29 @@
 <StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="br.unip.aps.ui.MapaController" fx:id="moldura" styleClass="mapa-palco">
     <WebView fx:id="webView"/>
-    <VBox spacing="10" pickOnBounds="false" StackPane.alignment="TOP_LEFT" maxWidth="-Infinity" maxHeight="-Infinity">
+    <VBox styleClass="mapa-titulo" pickOnBounds="false" StackPane.alignment="TOP_LEFT" maxWidth="-Infinity" maxHeight="-Infinity">
         <StackPane.margin>
             <Insets top="18" left="20"/>
         </StackPane.margin>
-        <VBox styleClass="mapa-titulo" maxWidth="-Infinity">
-            <Label fx:id="lblContagem" styleClass="mapa-titulo-numero" text="—"/>
-            <Label fx:id="lblContagemTexto" styleClass="mapa-titulo-texto" text="focos no mapa"/>
-        </VBox>
-        <FlowPane styleClass="mapa-controles" prefWrapLength="700" maxWidth="-Infinity">
-            <HBox fx:id="segModo" styleClass="segmented">
-                <ToggleButton fx:id="tgPontos" text="Pontos" selected="true"/>
-                <ToggleButton fx:id="tgCluster" text="Agrupado"/>
-                <ToggleButton fx:id="tgCalor" text="Calor"/>
-            </HBox>
-            <HBox spacing="8" alignment="CENTER_LEFT">
-                <Label text="Cor por" styleClass="field-label"/>
-                <HBox fx:id="segCor" styleClass="segmented">
-                    <ToggleButton fx:id="tgBioma" text="Bioma" selected="true"/>
-                    <ToggleButton fx:id="tgAno" text="Ano"/>
-                </HBox>
-            </HBox>
-            <ToggleButton fx:id="tgHotspots" text="Hotspots do ML" styleClass="chip-toggle" disable="true"/>
-        </FlowPane>
+        <Label fx:id="lblContagem" styleClass="mapa-titulo-numero" text="—"/>
+        <Label fx:id="lblContagemTexto" styleClass="mapa-titulo-texto" text="focos no mapa"/>
     </VBox>
+    <HBox styleClass="mapa-controles" spacing="10" alignment="CENTER_LEFT" maxWidth="-Infinity" maxHeight="-Infinity" StackPane.alignment="TOP_RIGHT">
+        <StackPane.margin>
+            <Insets top="18" right="64"/>
+        </StackPane.margin>
+        <HBox fx:id="segModo" styleClass="segmented">
+            <ToggleButton fx:id="tgPontos" text="Pontos" selected="true"/>
+            <ToggleButton fx:id="tgCluster" text="Agrupado"/>
+            <ToggleButton fx:id="tgCalor" text="Calor"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Cor por" styleClass="field-label"/>
+            <HBox fx:id="segCor" styleClass="segmented">
+                <ToggleButton fx:id="tgBioma" text="Bioma" selected="true"/>
+                <ToggleButton fx:id="tgAno" text="Ano"/>
+            </HBox>
+        </HBox>
+        <ToggleButton fx:id="tgHotspots" text="Hotspots do ML" styleClass="chip-toggle" disable="true"/>
+    </HBox>
 </StackPane>

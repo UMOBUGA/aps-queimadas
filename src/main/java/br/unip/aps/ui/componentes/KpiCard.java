@@ -25,8 +25,11 @@ public class KpiCard extends VBox {
         }
     }
 
+    private static final java.util.regex.Pattern COM_UNIDADE = java.util.regex.Pattern.compile("^([-+−]?[\\d.,]+)\\s+(ms|s|min|µs|ns|%|km|KB|MB)$");
+
     private final Label rotulo = new Label();
     private final Label valor = new Label("—");
+    private final Label unidade = new Label();
     private final Label contexto = new Label();
     private final StackPane badge = new StackPane();
     private final HBox base;
@@ -50,7 +53,9 @@ public class KpiCard extends VBox {
 
         Region esp2 = new Region();
         HBox.setHgrow(esp2, Priority.ALWAYS);
-        base = new HBox(8, valor, esp2);
+        unidade.getStyleClass().add("kpi-unidade");
+        unidade.setMinWidth(Region.USE_PREF_SIZE);
+        base = new HBox(6, valor, unidade, esp2);
         base.setAlignment(Pos.BOTTOM_LEFT);
 
         getChildren().addAll(topo, base, contexto);
@@ -63,7 +68,14 @@ public class KpiCard extends VBox {
     }
 
     public KpiCard valor(String texto) {
-        valor.setText(texto);
+        java.util.regex.Matcher m = COM_UNIDADE.matcher(texto == null ? "" : texto);
+        if (m.matches()) {
+            valor.setText(m.group(1));
+            unidade.setText(m.group(2));
+        } else {
+            valor.setText(texto);
+            unidade.setText("");
+        }
         valor.getStyleClass().remove("kpi-valor-texto");
         return this;
     }
@@ -71,6 +83,7 @@ public class KpiCard extends VBox {
     /** Valor textual longo (ex.: nome de municipio): fonte menor para caber no card. */
     public KpiCard valorTexto(String texto) {
         valor.setText(texto);
+        unidade.setText("");
         if (!valor.getStyleClass().contains("kpi-valor-texto")) valor.getStyleClass().add("kpi-valor-texto");
         Tooltip.install(valor, new Tooltip(texto));
         return this;

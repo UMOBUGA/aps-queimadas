@@ -36,6 +36,7 @@ public class MapaController implements Pagina.Controlador {
     private boolean paginaPronta;
     private boolean pendente = true;
     private boolean visivel;
+    private boolean modoOffline;
 
     public MapaController(UiContexto ctx) {
         this.ctx = ctx;
@@ -66,10 +67,15 @@ public class MapaController implements Pagina.Controlador {
 
         engine = webView.getEngine();
         engine.setUserAgent(engine.getUserAgent() + " APS-Queimadas-UNIP/1.0");
-        engine.setOnAlert(e -> LOG.info("mapa: " + e.getData()));
+        engine.setOnAlert(e -> {
+            LOG.info("mapa: " + e.getData());
+            if (e.getData() != null && e.getData().startsWith("OFFLINE")) modoOffline = true;
+        });
         engine.getLoadWorker().stateProperty().addListener((o, a, s) -> {
             if (s == Worker.State.SUCCEEDED) {
                 paginaPronta = true;
+                js("APS.setMalha(" + br.unip.aps.geo.MalhaMunicipal.sp().geojson() + ")");
+                if (Boolean.getBoolean("aps.mapa.offline")) js("APS.forcarOffline()");
                 aplicarTema();
                 if (visivel) enviarFocos();
                 enviarHotspots();
@@ -106,6 +112,10 @@ public class MapaController implements Pagina.Controlador {
     private void indisponivel() {
         lblContagem.setText("—");
         lblContagemTexto.setText("Mapa indisponível: verifique a internet");
+    }
+
+    boolean modoOffline() {
+        return modoOffline;
     }
 
     void modo(String modo) {

@@ -119,6 +119,7 @@ public class MainController {
         ctx.baseProperty().addListener((o, a, b) -> {
             filterBar.setOpcoes(b);
             if (b != null) faixa.setDados(new Estatisticas(b.getFocos()).serieMensal());
+            preCalcularMl(b);
             atualizarChips(b);
             exibir(ctx.paginaProperty().get());
         });
@@ -177,6 +178,18 @@ public class MainController {
         VBox.setVgrow(esp, Priority.ALWAYS);
         sidebar.getChildren().addAll(brand, nav, esp, rodape);
         sidebar.setPrefWidth(240);
+    }
+
+    private void preCalcularMl(BaseDeFocos b) {
+        if (b == null || b.anos().size() < 2) return;
+        List<Integer> anos = b.anos();
+        var p = ctx.sessao().parametrosMl(anos.get(anos.size() - 2), anos.get(anos.size() - 1));
+        ctx.executarEmSegundoPlano("Pré-cálculo do ML", () -> new br.unip.aps.ml.Preditor().executar(b.getFocos(), p), r -> {
+            if (ctx.baseProperty().get() == b && ctx.mlProperty().get() == null) {
+                ctx.sessao().setUltimoMl(r);
+                ctx.mlProperty().set(r);
+            }
+        });
     }
 
     private void aplicarRecolhimento(boolean recolhida) {
@@ -266,7 +279,8 @@ public class MainController {
         List<String> estados = new ArrayList<>();
         b.estados().forEach(e -> estados.add(VisaoGeralController.capitalizar(e)));
         linhaDados.setText(String.join(", ", estados) + "  ·  " + faixaAnos + "  ·  " + Formatos.inteiro(b.tamanho()) + " focos  ·  "
-                + b.getFontes().size() + (b.getFontes().size() == 1 ? " arquivo" : " arquivos"));
+                + (ctx.sessao().dadosEmbarcados() ? "base de demonstração embarcada"
+                : b.getFontes().size() + (b.getFontes().size() == 1 ? " arquivo" : " arquivos")));
         List<String> nomes = new ArrayList<>();
         b.getFontes().forEach(p -> nomes.add(p.getFileName().toString()));
         linhaDados.setTooltip(new Tooltip("Satélite de referência do INPE\n" + String.join("\n", nomes)));

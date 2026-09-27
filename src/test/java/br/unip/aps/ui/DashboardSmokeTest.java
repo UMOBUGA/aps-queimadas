@@ -11,7 +11,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -33,14 +32,7 @@ class DashboardSmokeTest {
     @Test
     void navegaPorTodasAsTelasNosDoisTemas() throws Exception {
         assumeFalse(System.getenv("CI") != null || java.awt.GraphicsEnvironment.isHeadless(), "sem ambiente grafico");
-        CountDownLatch iniciado = new CountDownLatch(1);
-        try {
-            Platform.startup(iniciado::countDown);
-        } catch (IllegalStateException jaIniciado) {
-            iniciado.countDown();
-        }
-        assertTrue(iniciado.await(20, TimeUnit.SECONDS));
-        Platform.setImplicitExit(false);
+        br.unip.aps.FxTestes.iniciar();
 
         AtomicReference<Throwable> erro = new AtomicReference<>();
         AtomicInteger telas = new AtomicInteger();
@@ -89,11 +81,4 @@ class DashboardSmokeTest {
         assertTrue(filtrados.get() > 0 && filtrados.get() < 600, "filtro global por bioma aplicado: " + filtrados.get());
     }
 
-    @AfterAll
-    static void encerrarJavaFx() {
-        try {
-            Platform.exit();
-        } catch (IllegalStateException ignorada) {
-        }
-    }
 }

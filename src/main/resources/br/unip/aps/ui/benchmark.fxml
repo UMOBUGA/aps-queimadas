@@ -46,6 +46,7 @@
                 </HBox>
             </GridPane>
         </VBox>
+        <Label fx:id="lblOrigem" styleClass="nota-origem" wrapText="true" managed="false" visible="false" maxWidth="Infinity"/>
 
         <FlowPane fx:id="barraVisao" hgap="10" vgap="8" alignment="CENTER_LEFT">
             <HBox fx:id="segCriterio" styleClass="segmented"/>

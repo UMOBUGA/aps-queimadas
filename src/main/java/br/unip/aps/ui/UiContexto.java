@@ -48,6 +48,12 @@ public final class UiContexto {
 
     private final Sessao sessao;
     private final Stage stage;
+    private final ExecutorService fundo = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "aps-segundo-plano");
+        t.setDaemon(true);
+        t.setPriority(Thread.MIN_PRIORITY);
+        return t;
+    });
     private final ExecutorService executor = Executors.newFixedThreadPool(2, r -> {
         Thread t = new Thread(r, "aps-worker");
         t.setDaemon(true);
@@ -156,6 +162,19 @@ public final class UiContexto {
         return task;
     }
 
+    /** Executa um calculo sem bloquear a interface nem ocupar o overlay (pre-calculo ao carregar os dados). */
+    public <T> void executarEmSegundoPlano(String descricao, Callable<T> trabalho, Consumer<T> aoConcluir) {
+        Task<T> task = new Task<>() {
+            @Override
+            protected T call() throws Exception {
+                return trabalho.call();
+            }
+        };
+        task.setOnSucceeded(e -> aoConcluir.accept(task.getValue()));
+        task.setOnFailed(e -> LOG.log(Level.WARNING, descricao + " (segundo plano) falhou", task.getException()));
+        fundo.submit(task);
+    }
+
     private void finalizar() {
         progresso.unbind();
         progresso.set(0);
@@ -245,6 +264,7 @@ public final class UiContexto {
     void encerrar() {
         cancelar();
         executor.shutdownNow();
+        fundo.shutdownNow();
     }
 
     public Sessao sessao() { return sessao; }

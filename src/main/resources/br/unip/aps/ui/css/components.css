@@ -454,7 +454,7 @@
 .barra-rotulo.destaque { -fx-text-fill: -aps-text-1; -fx-font-family: "Inter SemiBold"; }
 .barra-trilho { -fx-background-color: transparent; -fx-min-height: 18; -fx-pref-height: 18; -fx-max-height: 18; }
 .barra-fill { -fx-background-color: -aps-accent; -fx-background-radius: 0 2 2 0; -fx-min-height: 18; -fx-max-height: 18; }
-.barra-fill.suave { -fx-background-color: -aps-heat-2; }
+.barra-fill.suave { -fx-background-color: -aps-heat-3; }
 .barra-fill.lider { -fx-background-color: -aps-heat-4; }
 .barra-fill.sucesso { -fx-background-color: -aps-success; }
 .barra-fill.neutra { -fx-background-color: -aps-serie-neutra; }
@@ -467,10 +467,10 @@
 .problema-texto { -fx-font-size: 12.5px; -fx-text-fill: -aps-text-2; -fx-wrap-text: true; }
 
 .viz-palco { -fx-background-color: -aps-termica-bg; -fx-background-radius: 4; -fx-padding: 14; }
-.viz-barra { -fx-background-color: #5C4B41; -fx-background-radius: 1 1 0 0; }
+.viz-barra { -fx-background-color: #8A7668; -fx-background-radius: 1 1 0 0; }
 .viz-barra.comparando { -fx-background-color: #FCA50A; }
 .viz-barra.trocando { -fx-background-color: #FF6B1A; }
-.viz-barra.ordenada { -fx-background-color: #932667; }
+.viz-barra.ordenada { -fx-background-color: #C0487F; }
 
 .celula-heat { -fx-alignment: center; -fx-background-radius: 2; -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 20px; }
 .celula-heat.heat-0 { -fx-background-color: -aps-heat-vazio; -fx-text-fill: -aps-text-2; }
@@ -533,3 +533,10 @@
 
 .icone-app { -fx-background-color: #0A0807; -fx-background-radius: 14; }
 .icone-app .ikonli-font-icon { -fx-icon-color: #FF6B1A; -fx-icon-size: 42; }
+
+.nota-origem {
+    -fx-background-color: -aps-surface-muted; -fx-border-color: -aps-border; -fx-border-radius: 4; -fx-background-radius: 4;
+    -fx-padding: 9 14; -fx-font-size: 12.5px; -fx-text-fill: -aps-text-2;
+}
+
+.kpi-unidade { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 22px; -fx-text-fill: -aps-text-2; -fx-padding: 0 0 6 0; }

@@ -21,6 +21,7 @@ public class BarrasHorizontais extends GridPane {
     public record Item(String rotulo, double valor, String texto, String classe, boolean destaque, String dica) { }
 
     private double maximoFixo = Double.NaN;
+    private boolean escalaLog;
 
     /** Cria o componente vazio. */
     public BarrasHorizontais() {
@@ -37,6 +38,11 @@ public class BarrasHorizontais extends GridPane {
         c3.setMinWidth(56);
         c3.setHalignment(HPos.RIGHT);
         getColumnConstraints().addAll(c1, c2, c3);
+    }
+
+    /** Comprimento proporcional a log10(1 + valor): permite comparar valores de ordens de grandeza diferentes. */
+    public void setEscalaLog(boolean log) {
+        this.escalaLog = log;
     }
 
     public void setMaximo(double max) {
@@ -63,7 +69,9 @@ public class BarrasHorizontais extends GridPane {
             Region fill = new Region();
             fill.getStyleClass().add("barra-fill");
             if (it.classe() != null && !it.classe().isBlank()) fill.getStyleClass().addAll(it.classe().split(" "));
-            double frac = Math.max(0, Math.min(1, it.valor() / max));
+            double frac = escalaLog ? Math.log10(1 + Math.max(0, it.valor())) / Math.log10(1 + max)
+                    : it.valor() / max;
+            frac = Math.max(0, Math.min(1, frac));
             if (animar) {
                 javafx.beans.property.SimpleDoubleProperty f = new javafx.beans.property.SimpleDoubleProperty(0);
                 fill.maxWidthProperty().bind(trilho.widthProperty().multiply(f));

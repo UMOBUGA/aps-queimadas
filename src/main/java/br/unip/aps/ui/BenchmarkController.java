@@ -21,6 +21,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableRow;
@@ -64,6 +65,8 @@ public class BenchmarkController implements Pagina.Controlador {
     @FXML private HBox segCriterio, segCenario, segMetrica, segEscala;
     @FXML private ChartCard cQuadraticos, cLogLineares, cVencedores, cComplexidade;
     @FXML private TableView<BenchmarkResult> tabela;
+    @FXML private Label lblOrigem;
+    private boolean tentouEmbarcado;
 
     private final Map<AlgoritmoTipo, ToggleButton> tgAlgoritmos = new EnumMap<>(AlgoritmoTipo.class);
     private final Map<CriterioOrdenacao, ToggleButton> tgCriterios = new EnumMap<>(CriterioOrdenacao.class);
@@ -212,6 +215,7 @@ public class BenchmarkController implements Pagina.Controlador {
                 r -> {
                     ctx.sessao().setUltimoBenchmark(r);
                     aplicar(r);
+                    origem("Medições feitas agora, ao vivo, nesta máquina (" + Formatos.inteiro(r.size()) + " casos).");
                     Feedback.sucesso("Benchmark concluído", Formatos.inteiro(r.size()) + " medições");
                 });
     }
@@ -227,9 +231,35 @@ public class BenchmarkController implements Pagina.Controlador {
         if (f != null) carregarCsv(f.toPath());
     }
 
+    @Override
+    public void aoExibir() {
+        if (tentouEmbarcado || ctx.sessao().ultimoBenchmark() != null) return;
+        tentouEmbarcado = true;
+        try (java.io.InputStream in = getClass().getResourceAsStream("/resultados/benchmark.csv")) {
+            if (in == null) return;
+            carregarLinhas(new String(in.readAllBytes(), StandardCharsets.UTF_8).lines().toList(), null);
+        } catch (IOException e) {
+            java.util.logging.Logger.getLogger(getClass().getName()).warning("Resultados embarcados indisponíveis: " + e.getMessage());
+        }
+    }
+
+    private void origem(String texto) {
+        lblOrigem.setText(texto);
+        lblOrigem.setVisible(true);
+        lblOrigem.setManaged(true);
+    }
+
     void carregarCsv(Path arquivo) {
         try {
-            List<String> linhas = Files.readAllLines(arquivo, StandardCharsets.UTF_8);
+            carregarLinhas(Files.readAllLines(arquivo, StandardCharsets.UTF_8), arquivo.getFileName().toString());
+        } catch (IOException e) {
+            ctx.erro("Não foi possível abrir os resultados", new IllegalArgumentException(
+                    "Arquivo inválido ou em outro formato: " + e.getMessage(), e));
+        }
+    }
+
+    private void carregarLinhas(List<String> linhas, String arquivo) {
+        try {
             CsvParser p = new CsvParser(';');
             List<BenchmarkResult> r = new ArrayList<>();
             for (int i = 1; i < linhas.size(); i++) {
@@ -243,8 +273,14 @@ public class BenchmarkController implements Pagina.Controlador {
             if (r.isEmpty()) throw new IllegalArgumentException("O arquivo não contém medições no formato do benchmark.");
             ctx.sessao().setUltimoBenchmark(r);
             aplicar(r);
-            Feedback.sucesso("Resultados carregados", Formatos.inteiro(r.size()) + " medições de " + arquivo.getFileName());
-        } catch (IOException | RuntimeException e) {
+            if (arquivo == null) {
+                origem("Resultados pré-calculados: bateria completa gravada em docs/resultados (" + Formatos.inteiro(r.size())
+                        + " medições). Para medir de novo nesta máquina, clique em Executar benchmark.");
+            } else {
+                origem("Resultados carregados de " + arquivo + " (" + Formatos.inteiro(r.size()) + " medições).");
+                Feedback.sucesso("Resultados carregados", Formatos.inteiro(r.size()) + " medições de " + arquivo);
+            }
+        } catch (RuntimeException e) {
             ctx.erro("Não foi possível abrir os resultados", new IllegalArgumentException(
                     "Arquivo inválido ou em outro formato: " + e.getMessage(), e));
         }
@@ -429,10 +465,7 @@ public class BenchmarkController implements Pagina.Controlador {
 
     @Override
     public void demonstrar(Runnable concluido) {
-        Path salvo = Path.of("docs", "resultados", "benchmark.csv");
-        if (Files.isRegularFile(salvo)) {
-            carregarCsv(salvo);
-        }
+        aoExibir();
         concluido.run();
     }
 }

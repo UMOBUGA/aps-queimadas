@@ -90,3 +90,20 @@ Elas aparecem em outros produtos do INPE (por exemplo, os arquivos diários e me
 | 10 | **Linha corrompida** | Não interrompe a carga: é descartada e registrada (arquivo, número da linha, motivo e conteúdo). O relatório aparece na aba "Qualidade dos dados" e nos relatórios Excel. |
 
 **Datas em GMT.** O INPE publica `data_pas` em GMT. O sistema mantém GMT nas tabelas (fiel à fonte) e converte para o horário de Brasília (UTC−3) apenas no gráfico "focos por hora local".
+
+## Dados embarcados e modo offline
+
+O JAR carrega tudo o que a apresentação precisa, sem internet e sem a pasta `data/raw`:
+
+| Recurso no JAR | Conteúdo | Fonte |
+|---|---|---|
+| `dados/focos_br_sp_ref_2023.csv`, `…_2024.csv` | Base de demonstração (10.378 focos), usada quando `data/raw` não existe | INPE, Programa Queimadas (satélite de referência) |
+| `geo/sp-municipios.geojson` | Limites dos 645 municípios de SP, geometria simplificada | IBGE, Malha Municipal: API `servicodados.ibge.gov.br/api/v3/malhas/estados/35` (qualidade mínima, intrarregião município) |
+| `geo/sp-municipios.csv` | Código IBGE, nome, área territorial (km²) e centroide de cada município | IBGE, API de metadados das malhas (`/api/v3/malhas/estados/35/metadados`) |
+| `br/unip/aps/ui/web/` | Leaflet 1.9.4 (licença BSD-2) e Leaflet.markercluster 1.5.3 (licença MIT) | unpkg.com, versões fixas |
+| `resultados/benchmark.csv` | Bateria completa do benchmark (420 medições), carregada ao abrir a tela Benchmark | Execução real registrada em `docs/resultados/` |
+
+- **Correspondência INPE × IBGE:** os 580 municípios com focos em 2023–2024 têm par na malha. A chave é o nome sem acentos, em maiúsculas.
+- **Mapa sem internet:** se os mapas-base da Esri não responderem em 6 segundos, ou falharem três vezes seguidas, o mapa troca sozinho para a malha do IBGE e mostra o aviso "Modo offline".
+- **Forçar o modo offline:** para testar sem desligar a rede, rode com `-Daps.mapa.offline=true`.
+- **Machine Learning:** é calculado em segundo plano logo após a carga dos dados (cerca de 10 s). Ao abrir a tela ML, o resultado já está pronto; o botão refaz o treino ao vivo.

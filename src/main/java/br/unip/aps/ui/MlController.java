@@ -119,6 +119,10 @@ public class MlController implements Pagina.Controlador {
         for (KpiCard k : List.of(kMae, kRmse, kR2, kAcuracia, kF1)) k.valor("—").contexto("treine os modelos", KpiCard.Tendencia.NEUTRA);
         escreverSobre();
 
+        ctx.mlProperty().addListener((o, a, r) -> {
+            if (r != null && r != resultado) exibir(r);
+        });
+        if (ctx.mlProperty().get() != null) naInterfaceDepois(() -> exibir(ctx.mlProperty().get()));
         ctx.baseProperty().addListener((o, a, b) -> {
             resultado = null;
             ctx.mlProperty().set(null);
@@ -313,6 +317,10 @@ public class MlController implements Pagina.Controlador {
             c.getStyleClass().add("texto-corpo");
             textoSobre.getChildren().addAll(t, c);
         }
+    }
+
+    private static void naInterfaceDepois(Runnable r) {
+        javafx.application.Platform.runLater(r);
     }
 
     @Override

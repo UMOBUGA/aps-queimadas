@@ -108,6 +108,8 @@ public final class Sessao {
     public ServicoOrdenacao servicoOrdenacao() { return servicoOrdenacao; }
     public ReportExporter exporter() { return exporter; }
     public BaseDeFocos base() { return base; }
+    /** A base atual veio dos CSVs embarcados no JAR (sem pasta data/raw). */
+    public boolean dadosEmbarcados() { return repositorio.usouEmbarcados(); }
 
     public ResultadoOrdenacao<FocoIncendio> ultimaOrdenacao() { return ultimaOrdenacao; }
     public void setUltimaOrdenacao(ResultadoOrdenacao<FocoIncendio> r) { this.ultimaOrdenacao = r; }
