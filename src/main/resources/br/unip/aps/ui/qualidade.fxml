@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="br.unip.aps.ui.QualidadeController" fitToWidth="true" styleClass="aba">
+    <VBox spacing="10">
+        <padding><Insets top="12" right="14" bottom="14" left="14"/></padding>
+        <Label text="Arquivos carregados" styleClass="secao"/>
+        <TableView fx:id="tabelaArquivos" prefHeight="140"/>
+        <Label fx:id="lblResumo" wrapText="true"/>
+        <Label text="Motivos de rejeição e valores ausentes" styleClass="secao"/>
+        <TableView fx:id="tabelaMotivos" prefHeight="150"/>
+        <Label text="Linhas rejeitadas (até 500)" styleClass="secao"/>
+        <TableView fx:id="tabelaRejeicoes" prefHeight="220"/>
+        <Label text="Plano de limpeza aplicado" styleClass="secao"/>
+        <Label fx:id="lblPlano" wrapText="true" styleClass="texto-plano"/>
+    </VBox>
+</ScrollPane>

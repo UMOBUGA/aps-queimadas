@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<SplitPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="br.unip.aps.ui.OrdenacaoController" dividerPositions="0.25" styleClass="aba">
+    <ScrollPane fitToWidth="true" minWidth="300" maxWidth="420">
+        <VBox spacing="8" styleClass="painel-lateral">
+            <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            <Label text="Critério de ordenação" styleClass="secao"/>
+            <GridPane hgap="6" vgap="6">
+                <Label text="1º" GridPane.rowIndex="0"/>
+                <ComboBox fx:id="cbCriterio1" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="170"/>
+                <ComboBox fx:id="cbOrdem1" GridPane.columnIndex="2" GridPane.rowIndex="0" prefWidth="110"/>
+                <Label text="2º" GridPane.rowIndex="1"/>
+                <ComboBox fx:id="cbCriterio2" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="170"/>
+                <ComboBox fx:id="cbOrdem2" GridPane.columnIndex="2" GridPane.rowIndex="1" prefWidth="110"/>
+                <Label text="3º" GridPane.rowIndex="2"/>
+                <ComboBox fx:id="cbCriterio3" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="170"/>
+                <ComboBox fx:id="cbOrdem3" GridPane.columnIndex="2" GridPane.rowIndex="2" prefWidth="110"/>
+            </GridPane>
+            <Label text="O 2º e o 3º critérios só desempatam o anterior (thenComparing)." wrapText="true" styleClass="texto-suave"/>
+
+            <Separator/>
+            <Label text="Algoritmo" styleClass="secao"/>
+            <ComboBox fx:id="cbAlgoritmo" maxWidth="Infinity"/>
+            <Label fx:id="lblAlgoritmo" wrapText="true" styleClass="info-algoritmo"/>
+
+            <Separator/>
+            <Label text="Entrada" styleClass="secao"/>
+            <HBox spacing="6" alignment="CENTER_LEFT">
+                <Label text="Tamanho (0 = todos):"/>
+                <TextField fx:id="tfAmostra" text="0" prefWidth="90"/>
+            </HBox>
+            <CheckBox fx:id="chkAleatoria" text="Sortear amostra (semente fixa)" selected="true"/>
+            <Label fx:id="lblAmostra" styleClass="texto-suave"/>
+            <Label text="Disposição inicial:"/>
+            <ComboBox fx:id="cbCenario" maxWidth="Infinity"/>
+
+            <Separator/>
+            <Label text="Filtros (aplicados antes de ordenar)" styleClass="secao"/>
+            <HBox spacing="6" alignment="CENTER_LEFT">
+                <Label text="Ano:"/>
+                <ComboBox fx:id="cbAno" prefWidth="100"/>
+                <Label text="Bioma:"/>
+                <ComboBox fx:id="cbBioma" prefWidth="130"/>
+            </HBox>
+            <TextField fx:id="tfMunicipio" promptText="Município contém…"/>
+
+            <Separator/>
+            <Button text="Ordenar e exibir" onAction="#ordenar" maxWidth="Infinity" styleClass="botao-primario" defaultButton="true"/>
+            <Button text="Comparar todos os algoritmos" onAction="#compararTodos" maxWidth="Infinity"/>
+            <Button text="Exportar dados ordenados (CSV)" onAction="#exportarCsv" maxWidth="Infinity"/>
+        </VBox>
+    </ScrollPane>
+
+    <VBox spacing="8">
+        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+        <Label fx:id="lblResumo" styleClass="secao" wrapText="true" text="Escolha critério e algoritmo e clique em &quot;Ordenar e exibir&quot;."/>
+        <FlowPane hgap="8" vgap="8">
+            <VBox styleClass="kpi"><Label text="Comparações" styleClass="kpi-titulo"/><Label fx:id="lblComparacoes" text="—" styleClass="kpi-valor"/></VBox>
+            <VBox styleClass="kpi"><Label text="Trocas" styleClass="kpi-titulo"/><Label fx:id="lblTrocas" text="—" styleClass="kpi-valor"/></VBox>
+            <VBox styleClass="kpi"><Label text="Atribuições" styleClass="kpi-titulo"/><Label fx:id="lblAtribuicoes" text="—" styleClass="kpi-valor"/></VBox>
+            <VBox styleClass="kpi"><Label text="Acessos ao array" styleClass="kpi-titulo"/><Label fx:id="lblAcessos" text="—" styleClass="kpi-valor"/></VBox>
+            <VBox styleClass="kpi"><Label text="Tempo" styleClass="kpi-titulo"/><Label fx:id="lblTempo" text="—" styleClass="kpi-valor"/></VBox>
+            <VBox styleClass="kpi"><Label text="Verificação" styleClass="kpi-titulo"/><Label fx:id="lblVerificacao" text="—" styleClass="kpi-valor"/></VBox>
+        </FlowPane>
+        <TabPane fx:id="abasResultado" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+            <Tab text="Dados ordenados">
+                <TableView fx:id="tabela"/>
+            </Tab>
+            <Tab fx:id="abaComparativo" text="Comparativo de algoritmos">
+                <VBox spacing="6">
+                    <padding><Insets top="6" right="6" bottom="6" left="6"/></padding>
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label text="Métrica do gráfico:"/>
+                        <ComboBox fx:id="cbMetrica"/>
+                        <CheckBox fx:id="chkLog" text="Escala log10"/>
+                    </HBox>
+                    <BarChart fx:id="graficoComparativo" animated="false" legendVisible="false" prefHeight="300" VBox.vgrow="ALWAYS">
+                        <xAxis><CategoryAxis/></xAxis>
+                        <yAxis><NumberAxis/></yAxis>
+                    </BarChart>
+                    <TableView fx:id="tabelaComparativo" prefHeight="260"/>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </VBox>
+</SplitPane>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de focos</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<style>
+  html, body, #mapa { height: 100%; margin: 0; padding: 0; font-family: "Segoe UI", Arial, sans-serif; }
+  .legenda { background: rgba(255,255,255,.92); padding: 8px 10px; border-radius: 6px; line-height: 1.5;
+             box-shadow: 0 1px 4px rgba(0,0,0,.3); font-size: 12px; }
+  .legenda i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  #aviso { display: none; position: absolute; inset: 0; align-items: center; justify-content: center;
+           background: #f5f5f5; color: #444; text-align: center; padding: 30px; font-size: 15px; }
+</style>
+</head>
+<body>
+<div id="mapa"></div>
+<div id="aviso">
+  <div><b>Não foi possível carregar o mapa.</b><br><br>
+  O mapa usa a biblioteca Leaflet e as imagens do OpenStreetMap, que exigem conexão com a internet.<br>
+  Verifique a conexão e clique em "Aplicar" novamente. As demais abas funcionam normalmente offline.</div>
+</div>
+<script>
+(function () {
+  var CORES = ['#d7301f', '#1a9850', '#4575b4', '#984ea3', '#ff7f00', '#a65628', '#f781bf', '#666666'];
+
+  if (typeof L === 'undefined') {
+    document.getElementById('aviso').style.display = 'flex';
+    window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, limpar: function () {} };
+    return;
+  }
+
+  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: true }).setView([-22.3, -48.6], 7);
+  var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, attribution: '&copy; colaboradores do <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  });
+  var carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, subdomains: 'abcd',
+    attribution: '&copy; colaboradores do OpenStreetMap &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  });
+  carto.addTo(mapa);
+  var renderer = L.canvas({ padding: 0.5 });
+  var camadaFocos = L.layerGroup().addTo(mapa);
+  var camadaHotspots = L.layerGroup().addTo(mapa);
+  L.control.layers({ 'CARTO claro (OSM)': carto, 'OpenStreetMap': osm },
+                   { 'Focos': camadaFocos, 'Hotspots (ML)': camadaHotspots }).addTo(mapa);
+  L.control.scale({ imperial: false }).addTo(mapa);
+
+  var legenda = L.control({ position: 'bottomright' });
+  var legendaDiv;
+  legenda.onAdd = function () { legendaDiv = L.DomUtil.create('div', 'legenda'); return legendaDiv; };
+  legenda.addTo(mapa);
+
+  function escapar(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /**
+   * dados = { biomas: ["Cerrado", ...], focos: [[lat, lon, idxBioma, "MUNICIPIO", "dd/MM/yyyy HH:mm"], ...] }
+   */
+  function setFocos(dados) {
+    camadaFocos.clearLayers();
+    var limites = [];
+    dados.focos.forEach(function (f) {
+      var cor = CORES[f[2] % CORES.length];
+      L.circleMarker([f[0], f[1]], { renderer: renderer, radius: 3.5, weight: 0.6, color: '#333',
+                                     fillColor: cor, fillOpacity: 0.8 })
+        .bindPopup('<b>' + escapar(f[3]) + '</b><br>' + escapar(f[4]) + ' (GMT)<br>' + escapar(dados.biomas[f[2]])
+                   + '<br>' + f[0].toFixed(5) + ', ' + f[1].toFixed(5))
+        .addTo(camadaFocos);
+      limites.push([f[0], f[1]]);
+    });
+    var html = '<b>' + dados.focos.length.toLocaleString('pt-BR') + ' focos</b><br>';
+    dados.biomas.forEach(function (b, i) { html += '<i style="background:' + CORES[i % CORES.length] + '"></i>' + escapar(b) + '<br>'; });
+    legendaDiv.innerHTML = html;
+    if (limites.length > 0) mapa.fitBounds(limites, { padding: [20, 20], maxZoom: 11 });
+  }
+
+  /** hotspots = [[lat, lon, focos, raioKm, id, "MUNICIPIO", "Bioma"], ...] */
+  function setHotspots(hotspots) {
+    camadaHotspots.clearLayers();
+    hotspots.forEach(function (h) {
+      L.circle([h[0], h[1]], { radius: Math.max(1500, h[3] * 1000), color: '#b10026', weight: 2,
+                               fillColor: '#fd8d3c', fillOpacity: 0.18 })
+        .bindTooltip('Hotspot #' + h[4] + ' — ' + h[2] + ' focos', { sticky: true })
+        .bindPopup('<b>Hotspot #' + h[4] + '</b><br>' + h[2] + ' focos<br>raio ~' + h[3].toFixed(1) + ' km<br>'
+                   + escapar(h[5]) + ' / ' + escapar(h[6]))
+        .addTo(camadaHotspots);
+    });
+  }
+
+  window.APS = {
+    pronto: true,
+    setFocos: setFocos,
+    setHotspots: setHotspots,
+    limpar: function () { camadaFocos.clearLayers(); camadaHotspots.clearLayers(); }
+  };
+})();
+</script>
+</body>
+</html>

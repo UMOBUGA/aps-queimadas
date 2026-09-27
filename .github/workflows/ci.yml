@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build e testes (Java 21)
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build, testes e cobertura
+        run: ./mvnw -B -ntp clean verify
+
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          echo "### Testes" >> "$GITHUB_STEP_SUMMARY"
+          grep -h -o 'tests="[0-9]*" errors="[0-9]*" skipped="[0-9]*" failures="[0-9]*"' target/surefire-reports/TEST-*.xml \
+            | awk -F'"' '{t+=$2; e+=$4; s+=$6; f+=$8} END {printf "| total | falhas | erros | ignorados |\n|---|---|---|---|\n| %d | %d | %d | %d |\n", t, f, e, s}' \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Relatorio com as linhas de codigo
+        run: java -jar target/aps-queimadas-1.0.0-all.jar relatorio-codigo
+
+      - name: Artefatos (JAR executavel, cobertura, codigo-fonte)
+        uses: actions/upload-artifact@v4
+        with:
+          name: aps-queimadas
+          path: |
+            target/aps-queimadas-1.0.0-all.jar
+            target/site/jacoco/
+            relatorios/codigo-fonte.pdf
+          retention-days: 30

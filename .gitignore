@@ -1,0 +1,24 @@
+# Build
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+out/
+
+# Execucao
+logs/
+relatorios/
+aps.properties
+*.lck
+hs_err_pid*.log
+
+# Dados: os CSVs ficam versionados; os ZIPs originais do INPE nao
+data/raw/*.zip
+
+# SO
+.DS_Store
+Thumbs.db
+desktop.ini

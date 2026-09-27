@@ -1,0 +1,10 @@
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+# dados do INPE preservados byte a byte
+*.csv -text
+*.zip binary
+*.jar binary
+*.png binary
+*.xlsx binary
+*.pdf binary

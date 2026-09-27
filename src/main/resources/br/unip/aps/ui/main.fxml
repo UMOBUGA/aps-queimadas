@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="br.unip.aps.ui.MainController" styleClass="raiz">
+    <top>
+        <VBox>
+            <HBox styleClass="cabecalho" alignment="CENTER_LEFT" spacing="14">
+                <VBox>
+                    <Label text="Focos de Queimadas · Análise de Algoritmos de Ordenação" styleClass="titulo"/>
+                    <Label text="APS UNIP — Estrutura de Dados · dados do Programa Queimadas (INPE)" styleClass="subtitulo"/>
+                </VBox>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblBase" styleClass="badge-base"/>
+            </HBox>
+            <ToolBar styleClass="barra-ferramentas">
+                <Button text="Abrir CSV…" onAction="#abrirCsv"/>
+                <Button text="Recarregar" onAction="#recarregar"/>
+                <Button text="Baixar do INPE…" onAction="#baixarInpe"/>
+                <Separator orientation="VERTICAL"/>
+                <Button text="Exportar Excel" onAction="#exportarExcel" styleClass="botao-primario"/>
+                <Button text="Exportar PDF" onAction="#exportarPdf" styleClass="botao-primario"/>
+                <Button text="Relatório de código" onAction="#relatorioCodigo"/>
+                <Separator orientation="VERTICAL"/>
+                <Button text="Sobre" onAction="#sobre"/>
+            </ToolBar>
+        </VBox>
+    </top>
+    <center>
+        <TabPane fx:id="abas" tabClosingPolicy="UNAVAILABLE">
+            <Tab id="visao" text="Visão geral">
+                <fx:include source="visao-geral.fxml"/>
+            </Tab>
+            <Tab id="ordenacao" text="Ordenação">
+                <fx:include source="ordenacao.fxml"/>
+            </Tab>
+            <Tab id="benchmark" text="Benchmark">
+                <fx:include source="benchmark.fxml"/>
+            </Tab>
+            <Tab id="mapa" text="Mapa">
+                <fx:include source="mapa.fxml"/>
+            </Tab>
+            <Tab id="ml" text="Machine Learning">
+                <fx:include source="ml.fxml"/>
+            </Tab>
+            <Tab id="qualidade" text="Qualidade dos dados">
+                <fx:include source="qualidade.fxml"/>
+            </Tab>
+        </TabPane>
+    </center>
+    <bottom>
+        <HBox styleClass="barra-status" alignment="CENTER_LEFT" spacing="10">
+            <padding><Insets top="4" right="10" bottom="4" left="10"/></padding>
+            <Label fx:id="lblStatus" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <ProgressBar fx:id="barraProgresso" prefWidth="220"/>
+            <Button fx:id="btnCancelar" text="Cancelar" onAction="#cancelar" styleClass="botao-perigo"/>
+        </HBox>
+    </bottom>
+</BorderPane>
