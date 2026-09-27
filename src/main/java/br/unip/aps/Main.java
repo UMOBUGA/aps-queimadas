@@ -159,6 +159,7 @@ public final class Main {
                 s.parametrosMl(anos.get(anos.size() - 2), anos.get(anos.size() - 1)));
         s.setUltimoMl(ml);
         var reg = ml.regressao();
+        out.println("Preparo:        " + ml.municipios() + " municipios; ordenacao municipio -> data (Merge Sort): " + ml.ordenacaoPreparo());
         out.printf("Regressao RF:   MAE=%.3f RMSE=%.3f R2=%.3f%n", reg.modelo().mae(), reg.modelo().rmse(), reg.modelo().r2());
         out.printf("RF janela exp.: MAE=%.3f RMSE=%.3f R2=%.3f%n", reg.janelaExpansivel().mae(), reg.janelaExpansivel().rmse(), reg.janelaExpansivel().r2());
         out.printf("Persistencia:   MAE=%.3f RMSE=%.3f R2=%.3f%n", reg.persistencia().mae(), reg.persistencia().rmse(), reg.persistencia().r2());

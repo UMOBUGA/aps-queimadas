@@ -1,0 +1,16 @@
+Criterio: Bioma ↑ → Município ↑ → Data/hora ↑ | cenario: Original (arquivo) | n = 10378
+Algoritmo                Comparacoes  Trocas      Atribuicoes  Acessos      Tempo      Verif.
+-----------------------  -----------  ----------  -----------  -----------  ---------  ------
+Bubble Sort               53.786.078  26.752.567   53.505.134  214.582.424    5,341 s  OK
+Selection Sort            53.846.253      10.368       20.736  107.733.978    3,427 s  OK
+Insertion Sort            26.762.938           0   26.762.931   53.536.246    1,567 s  OK
+Shell Sort                   187.238           0      141.574      428.633  46,291 ms  OK
+Merge Sort                   122.682           0      246.796      626.651  21,881 ms  OK
+Quick Sort                   169.101      43.266       86.532      366.985  24,293 ms  OK
+Quick Sort 3-Way             126.280     116.499      232.998      603.728  25,902 ms  OK
+Heap Sort                    244.054     128.192      256.384    1.000.876  29,750 ms  OK
+Tim Sort (simplificado)      127.019           0      260.075      649.782  27,794 ms  OK
+Benchmark: 450 casos, 2 aquecimentos + 5 repeticoes por caso...
+Concluido em 36 min 21 s
+Regressao RF:   MAE=1,313 RMSE=4,919 R2=-0,001
+RF janela exp.: MAE=1,671 RMSE=4,851 R2=0,027
