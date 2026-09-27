@@ -72,6 +72,48 @@ class ReportExporterTest {
     }
 
     @Test
+    @DisplayName("Excel: aba Sobre os dados, cabecalho congelado, formatacao condicional e graficos nativos")
+    void excelCorporativo() throws Exception {
+        Path x = new ReportExporter().exportarExcel(contexto(), dir.resolve("c.xlsx"));
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(x.toFile())) {
+            assertEquals(1, wb.getSheetIndex("Sobre os dados"));
+            assertNotNull(wb.getSheet("Ordenacao").getPaneInformation(), "cabeçalho congelado");
+            assertTrue(wb.getSheet("Estatisticas").getSheetConditionalFormatting().getNumConditionalFormattings() > 0);
+            assertTrue(wb.getSheet("Estatisticas").getDrawingPatriarch().getCharts().size() >= 1);
+            assertEquals(1, wb.getSheet("Curvas").getDrawingPatriarch().getCharts().size());
+            assertNotNull(wb.getSheet("Benchmark").getCTWorksheet().getAutoFilter(), "filtro automático");
+        }
+    }
+
+    @Test
+    @DisplayName("PDF: capa, sumario com paginas reais, resumo executivo e notas metodologicas")
+    void pdfCorporativo() throws Exception {
+        Path p = new ReportExporter().exportarPdf(contexto(), dir.resolve("c.pdf"));
+        try (com.lowagie.text.pdf.PdfReader r = new com.lowagie.text.pdf.PdfReader(p.toString())) {
+            assertTrue(r.getNumberOfPages() >= 6);
+            var ext = new com.lowagie.text.pdf.parser.PdfTextExtractor(r);
+            String sumario = ext.getTextFromPage(2);
+            assertTrue(sumario.contains("Sumário") && sumario.contains("Resumo executivo") && sumario.contains("Notas metodológicas"), sumario);
+            assertTrue(ext.getTextFromPage(3).contains("Principais achados"));
+            String ultima = ext.getTextFromPage(r.getNumberOfPages());
+            assertTrue(ultima.contains("Viés do sensor"), ultima);
+        }
+    }
+
+    @Test
+    @DisplayName("rotulos diretos dos graficos do PDF nao se sobrepoem")
+    void rotulosAfastados() {
+        float[] ys = GraficosPdf.afastar(new float[]{50, 52, 10, 51}, 9);
+        float[] ord = ys.clone();
+        java.util.Arrays.sort(ord);
+        for (int i = 1; i < ord.length; i++) assertTrue(ord[i] - ord[i - 1] >= 9 - 1e-6);
+        assertEquals(10, ys[2], 1e-6);
+        assertEquals(50, ys[0], 1e-6);
+        assertEquals(5.0, GraficosPdf.passoBonito(4.2), 1e-9);
+        assertEquals(2000.0, GraficosPdf.passoBonito(1500), 1e-9);
+    }
+
+    @Test
     @DisplayName("relatorio com as linhas de codigo inclui este proprio teste")
     void codigoFonte() throws Exception {
         Path raiz = Path.of("").toAbsolutePath();

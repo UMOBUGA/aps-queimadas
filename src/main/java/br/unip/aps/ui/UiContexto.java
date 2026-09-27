@@ -241,6 +241,7 @@ public final class UiContexto {
         if (node == null || node.getScene() == null || node.getLayoutBounds().getWidth() < 10) return null;
         SnapshotParameters sp = new SnapshotParameters();
         sp.setFill(javafx.scene.paint.Color.WHITE);
+        sp.setTransform(javafx.scene.transform.Transform.scale(2, 2));
         WritableImage img = node.snapshot(sp, null);
         return SwingFXUtils.fromFXImage(img, null);
     }
