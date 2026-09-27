@@ -1,6 +1,6 @@
-# Design da interface — design system, decisões de UX e texto para a dissertação
+# Design da interface — "Boletim de Fogo"
 
-Este documento registra o redesign do dashboard (Fases 1 a 8 do plano de UI). A seção 8 é um **texto pronto para adaptar** na seção "Projeto do programa" da dissertação.
+Este documento registra a direção visual do dashboard, o design system e as decisões de UX. A seção 8 é um **texto pronto para adaptar** na seção "Projeto do programa" da dissertação.
 
 Os prints ficam em [`prints/`](prints/). Para regenerá-los:
 
@@ -10,178 +10,125 @@ java -jar target/aps-queimadas-1.0.0-all.jar capturas
 
 ---
 
-## 1. Diagnóstico da versão anterior → solução
+## 1. Conceito
 
-| # | Problema | Solução adotada |
-|---|---|---|
-| 1 | Visual padrão "Modena" (botões, abas, combos e scrollbars de sistema antigo) | Tema base **AtlantaFX (Primer)** sobrescrito pelo design system do projeto: tokens próprios, scrollbars finas, controles com raio de 6–7 px |
-| 2 | Barra de ações sem hierarquia (botões vermelhos e cinzas misturados, sem ícones) | **Uma ação primária** ("Exportar", com menu: Excel, PDF, Relatório de código). Ações secundárias viram **botões de ícone com tooltip** (Abrir CSV, Recarregar, Baixar do INPE, Tema) |
-| 3 | Cabeçalho com gradiente pesado e badge com informação densa | Top bar neutra com breadcrumb + título da tela e **chips discretos** de contexto (UF, período, nº de focos, arquivos, com lista no tooltip) |
-| 4 | **Bug da pizza**: rótulos sobrepostos no canto e legenda duplicada | Pizza substituída por **donut** próprio (`DonutChart`): total no centro, legenda lateral com valor e %, 2 px de folga entre segmentos e tooltip |
-| 5 | Barras "invisíveis" (brancas) e gráfico de horas com uma única barra branca | **Causa 1 (CSS):** a regra `-fx-background-color: #b3261e, white` empilhava uma camada branca sobre a barra. **Causa 2 (dados):** o agrupamento estava correto. O satélite de referência (AQUA) passa sobre SP no início da tarde, e **100% das detecções caem entre 13h e 15h (UTC−3)**: 16h GMT = 577, 17h = 8.896, 18h = 905. O gráfico agora mostra as **24 horas** com essa explicação no subtítulo. O Top 10 virou barras horizontais sólidas com o valor no fim de cada barra |
-| 6 | KPIs desalinhados, sem ícones nem contexto | `KpiCard` padronizado: **8 cards** de mesma largura e altura em grade responsiva (4/3/2 colunas), rótulo em caixa-alta, valor grande, ícone em badge, linha de contexto com tendência e sparkline |
-| 7 | Paleta sem sistema | Paleta **com significado fixo** (ano, bioma, algoritmo, calor), validada para daltonismo e contraste, e usada igual em gráficos, mapa e relatórios |
-| 8 | Tipografia sem hierarquia, espaço desperdiçado | Fonte **Inter** embarcada, escala tipográfica de 6 níveis, escala de espaçamento 4/8/12/16/24/32 e grade com alinhamento rigoroso |
+Cada tela é uma página de uma **reportagem especial de dados** sobre a temporada de fogo em São Paulo, no estilo das editorias de infografia dos jornais: manchetes com números grandes, fios tipográficos no lugar de cards e uma única escala de cor para a intensidade do fogo.
 
-## 2. Conceito
-
-**Painel de monitoramento ambiental** sóbrio e confiável (referências: Linear, Vercel, Grafana, NASA FIRMS).
-
-- **Base neutra:** a cor não enfeita, informa.
-- **Destaque brasa** (`#E8590C`) aparece pouco e só onde importa:
-  - a ação primária ("Exportar");
-  - o ano mais recente;
-  - o item de menu ativo;
-  - a escala de intensidade.
-
-## 3. Design tokens
-
-Arquivos em `src/main/resources/br/unip/aps/ui/css/`:
-
-| Arquivo | Conteúdo |
+| Decisão | Motivo |
 |---|---|
-| `tokens.css` | Paleta bruta (slate, ink, brasa, semânticas) e documentação das escalas |
-| `theme-light.css` / `theme-dark.css` | Tokens semânticos `-aps-*` e sobrescrita dos tokens do AtlantaFX |
-| `base.css` | Tipografia e controles base |
-| `components.css` | Componentes |
-| `charts.css` | Gráficos |
+| **Tema escuro como padrão** (claro disponível com Ctrl+T) | O uso principal é a apresentação à banca num projetor. As cores de fogo ganham luminosidade sobre o carvão e o contraste se mantém numa sala com pouca luz. |
+| **Manchete de dados** no lugar da grade de 8 cards | Uma frase com o número principal ("Em 2024, São Paulo registrou **8.712** focos de incêndio, **5,2 vezes** o total de 2023") comunica mais rápido do que oito indicadores do mesmo peso. |
+| **Faixa térmica** no topo de todas as telas | É a assinatura visual: um retângulo por mês da base, colorido pela quantidade de focos. Mostra a temporada inteira de relance e funciona como filtro. |
+| **Fios em vez de cards** | Um fio grosso sobre o título separa as seções, como numa página de jornal. O conteúdo fica sobre o próprio fundo e ganha espaço. |
+| **Mapa em tela cheia** | O mapa é o protagonista da tela Mapa. Os controles e o total de focos flutuam por cima dele. |
 
-**Regra:** componentes só referenciam tokens semânticos, e o código Java não tem cores. Trocar o tema é trocar um único arquivo.
+## 2. Cor
 
-### 3.1 Interface
+### 2.1 Interface
 
-| Token | Claro | Escuro | Uso / contraste |
+| Token | Escuro (padrão) | Claro | Uso / contraste |
 |---|---|---|---|
-| `-aps-bg-app` | `#F5F6F8` | `#0B0F14` | Fundo da aplicação |
-| `-aps-surface` | `#FFFFFF` | `#151B23` | Cards |
-| `-aps-border` | `#E4E7EC` | `#273140` | Bordas sutis |
-| `-aps-text-1` | `#101828` | `#F2F4F7` | Texto principal (17,8:1 / 15,7:1) |
-| `-aps-text-2` | `#475467` | `#B4BDC9` | Secundário (7,7:1 / 9,1:1) |
-| `-aps-text-3` | `#667085` | `#8C97A6` | Terciário (5,0:1 / 5,9:1) |
-| `-aps-accent` | `#E8590C` | `#F97316` | Destaque gráfico |
-| `-aps-accent-strong` | `#C2410C` | `#F97316` | Botão primário (texto 5,18:1 / 6,86:1) |
-| sucesso / alerta / erro / info | `#067647` `#B54708` `#B42318` `#175CD3` | `#47CD89` `#FDB022` `#F97066` `#53B1FD` | Sempre ≥ 5:1 sobre o fundo suave correspondente |
+| `-aps-bg-app` | `#0D0A09` carvão | `#F3F2F0` | Fundo |
+| `-aps-surface` | `#15100E` | `#FFFFFF` | Painéis e tabelas |
+| `-aps-text-1` | `#F6EEE7` | `#15100D` | Texto principal (16,5:1 / 18,9:1) |
+| `-aps-text-2` | `#CDBDB1` | `#4A413B` | Secundário (10,4:1 / 9,9:1) |
+| `-aps-text-3` | `#A08D80` | `#6E635B` | Terciário (6,0:1 / 5,8:1) |
+| `-aps-accent` | `#FF6B1A` brasa | `#D9480F` | Destaque, ano recente, ação primária |
+| Botão primário | `#FF6B1A` + texto `#1A0B02` (6,7:1) | `#C2410C` + texto branco (5,2:1) | |
+| `-aps-rail-*` | `#0A0807` | igual | Menu lateral: escuro nos dois temas, como a "lombada" da publicação |
 
-Todas as combinações de texto passam no **WCAG AA** (4,5:1). O cálculo foi feito com a fórmula de luminância relativa da W3C.
+Todas as combinações de texto passam no **WCAG AA** (≥ 4,5:1), com contraste calculado pela fórmula de luminância relativa da W3C.
 
-### 3.2 Dados (significado fixo em todo o sistema)
+### 2.2 Dados
 
-| Entidade | Claro | Escuro |
+| Entidade | Escuro | Claro |
 |---|---|---|
-| Ano mais recente (2024) | `#E8590C` brasa | `#EC6325` |
-| Anos anteriores (2023) | `#3D6DB5` azul-acinzentado | `#6A95D6` |
-| Mata Atlântica | `#1F6E45` verde floresta | `#23804F` |
-| Cerrado | `#C48E22` ocre | `#BC862A` |
-| Amazônia · Caatinga · Pantanal · Pampa (reservados) | `#2A78D6` `#E87BA4` `#4A3AA7` `#1BAF7A` | `#3987E5` `#D55181` `#9085E9` `#199E70` |
-| Calor (sequencial, 1 matiz) | `#F0975C` → `#E8590C` → `#C4470A` → `#963608` → `#662405` | Invertida (mais focos = mais brilho) |
+| Ano mais recente (2024) | `#FF6B1A` brasa | `#D9480F` |
+| Ano anterior (2023) | `#7FA3D1` aço frio | `#3D6DB5` |
+| Mata Atlântica | `#2E9E63` | `#1F6E45` |
+| Cerrado | `#D6A03A` | `#C48E22` |
+| **Intensidade (escala "inferno")** | `#420A68` → `#932667` → `#DD513A` → `#FCA50A` → `#FCFFA4` | invertida: `#FDDCA0` → … → `#420A68` |
 
-**Validação.** As paletas foram conferidas com um validador de paletas categóricas. O script verifica:
+- **2024 quente e 2023 frio:** o contraste de temperatura entre as cores reforça a leitura "o fogo aumentou".
+- **Escala inferno:** é perceptualmente uniforme e segura para daltônicos, e lembra a imagem de uma câmera térmica. Ela é usada na faixa térmica, no calendário, no mapa de calor, na matriz de confusão e no gráfico de horas.
+- **A escala é sequencial**, do escuro ao incandescente: nunca um arco-íris.
+- **Cor segue a entidade, não a posição.** `Graficos.classe` reaplica a classe CSS da série quando o JavaFX a reescreve, então 2024 é brasa mesmo quando o filtro deixa só esse ano.
 
-- faixa de luminosidade e croma mínimo;
-- separação entre cores (ΔE em OKLab) sob **protanopia, deuteranopia e tritanopia**;
-- contraste com a superfície.
+## 3. Tipografia
 
-**Resultados:**
+| Papel | Fonte | Tamanhos |
+|---|---|---|
+| Display: títulos de tela, números, manchete | **Big Shoulders Display** (Black, ExtraBold), licença OFL | 168 (manchete) · 54–60 (destaques e placar) · 46 (título da tela) · 25–34 (títulos de seção) |
+| Texto, rótulos, tabelas, controles | **Inter** (Regular, Medium, SemiBold), licença OFL | 22 (linha da manchete) · 17 (texto de apoio) · 13,5 (corpo) · 12,5 (rótulos) · 11 (legendas) |
 
-- **Anos:** ΔE 22,8 (CVD).
-- **Mata Atlântica × Cerrado:** separação garantida por luminosidade (verde escuro × ocre claro).
-- **Contraste do Cerrado sobre branco (2,9:1):** fica abaixo de 3:1. Isso é compensado por rótulos diretos e pela tabela "Ver dados" em todos os gráficos.
+- **Big Shoulders** nasceu da sinalização urbana de Chicago. Condensada e pesada, faz números de cinco dígitos caberem em colunas estreitas, como num placar.
+- **Inter** cuida de tudo o que precisa ser lido com precisão.
+- **Arquivos:** as duas famílias são embarcadas em `src/main/resources/fonts` e carregadas pelo `GerenciadorTema`.
 
-**Cor segue a entidade, nunca a posição.** O JavaFX reescreve as classes CSS das séries quando outra série é adicionada. O utilitário `Graficos.classe` reaplica a classe da entidade sempre que isso acontece. Resultado: 2024 é sempre brasa, mesmo quando o filtro deixa só esse ano.
-
-### 3.3 Tipografia, espaçamento, raios e sombras
-
-- **Fonte:** Inter (Rasmus Andersson, licença OFL), 4 pesos embarcados em `resources/fonts`.
-  - O JavaFX registra Medium e SemiBold como famílias próprias ("Inter Medium", "Inter SemiBold").
-  - O JavaFX não suporta `font-feature-settings`, então não há números tabulares. Os números nas tabelas são alinhados à direita.
-- **Escala tipográfica:** display 28 · h1 20 · h2 15 · h3 13,5 · corpo 13,5 · pequeno 12,5 · legenda 11 (px).
-- **Espaçamento:** 4 · 8 · 12 · 16 · 24 · 32 (classe `ui.componentes.Espaco`).
-- **Raios:** 6–7 px (controles) · 10 (chips, tabelas) · 14 (cards e diálogos).
-- **Sombras:** 2 níveis (cards; popups e toasts), mais fortes no tema escuro.
-
-## 4. Estrutura e navegação
+## 4. Estrutura das telas
 
 ```
-┌────────────┬───────────────────────────────────────────────────────────────┐
-│ ▣ APS      │ APS Queimadas › Análise                    [SP][2023–2024]    │
-│ Queimadas  │ Visão geral            [10.378 focos][2 arq.] ⌂ ↻ ☁ ☾ [Exportar▾]│
-│            ├───────────────────────────────────────────────────────────────┤
-│ ANÁLISE    │ ≡ Filtros [Bioma▾][Ano▾][🔍 Município…][Início▾]→[Fim▾] ✕ 10.378│
-│ ▸ Visão ger│   (Bioma: Cerrado ✕) (Ano: 2024 ✕)                            │
-│   Ordenação├───────────────────────────────────────────────────────────────┤
-│   Benchmark│ [KPI][KPI][KPI][KPI]                                          │
-│   Mapa     │ [KPI][KPI][KPI][KPI]                                          │
-│   ML       │ [Focos por mês ────────][Focos por bioma (donut)]              │
-│   Qualidade│ [Top 10 municípios ─────][Focos por hora (24h)]                │
-│            │ [Calendário de focos por dia ──────────────────────────]       │
-│ ⚙ Config.  │                                                               │
-│ ⓘ Sobre    │                                                     [toast]   │
-│ « Recolher │                                                               │
-└────────────┴───────────────────────────────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────────────────────┐
+│ 🔥 QUEIMADAS │ VISÃO GERAL                               ⌂ ↻ ☁ ☀ [Exportar▾]│
+│ Focos · INPE │ São Paulo · 2023–2024 · 10.378 focos · 2 arquivos           │
+│              │ ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇  ← faixa térmica (24 meses)       │
+│ Análise      │ [Bioma▾][Ano▾][Município…][Início]→[Fim]  ✕       10.378 focos│
+│ ▸ Visão geral├─────────────────────────────────────────────────────────────┤
+│   Ordenação  │ Em 2024, São Paulo registrou                                │
+│   Benchmark  │ 8.712 focos de incêndio                                     │
+│   Mapa       │ 5,2 vezes o total de 2023 (1.666). O pico foi em agosto…    │
+│   ML         │ 580 │ ago/24 │ Andradina │ Mata Atlântica │ 14h               │
+│   Qualidade  │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│              │ A temporada, mês a mês                             3.612    │
+│ Configurações│ ━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ Sobre        │ Onde queima (Top 10)       Em que bioma (donut)             │
+└──────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
-- **Sidebar recolhível** (Ctrl+B): ícone + rótulo; recolhida, mostra só o ícone com tooltip. O item ativo tem fundo brasa suave.
-- **Barra de filtros global**, fixa, visível só nas telas que a usam (Visão geral, Ordenação, Mapa):
-  - bioma e ano com seleção múltipla;
-  - município com autocompletar (a busca ignora acentos; escolher na lista filtra o município exato);
-  - período por mês;
-  - chips removíveis dos filtros ativos.
-- **Estados globais:**
-  - splash durante a carga;
-  - estado vazio quando não há CSV (ações: Abrir CSV / Baixar do INPE);
-  - barra de progresso fina sob a top bar;
-  - overlay com Cancelar em tarefas de mais de 300 ms;
-  - toasts de sucesso e erro;
-  - diálogos estilizados, em vez do `Alert` padrão.
-- **Responsividade:** `GradeResponsiva` recalcula as colunas pela largura (KPIs 4/3/2; gráficos 2/1). Janela mínima de 1100×700. Botões e chips nunca encolhem até virar "…" (`Layout.naoEncolher`).
+- **Faixa térmica clicável:**
+  - clicar em um mês filtra o período;
+  - Shift+clique estende a seleção;
+  - clicar de novo limpa;
+  - fora das telas com filtro, o clique leva à Visão geral.
+- **Manchete:** o texto se reescreve conforme o filtro. Com Cerrado + 2024, por exemplo, vira "Em 2024, o bioma Cerrado em São Paulo registrou 3.955 focos". Todos os números vêm dos dados; nada é fixo no código.
+- **Placar da Ordenação:** comparações, trocas, acessos e tempo em números de 46 px. É a exigência central do enunciado ("informar o número de operações"), então merece o maior destaque da tela.
+- **Mapa:**
+  - ocupa toda a área de conteúdo, com mapas-base Esri claro/escuro que acompanham o tema;
+  - o total de focos e os modos (Pontos, Agrupado, Calor) flutuam sobre o mapa;
+  - o zoom fica à direita.
 
 ## 5. Componentes (`br.unip.aps.ui.componentes`)
 
 | Componente | Função |
 |---|---|
-| `KpiCard` | Rótulo, valor, ícone em badge, contexto com tendência (cor por regra: aumento de focos = alerta), sparkline |
-| `ChartCard` | Título, subtítulo, legenda em linha, chip de destaque, menu (Exportar PNG / Ver dados em tabela), estados conteúdo, skeleton e vazio |
-| `DonutChart`, `BarrasHorizontais`, `CalendarioHeatmap`, `MatrizCalor`, `Sparkline` | Gráficos próprios, com tooltips em todos os elementos |
-| `SidebarItem`, `FilterBar`, `Chip`, `EmptyState`, `Toast`, `Dialogos`, `LoadingOverlay` | Navegação, filtros e feedback |
-| `SortVisualizer` | Animação da ordenação (32 barras) gravada via `InstrumentedArray.Ouvinte`, com as mesmas contagens do sistema |
-| `Graficos`, `Icones`, `Espaco`, `Layout` | Utilitários do design system |
+| `FaixaTermica` | Assinatura visual: 24 meses na escala inferno, legenda "menos → mais focos", seleção de período por clique e entrada animada da esquerda para a direita |
+| `ChartCard` | Seção com fio superior, título em display, subtítulo, anotação à direita (ex.: "3.612 focos no pico"), legenda e menu (Exportar PNG / Ver dados em tabela) |
+| `KpiCard` | Número em display sobre fio fino; na Ordenação, recebe a classe `placar` |
+| `DonutChart`, `BarrasHorizontais`, `CalendarioHeatmap`, `MatrizCalor` | Gráficos próprios; o líder do Top 10 recebe a cor mais quente da escala |
+| `SortVisualizer` | Animação da ordenação sobre fundo térmico; as cores indicam comparando, trocando e ordenada |
+| `FilterBar`, `Chip`, `Toast`, `Dialogos`, `EmptyState`, `LoadingOverlay` | Filtros e feedback. As notificações (toasts) são escuras nos dois temas. |
 
-**Botões:** primário, secundário, fantasma, perigo e ícone. Todos têm estados hover, pressionado, desabilitado e **foco visível** (`:focus-visible`).
+**Estados dos controles:** hover, pressionado (escala 0,97), foco visível (anel brasa), desabilitado e selecionado (fundo em tinta cheia).
 
-**Tabelas:**
+**Tabelas:** fios horizontais em vez de listras zebradas, números alinhados à direita e cabeçalho com fio grosso.
 
-- cabeçalho fixo, linhas zebradas;
-- números à direita em pt-BR;
-- badges coloridos de bioma;
-- rolagem virtualizada.
+## 6. Movimento
 
-A ordenação por clique no cabeçalho foi desativada de propósito: o `TableView` usa `Collections.sort` internamente, e toda ordem exibida precisa vir dos algoritmos do projeto.
+Segui a regra de animar pouco e com propósito (Emil Kowalski): um único momento marcante e nada em ações repetidas.
 
-## 6. Gráficos
+| Onde | O quê | Duração |
+|---|---|---|
+| Primeira abertura da Visão geral | O número da manchete conta de 0 até o valor real (curva de desaceleração forte) | 900 ms, uma vez por sessão |
+| Faixa térmica | Os meses surgem da esquerda para a direita | 220 ms por mês, 18 ms de defasagem |
+| Troca de tela | Esmaecimento | 200 ms |
+| Botões e itens do menu | Encolhem 3% ao pressionar | Imediato |
 
-| Gráfico | Decisão |
-|---|---|
-| Focos por mês | Área com gradiente leve, pontos só no hover, **pico anotado** ("Pico: ago/2024 — 3.612"), legenda em linha |
-| Biomas | Donut com total no centro e legenda com valor e % |
-| Top 10 | Barras horizontais sólidas com valor no fim; líder em negrito e chip "Líder" |
-| Hora local | 24 barras (0–23); o subtítulo explica o horário de passagem do satélite |
-| **Novo:** calendário por dia | Heatmap estilo "contribution graph", com faixas fixas 0 · 1–2 · 3–9 · 10–29 · 30–99 · 100+ |
-| Benchmark | **Pequenos múltiplos**: O(n²) e O(n log n) em gráficos separados (cada um com até 7 séries e cor fixa por algoritmo); escala linear/log; curvas teóricas tracejadas |
-| ML | Real × previsto (real em cinza-grafite); matriz de confusão como heatmap normalizado por linha; importância em barras |
-| Mapa | Mapas-base Esri Light/Dark Gray (acompanham o tema); modos Pontos, Agrupado (cluster) e **Calor** (grade de densidade de ~9 km com contagem exata no tooltip); cor por bioma ou ano; hotspots do DBSCAN |
-
-Todos os gráficos têm:
-
-- grade horizontal tracejada e sem grade vertical;
-- tooltip com valor exato e percentual;
-- "Ver dados em tabela", a alternativa acessível ao gráfico;
-- exportação em PNG.
-
-As animações (200–320 ms) podem ser desligadas em Configurações.
+Todas as animações podem ser desligadas em Configurações. Nada anima em atalhos de teclado.
 
 ## 7. Acessibilidade e atalhos
 
-- **Contraste AA** nos dois temas (tabela 3.1). A identidade dos dados nunca depende só da cor: há legenda, rótulo direto ou tooltip.
+- **Contraste:** nível AA nos dois temas (tabela 2.1). A identidade dos dados nunca depende só da cor: há legenda, rótulo direto ou tooltip.
+- **Alternativa ao gráfico:** todo gráfico tem "Ver dados em tabela".
 - **Teclado:**
 
 | Atalho | Ação |
@@ -194,85 +141,72 @@ As animações (200–320 ms) podem ser desligadas em Configurações.
 | Ctrl+B | Menu |
 | F1 | Sobre |
 
-  Tab percorre os controles com foco visível.
-- **Preferências** (tema, animações, menu) persistidas com `java.util.prefs.Preferences`.
-- **Formatação pt-BR** em todos os números e datas.
-- **Relatórios PDF/Excel** com a mesma identidade: fonte Inter embarcada no PDF, cabeçalho brasa, zebra e rodapé paginado (classe `report.Identidade`).
+- **Preferências:** tema, animações e menu recolhido são persistidos com `java.util.prefs.Preferences`.
 
 ---
 
-## 8. Texto para a dissertação — "Projeto do programa: interface e experiência do usuário"
+## 8. Texto para a dissertação — "Projeto do programa: interface"
 
-> Adapte à formatação ABNT/UNIP. As afirmações abaixo descrevem o que foi implementado; os números vêm dos prints e das medições reais.
+> Adapte à formatação ABNT/UNIP.
 
-**8.1 Objetivos de design.** A interface foi concebida como um painel de monitoramento ambiental. O objetivo é que o usuário responda rapidamente três perguntas:
+**8.1 Conceito.** A interface foi projetada como uma reportagem especial de dados sobre a temporada de fogo em São Paulo. A escolha se apoia no público principal: a apresentação à banca, em projetor, exige leitura rápida e à distância. Por isso cada tela abre com a informação mais importante em grande escala. Na Visão geral, é uma frase-manchete gerada dos próprios dados: "Em 2024, São Paulo registrou 8.712 focos de incêndio, 5,2 vezes o total de 2023".
 
-- quantos focos houve e como variaram;
-- onde e quando ocorreram;
-- qual algoritmo de ordenação é mais eficiente para cada critério.
+**8.2 Hierarquia e redução de escolhas.** A primeira versão exibia oito indicadores de mesmo peso. A Lei de Hick (HICK, 1952) indica que o tempo de decisão cresce com o número de alternativas equivalentes. A versão final hierarquiza a informação em três camadas:
 
-O projeto partiu de um diagnóstico da primeira versão, que usava os componentes padrão do JavaFX: hierarquia confusa, cores sem significado e defeitos de renderização em gráficos. Esse diagnóstico orientou um redesign baseado em um *design system*: um conjunto de tokens (cores, tipografia, espaçamentos) e componentes reutilizáveis que garantem consistência entre telas, temas e relatórios.
+- um número principal;
+- cinco destaques em linha;
+- as seções de análise, separadas por fios tipográficos.
 
-**8.2 Hierarquia visual e Lei de Hick.** Cada tela tem uma única ação primária, destacada pela cor brasa; as demais são secundárias ou ícones com tooltip. A Lei de Hick (HICK, 1952) indica que o tempo de decisão cresce com o número de alternativas equivalentes. Reduzir as escolhas visíveis e agrupar as exportações em um único menu diminui a carga cognitiva. A navegação foi reorganizada em uma barra lateral com seis telas de análise e duas de sistema, separadas por seção.
+Cada tela tem uma única ação primária ("Exportar" ou "Executar").
 
-**8.3 Princípios da Gestalt.**
-
-- **Proximidade e região comum:** os cards agrupam título, legenda, gráfico e ações relacionados.
-- **Similaridade:** a mesma cor representa sempre a mesma entidade em todas as telas (o ano mais recente é sempre brasa; a Mata Atlântica é sempre verde).
-- **Continuidade:** a grade responsiva alinha rigorosamente as bordas dos cards.
-- **Figura-fundo:** a base neutra faz os dados sobressaírem.
-
-**8.4 Cor com propósito.** As cores de dados foram escolhidas por função:
+**8.3 Cor com função.** Três escalas, cada uma com um papel:
 
 - **Categórica** para entidades (anos, biomas, algoritmos).
-- **Sequencial de um único matiz** para intensidade (calor), evitando o arco-íris, que distorce a percepção de ordem.
-- **Validada objetivamente:** a paleta foi conferida quanto à distinção sob os três tipos de daltonismo (protanopia, deuteranopia e tritanopia) e quanto ao contraste mínimo.
+- **Sequencial "inferno"** para intensidade. É perceptualmente uniforme e distinguível por daltônicos, e se parece com a imagem de uma câmera térmica.
+- **Semântica** para estados (sucesso, alerta, erro).
 
-**8.5 Correção de problemas de visualização.** Três exemplos de decisões guiadas por dados:
+O ano recente recebe a cor mais quente e o anterior, uma cor fria. Isso reforça a leitura do aumento de focos sem depender de texto.
 
-- **Pizza → donut.** O gráfico de pizza foi substituído por um donut com legenda numérica, porque ângulos são percebidos com menos precisão do que comprimentos e rótulos diretos (CLEVELAND; McGILL, 1984).
-- **Benchmark em pequenos múltiplos.** Dez algoritmos em um único gráfico exigiriam dez cores indistinguíveis. A divisão em O(n²) e O(n log n) mantém no máximo sete séries por gráfico e permite comparar cada curva com a curva teórica tracejada.
-- **Horário das detecções.** O gráfico de horas parecia ter um erro de agrupamento. A análise dos dados mostrou que todas as detecções ocorrem entre 13h e 15h (horário de Brasília), porque o satélite de referência passa sobre São Paulo no início da tarde. O gráfico passou a exibir as 24 horas com essa explicação: um caso em que a interface precisa comunicar uma característica do sensor, não esconder um "defeito".
+**8.4 Assinatura visual: a faixa térmica.** No topo de todas as telas, uma faixa mostra os 24 meses da base, um retângulo por mês, coloridos pela quantidade de focos. Ela resume a temporada inteira (o pico de agosto a outubro de 2024 salta aos olhos) e serve de controle: clicar em um mês filtra o período em todas as análises. É um exemplo de visualização que também é navegação.
+
+**8.5 Correções guiadas por dados.**
+
+- **Pizza → donut.** O gráfico de pizza foi substituído por um donut com legenda numérica, porque comprimentos e rótulos diretos são percebidos com mais precisão do que ângulos (CLEVELAND; McGILL, 1984).
+- **Benchmark em pequenos múltiplos.** O benchmark foi dividido em dois gráficos (O(n²) e O(n log n)), cada um com a curva teórica tracejada.
+- **Horário das detecções.** O gráfico de horas mostra que as detecções se concentram entre 13h e 15h, porque o satélite de referência passa sobre São Paulo no início da tarde. A interface explica essa característica do sensor em vez de escondê-la.
 
 **8.6 Acessibilidade.**
 
-- Todas as combinações de texto atendem ao nível AA das WCAG 2.1 (W3C, 2018): contraste ≥ 4,5:1, com valores calculados na tabela de tokens.
-- A informação nunca depende apenas da cor: legendas, rótulos e tooltips acompanham as marcas.
-- Todo gráfico oferece uma alternativa textual ("Ver dados em tabela").
-- Há navegação completa por teclado com foco visível, atalhos e tema escuro para ambientes com pouca luz.
+- Todas as combinações de texto atendem ao nível AA das WCAG 2.1 (W3C, 2018).
+- A informação nunca depende apenas da cor.
+- Todo gráfico oferece a alternativa "ver dados em tabela".
+- Há navegação por teclado com foco visível, e as animações podem ser desligadas.
 
-**8.7 Responsividade e desempenho percebido.**
+**8.7 Arquitetura da interface.**
 
-- **Layout:** a grade reorganiza os indicadores conforme a largura da janela.
-- **Operações demoradas:** ordenação, benchmark, aprendizado de máquina e exportação rodam em *threads* separadas (`javafx.concurrent.Task`), com barra de progresso, sobreposição cancelável e notificações ao concluir. A interface nunca congela.
-- **Feedback imediato:** estados de carregamento (*skeleton*) e estados vazios explicativos orientam o usuário.
-
-**8.8 Arquitetura da interface.**
-
-- **MVC:** as telas são arquivos FXML (visão) com *controllers* dedicados, que recebem um contexto compartilhado por injeção de dependência.
-- **Componentes:** implementados como classes Java reutilizáveis e documentadas.
-- **Estilos:** separados do código em seis folhas CSS organizadas em camadas (tokens → tema → base → componentes → gráficos). A troca de tema em tempo real consiste apenas em substituir a folha de tema e o tema base do AtlantaFX.
+- **MVC:** as telas são arquivos FXML (visão) com *controllers* dedicados.
+- **Componentes:** são classes Java reutilizáveis.
+- **Estilos:** ficam em folhas CSS organizadas em camadas (tokens → tema → base → componentes → gráficos). Trocar o tema é substituir uma única folha.
+- **Tarefas longas:** rodam em *threads* separadas (`javafx.concurrent.Task`), com progresso e cancelamento.
 
 **Referências sugeridas:**
 
 - CLEVELAND, W. S.; McGILL, R. Graphical perception: theory, experimentation, and application to the development of graphical methods. *Journal of the American Statistical Association*, v. 79, n. 387, p. 531–554, 1984.
 - HICK, W. E. On the rate of gain of information. *Quarterly Journal of Experimental Psychology*, v. 4, n. 1, p. 11–26, 1952.
+- SMITH, N.; VAN DER WALT, S. *A better default colormap for Matplotlib* (viridis, inferno). SciPy Conference, 2015.
 - W3C. *Web Content Accessibility Guidelines (WCAG) 2.1*. 2018. Disponível em: https://www.w3.org/TR/WCAG21/.
 - TUFTE, E. R. *The Visual Display of Quantitative Information*. 2. ed. Cheshire: Graphics Press, 2001.
-- NIELSEN, J. *Usability Engineering*. San Francisco: Morgan Kaufmann, 1993.
 
 ## 9. Prints recomendados para a dissertação
 
-| Arquivo (`docs/prints/`) | Legenda sugerida | Seção |
-|---|---|---|
-| `completa/01-visao-geral-claro.png` | Visão geral: indicadores, focos por mês, biomas, municípios, horário e calendário | Projeto do programa — Dashboard |
-| `09-visao-geral-escuro.png` | Tema escuro da visão geral | Design system |
-| `17-visao-geral-filtro-cerrado-2024.png` | Filtro global com chips ativos (Cerrado, 2024) | Interação |
-| `02-ordenacao-claro.png` | Ordenação multicritério (Bioma → Município → Data) com contagem de operações | Algoritmos |
-| `18-ordenacao-comparativo.png` | Comparativo dos algoritmos sobre a mesma entrada | Algoritmos / Resultados |
-| `19-ordenacao-visualizacao.png` | Visualização animada do Quick Sort | Apresentação |
-| `completa/03-benchmark-claro.png` | Benchmark: custo × n com curvas teóricas, vencedores e expoente empírico | Resultados |
-| `04-mapa-claro.png`, `20-mapa-calor.png`, `21-mapa-agrupado.png` | Distribuição geográfica: pontos por bioma, densidade e agrupamento com hotspots | Geoprocessamento |
-| `completa/05-ml-claro.png` | Machine Learning: métricas, previsão, matriz de confusão, importância e hotspots | ML |
-| `completa/06-qualidade-claro.png` | Qualidade dos dados: completude e problemas por severidade | Metodologia (limpeza) |
-| `07-configuracoes-claro.png`, `08-sobre-claro.png` | Preferências, atalhos e créditos | Apêndice |
+| Arquivo (`docs/prints/`) | Legenda sugerida |
+|---|---|
+| `completa/09-visao-geral-escuro.png` | Visão geral: manchete de dados, destaques, temporada mês a mês, municípios, biomas, calendário e horário |
+| `01-visao-geral-claro.png` | A mesma tela no tema claro |
+| `17-visao-geral-filtro-cerrado-2024.png` | A manchete se reescreve com o filtro (Cerrado, 2024) |
+| `10-ordenacao-escuro.png` | Ordenação multicritério com o placar de operações |
+| `18-ordenacao-comparativo.png` · `19-ordenacao-visualizacao.png` | Comparativo dos algoritmos e visualização animada |
+| `completa/11-benchmark-escuro.png` | Benchmark: custo × n com curvas teóricas |
+| `12-mapa-escuro.png` · `20-mapa-calor.png` · `21-mapa-agrupado.png` | Mapa em tela cheia: pontos por bioma, densidade e agrupamento com hotspots |
+| `completa/13-ml-escuro.png` | Machine Learning |
+| `completa/14-qualidade-escuro.png` | Qualidade dos dados |

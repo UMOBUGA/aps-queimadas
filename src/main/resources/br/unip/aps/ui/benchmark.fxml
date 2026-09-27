@@ -28,7 +28,7 @@
                 <Button fx:id="btnRapida" text="Configuração rápida" onAction="#configRapida" styleClass="btn-secondary"/>
                 <Button fx:id="btnExecutar" text="Executar benchmark" onAction="#executar" styleClass="btn-primary"/>
             </HBox>
-            <GridPane hgap="16" vgap="10">
+            <GridPane hgap="32" vgap="10">
                 <Label text="ALGORITMOS" styleClass="section-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                 <FlowPane fx:id="fpAlgoritmos" hgap="6" vgap="6" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                 <Label text="CRITÉRIOS" styleClass="section-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
@@ -54,12 +54,12 @@
             <HBox fx:id="segEscala" styleClass="segmented"/>
         </FlowPane>
 
-        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="16">
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="32">
             <ChartCard fx:id="cQuadraticos" titulo="Algoritmos O(n²)" subtitulo="Bubble, Selection e Insertion" prefHeight="420"/>
             <ChartCard fx:id="cLogLineares" titulo="Algoritmos O(n log n) e lineares" subtitulo="Shell, Merge, Quick, Quick 3-Way, Heap, Tim e Radix" prefHeight="420"/>
         </GradeResponsiva>
 
-        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="16">
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="32">
             <ChartCard fx:id="cVencedores" titulo="Vencedores por critério e cenário" subtitulo="Menor tempo médio no maior n medido; ★ = vencedor" prefHeight="360"/>
             <ChartCard fx:id="cComplexidade" titulo="Complexidade empírica" subtitulo="Expoente k da regressão log-log (custo ≈ c·nᵏ): ≈2 para O(n²), ≈1,0–1,2 para O(n log n)" prefHeight="360"/>
         </GradeResponsiva>

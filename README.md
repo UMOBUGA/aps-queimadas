@@ -16,9 +16,9 @@ Além da ordenação, o sistema:
 - executa um **benchmark** com metodologia adequada à JVM;
 - estima empiricamente a complexidade;
 - aplica **Machine Learning** (Random Forest e DBSCAN/K-Means) sobre os dados ordenados;
-- apresenta tudo em um **dashboard JavaFX** com design system próprio (temas claro e escuro), mapa Leaflet e relatórios Excel/PDF.
+- apresenta tudo em um **dashboard JavaFX** com visual editorial próprio (temas escuro e claro), mapa Leaflet e relatórios Excel/PDF.
 
-![Visão geral do dashboard](docs/prints/01-visao-geral-claro.png)
+![Visão geral do dashboard](docs/prints/09-visao-geral-escuro.png)
 
 > Grupo, RAs e dados da capa: [`docs/GRUPO.md`](docs/GRUPO.md) (a preencher).
 
@@ -98,12 +98,20 @@ Os **dados reais** de SP 2023/2024 já estão em `data/raw/`. Para outro estado 
 
 ## Interface
 
-Painel de monitoramento com **sidebar**, barra de filtros global (bioma, ano, município com autocompletar, período) e tema **claro/escuro** (Ctrl+T), persistido entre execuções. O design system (tokens CSS, componentes, paleta validada para daltonismo, contraste WCAG AA) está documentado em [docs/DESIGN.md](docs/DESIGN.md).
+Visual de **reportagem de dados** ("Boletim de Fogo"):
+
+- manchete com os números reais da temporada;
+- **faixa térmica** clicável com os 24 meses, que filtra o período;
+- placar de operações na Ordenação;
+- mapa em tela cheia;
+- escala de calor "inferno", segura para daltônicos.
+
+O tema escuro é o padrão, e o claro fica a um Ctrl+T. O design system (tokens CSS, tipografia, componentes, contraste WCAG AA) está em [docs/DESIGN.md](docs/DESIGN.md).
 
 | Claro | Escuro |
 |---|---|
-| ![Ordenação](docs/prints/02-ordenacao-claro.png) | ![Benchmark](docs/prints/11-benchmark-escuro.png) |
-| ![Mapa](docs/prints/04-mapa-claro.png) | ![ML](docs/prints/13-ml-escuro.png) |
+| ![Visão geral](docs/prints/01-visao-geral-claro.png) | ![Ordenação](docs/prints/10-ordenacao-escuro.png) |
+| ![Mapa](docs/prints/04-mapa-claro.png) | ![Mapa de calor](docs/prints/12-mapa-escuro.png) |
 
 **Atalhos:**
 
@@ -248,7 +256,7 @@ O **CI** (GitHub Actions) roda o build e os testes a cada push e publica o JAR, 
 | Área | Tecnologias |
 |---|---|
 | Plataforma e build | Java 21 (LTS), Maven (+ Wrapper), Shade (fat JAR), JaCoCo, GitHub Actions |
-| Interface | JavaFX 21 (FXML, CSS, Charts, WebView), [AtlantaFX](https://github.com/mkpaz/atlantafx) 2.1, [Ikonli](https://kordamp.org/ikonli/) (Material Design Icons), fonte [Inter](https://rsms.me/inter/) (OFL) |
+| Interface | JavaFX 21 (FXML, CSS, Charts, WebView), [AtlantaFX](https://github.com/mkpaz/atlantafx) 2.1, [Ikonli](https://kordamp.org/ikonli/) (Material Design Icons), fontes [Inter](https://rsms.me/inter/) e [Big Shoulders Display](https://github.com/xotypeco/big_shoulders) (OFL) |
 | Mapa | Leaflet 1.9 + markercluster, mapas-base Esri World Light/Dark Gray Canvas, dados © colaboradores do OpenStreetMap |
 | Machine Learning | [Smile](https://haifengl.github.io/) 4.4 (Random Forest, K-Means, DBSCAN) |
 | Relatórios | Apache POI (Excel), OpenPDF (PDF) |

@@ -38,7 +38,8 @@ public final class GerenciadorTema {
 
     private static final Logger LOG = Logger.getLogger(GerenciadorTema.class.getName());
     private static final String BASE_CSS = "/br/unip/aps/ui/css/";
-    private static final String[] FONTES = {"Inter-Regular.ttf", "Inter-Medium.ttf", "Inter-SemiBold.ttf", "Inter-Bold.ttf"};
+    private static final String[] FONTES = {"Inter-Regular.ttf", "Inter-Medium.ttf", "Inter-SemiBold.ttf", "Inter-Bold.ttf",
+            "BigShouldersDisplay-SemiBold.ttf", "BigShouldersDisplay-Bold.ttf", "BigShouldersDisplay-ExtraBold.ttf", "BigShouldersDisplay-Black.ttf"};
     private static GerenciadorTema instancia;
 
     private final Preferences prefs;
@@ -77,9 +78,9 @@ public final class GerenciadorTema {
 
     private Tema lerTema() {
         try {
-            return Tema.valueOf(prefs.get("tema", Tema.CLARO.name()));
+            return Tema.valueOf(prefs.get("tema", Tema.ESCURO.name()));
         } catch (IllegalArgumentException e) {
-            return Tema.CLARO;
+            return Tema.ESCURO;
         }
     }
 
@@ -136,9 +137,9 @@ public final class GerenciadorTema {
     public BooleanProperty animacoesProperty() { return animacoes; }
     public BooleanProperty sidebarRecolhidaProperty() { return sidebarRecolhida; }
 
-    /** Restaura as preferencias padrao (tema claro, animacoes ligadas, sidebar expandida). */
+    /** Restaura as preferencias padrao (tema escuro, animacoes ligadas, sidebar expandida). */
     public void restaurarPadroes() {
-        tema.set(Tema.CLARO);
+        tema.set(Tema.ESCURO);
         animacoes.set(true);
         sidebarRecolhida.set(false);
     }

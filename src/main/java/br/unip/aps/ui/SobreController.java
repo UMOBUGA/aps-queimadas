@@ -63,7 +63,7 @@ public class SobreController implements Pagina.Controlador {
         lblOrientador.setText("Orientação: " + valor(g, "orientador", "—"));
         lblDisciplina.setText(valor(g, "disciplina", "Estrutura de Dados — APS"));
 
-        for (String t : new String[]{"Java 21", "Maven", "JavaFX 21", "AtlantaFX", "Ikonli", "Inter (fonte)", "Leaflet",
+        for (String t : new String[]{"Java 21", "Maven", "JavaFX 21", "AtlantaFX", "Ikonli", "Inter + Big Shoulders", "Leaflet",
                 "Esri / OpenStreetMap", "Smile (ML)", "Apache POI", "OpenPDF", "JUnit 5", "JaCoCo", "GitHub Actions"}) {
             chipsTecnologias.getChildren().add(Chip.de(t));
         }

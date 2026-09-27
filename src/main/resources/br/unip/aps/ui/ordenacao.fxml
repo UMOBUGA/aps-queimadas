@@ -64,7 +64,7 @@
     <VBox spacing="14" HBox.hgrow="ALWAYS">
         <VBox styleClass="panel-card" spacing="8">
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <Label fx:id="lblTitulo" text="Nenhuma ordenação executada" styleClass="card-title"/>
+                <Label fx:id="lblTitulo" text="Nenhuma ordenação executada" styleClass="t-display" wrapText="true"/>
                 <HBox fx:id="chipsResultado" spacing="6" alignment="CENTER_LEFT"/>
             </HBox>
             <Label fx:id="lblResumo" text="Escolha critério e algoritmo e clique em &quot;Ordenar e exibir&quot;." styleClass="card-subtitle" wrapText="true"/>
@@ -73,7 +73,7 @@
             </HBox>
         </VBox>
 
-        <GradeResponsiva larguraMinima="170" maxColunas="4" gap="12">
+        <GradeResponsiva larguraMinima="150" maxColunas="4" gap="24" styleClass="placar">
             <KpiCard fx:id="mComparacoes" titulo="Comparações" icone="mdi2c-counter"/>
             <KpiCard fx:id="mTrocas" titulo="Trocas" icone="mdi2s-swap-horizontal"/>
             <KpiCard fx:id="mAcessos" titulo="Acessos" icone="mdi2d-database-outline"/>

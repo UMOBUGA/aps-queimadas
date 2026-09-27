@@ -1,41 +1,42 @@
 .root {
-    -aps-bg-app:          -slate-50;
-    -aps-surface:         -slate-0;
-    -aps-surface-muted:   -slate-25;
-    -aps-surface-hover:   -slate-100;
-    -aps-surface-sunken:  -slate-100;
-    -aps-border:          -slate-150;
-    -aps-border-strong:   -slate-200;
-    -aps-text-1:          -slate-900;
-    -aps-text-2:          -slate-600;
-    -aps-text-3:          -slate-500;
+    -aps-bg-app:          #F3F2F0;
+    -aps-surface:         #FFFFFF;
+    -aps-surface-muted:   #FAF9F8;
+    -aps-surface-hover:   #EFEDEA;
+    -aps-surface-sunken:  #ECEAE7;
+    -aps-border:          #E2DFDB;
+    -aps-border-strong:   #CFCAC4;
+    -aps-rule:            #15100D;
+    -aps-text-1:          #15100D;
+    -aps-text-2:          #4A413B;
+    -aps-text-3:          #6E635B;
     -aps-text-on-accent:  #FFFFFF;
-    -aps-focus-ring:      rgba(232, 89, 12, 0.55);
-    -aps-scrim:           rgba(16, 24, 40, 0.38);
-    -aps-shadow-1:        rgba(16, 24, 40, 0.06);
-    -aps-shadow-2:        rgba(16, 24, 40, 0.16);
+    -aps-focus-ring:      rgba(217, 72, 15, 0.60);
+    -aps-scrim:           rgba(21, 16, 13, 0.45);
+    -aps-shadow-1:        rgba(21, 16, 13, 0.06);
+    -aps-shadow-2:        rgba(21, 16, 13, 0.18);
 
-    -aps-accent:          -brasa-600;
-    -aps-accent-strong:   -brasa-700;
-    -aps-accent-hover:    -brasa-800;
-    -aps-accent-subtle:   -brasa-50;
-    -aps-accent-muted:    -brasa-100;
-    -aps-accent-text:     -brasa-700;
+    -aps-accent:          #D9480F;
+    -aps-accent-strong:   #C2410C;
+    -aps-accent-hover:    #9A3412;
+    -aps-accent-subtle:   #FFF1E8;
+    -aps-accent-muted:    #FFD9C2;
+    -aps-accent-text:     #B93A0A;
 
-    -aps-success:        -verde-700;
-    -aps-success-subtle: -verde-50;
-    -aps-warning:        -ambar-700;
-    -aps-warning-subtle: -ambar-50;
-    -aps-danger:         -vermelho-700;
-    -aps-danger-subtle:  -vermelho-50;
-    -aps-info:           -azul-700;
-    -aps-info-subtle:    -azul-50;
+    -aps-success:        #067647;
+    -aps-success-subtle: #ECFDF3;
+    -aps-warning:        #B54708;
+    -aps-warning-subtle: #FFFAEB;
+    -aps-danger:         #B42318;
+    -aps-danger-subtle:  #FEF3F2;
+    -aps-info:           #175CD3;
+    -aps-info-subtle:    #EFF8FF;
 
-    -aps-ano-recente:        #E8590C;
-    -aps-ano-recente-area:   rgba(232, 89, 12, 0.22);
-    -aps-ano-recente-area-0: rgba(232, 89, 12, 0.00);
+    -aps-ano-recente:        #D9480F;
+    -aps-ano-recente-area:   rgba(217, 72, 15, 0.30);
+    -aps-ano-recente-area-0: rgba(217, 72, 15, 0.00);
     -aps-ano-anterior:        #3D6DB5;
-    -aps-ano-anterior-area:   rgba(61, 109, 181, 0.16);
+    -aps-ano-anterior-area:   rgba(61, 109, 181, 0.12);
     -aps-ano-anterior-area-0: rgba(61, 109, 181, 0.00);
     -aps-bioma-mata:     #1F6E45;
     -aps-bioma-cerrado:  #C48E22;
@@ -43,29 +44,29 @@
     -aps-bioma-caatinga: #E87BA4;
     -aps-bioma-pantanal: #4A3AA7;
     -aps-bioma-pampa:    #1BAF7A;
-    -aps-bioma-outro:    #98A2B3;
-    -aps-heat-vazio: #EEF1F4;
-    -aps-heat-1: #F0975C;
-    -aps-heat-2: #E8590C;
-    -aps-heat-3: #C4470A;
-    -aps-heat-4: #963608;
+    -aps-bioma-outro:    #8C8178;
+    -aps-heat-vazio: #ECEAE7;
+    -aps-heat-1: #FDDCA0;
+    -aps-heat-2: #FCA50A;
+    -aps-heat-3: #DD513A;
+    -aps-heat-4: #932667;
+    -aps-heat-5: #420A68;
     -aps-heat-tinta-1: #1A0B02;
     -aps-heat-tinta-2: #1A0B02;
-    -aps-heat-tinta-3: #FFFFFF;
+    -aps-heat-tinta-3: #1A0B02;
     -aps-heat-tinta-4: #FFFFFF;
     -aps-heat-tinta-5: #FFFFFF;
-    -aps-heat-5: #662405;
     -aps-serie-1: #2A78D6;
-    -aps-serie-2: #EB6834;
+    -aps-serie-2: #D9480F;
     -aps-serie-3: #1BAF7A;
-    -aps-serie-4: #EDA100;
-    -aps-serie-5: #E87BA4;
-    -aps-serie-6: #008300;
+    -aps-serie-4: #C98A00;
+    -aps-serie-5: #D5578E;
+    -aps-serie-6: #2E8B2E;
     -aps-serie-7: #4A3AA7;
-    -aps-serie-neutra: #475467;
-    -aps-grid: #E4E7EC;
-    -aps-skeleton-1: #EEF1F4;
-    -aps-skeleton-2: #F7F8FA;
+    -aps-serie-neutra: #4A413B;
+    -aps-grid: #E2DFDB;
+    -aps-skeleton-1: #ECEAE7;
+    -aps-skeleton-2: #F6F5F3;
 
     -color-fg-default:      -aps-text-1;
     -color-fg-muted:        -aps-text-2;
@@ -77,19 +78,19 @@
     -color-border-default:  -aps-border-strong;
     -color-border-muted:    -aps-border;
     -color-border-subtle:   -aps-border;
-    -color-accent-0: -brasa-50;
-    -color-accent-1: -brasa-100;
-    -color-accent-2: -brasa-300;
-    -color-accent-3: -brasa-400;
-    -color-accent-4: -brasa-500;
-    -color-accent-5: -brasa-600;
-    -color-accent-6: -brasa-700;
-    -color-accent-7: -brasa-800;
-    -color-accent-8: -brasa-800;
-    -color-accent-9: -brasa-950;
+    -color-accent-0: #FFF1E8;
+    -color-accent-1: #FFD9C2;
+    -color-accent-2: #FDBA8C;
+    -color-accent-3: #FB8A4C;
+    -color-accent-4: #F97316;
+    -color-accent-5: #D9480F;
+    -color-accent-6: #C2410C;
+    -color-accent-7: #9A3412;
+    -color-accent-8: #7C2D12;
+    -color-accent-9: #431407;
     -color-accent-fg:       -aps-accent-text;
     -color-accent-emphasis: -aps-accent-strong;
-    -color-accent-muted:    rgba(232, 89, 12, 0.35);
+    -color-accent-muted:    rgba(217, 72, 15, 0.35);
     -color-accent-subtle:   -aps-accent-subtle;
     -color-success-fg:      -aps-success;
     -color-success-subtle:  -aps-success-subtle;
@@ -102,9 +103,6 @@
     -color-chart-2: -aps-ano-recente;
 }
 
-.card, .kpi-card, .chart-card, .panel-card {
-    -fx-effect: dropshadow(gaussian, rgba(16, 24, 40, 0.06), 10, 0, 0, 1);
-}
-.toast, .splash-card {
-    -fx-effect: dropshadow(gaussian, rgba(16, 24, 40, 0.18), 24, 0, 0, 6);
+.toast, .splash-card, .context-menu {
+    -fx-effect: dropshadow(gaussian, rgba(21, 16, 13, 0.20), 26, 0, 0, 8);
 }

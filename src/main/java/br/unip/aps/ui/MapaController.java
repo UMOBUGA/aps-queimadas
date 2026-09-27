@@ -28,7 +28,7 @@ public class MapaController implements Pagina.Controlador {
     private final UiContexto ctx;
 
     @FXML private ToggleButton tgPontos, tgCluster, tgCalor, tgBioma, tgAno, tgHotspots;
-    @FXML private Label lblContagem;
+    @FXML private Label lblContagem, lblContagemTexto;
     @FXML private StackPane moldura;
     @FXML private WebView webView;
 
@@ -43,10 +43,7 @@ public class MapaController implements Pagina.Controlador {
 
     @FXML
     private void initialize() {
-        moldura.getStyleClass().add("map-frame");
         Rectangle clip = new Rectangle();
-        clip.setArcWidth(28);
-        clip.setArcHeight(28);
         clip.widthProperty().bind(moldura.widthProperty());
         clip.heightProperty().bind(moldura.heightProperty());
         moldura.setClip(clip);
@@ -58,7 +55,6 @@ public class MapaController implements Pagina.Controlador {
         tgCluster.setGraphic(Icones.de(Icones.CAMADAS, 15));
         tgCalor.setGraphic(Icones.de(Icones.MARCA, 15));
         tgHotspots.setGraphic(Icones.de(Icones.ALVO, 15));
-        lblContagem.setGraphic(Icones.de(Icones.MARCA, 14));
         modo.selectedToggleProperty().addListener((o, a, n) -> {
             if (n == null) a.setSelected(true);
             else js("APS.setModo('" + (n == tgCluster ? "cluster" : n == tgCalor ? "calor" : "pontos") + "')");
@@ -78,7 +74,7 @@ public class MapaController implements Pagina.Controlador {
                 if (visivel) enviarFocos();
                 enviarHotspots();
             } else if (s == Worker.State.FAILED) {
-                lblContagem.setText("Mapa indisponível (sem internet?)");
+                indisponivel();
             }
         });
         engine.load(getClass().getResource("/br/unip/aps/ui/mapa.html").toExternalForm());
@@ -107,6 +103,11 @@ public class MapaController implements Pagina.Controlador {
         visivel = false;
     }
 
+    private void indisponivel() {
+        lblContagem.setText("—");
+        lblContagemTexto.setText("Mapa indisponível: verifique a internet");
+    }
+
     void modo(String modo) {
         (modo.equals("cluster") ? tgCluster : modo.equals("calor") ? tgCalor : tgPontos).setSelected(true);
     }
@@ -120,7 +121,8 @@ public class MapaController implements Pagina.Controlador {
         pendente = false;
         BaseDeFocos b = ctx.baseProperty().get();
         List<FocoIncendio> focos = ctx.focosFiltradosProperty().get();
-        lblContagem.setText(Formatos.inteiro(focos.size()) + " focos no mapa");
+        lblContagem.setText(Formatos.inteiro(focos.size()));
+        lblContagemTexto.setText(focos.size() == 1 ? "foco no mapa" : "focos no mapa");
         if (b == null) return;
         List<Integer> anos = b.anos();
         js("APS.setFocos(" + json(b.biomas(), focos, anos.isEmpty() ? 0 : anos.get(anos.size() - 1)) + ")");
@@ -169,7 +171,7 @@ public class MapaController implements Pagina.Controlador {
             engine.executeScript("window.APS && " + codigo + ";");
         } catch (RuntimeException e) {
             LOG.warning("Falha ao executar script no mapa: " + e.getMessage());
-            lblContagem.setText("Mapa indisponível (verifique a internet)");
+            indisponivel();
         }
     }
 }

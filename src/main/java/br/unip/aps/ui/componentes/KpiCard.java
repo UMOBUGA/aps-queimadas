@@ -34,7 +34,7 @@ public class KpiCard extends VBox {
 
     public KpiCard(@javafx.beans.NamedArg("titulo") String titulo, @javafx.beans.NamedArg("icone") String icone) {
         getStyleClass().add("kpi-card");
-        rotulo.setText(titulo.toUpperCase(java.util.Locale.of("pt", "BR")));
+        rotulo.setText(titulo);
         rotulo.getStyleClass().add("kpi-rotulo");
         valor.getStyleClass().add("kpi-valor");
         valor.setMinWidth(Region.USE_PREF_SIZE);
@@ -45,7 +45,7 @@ public class KpiCard extends VBox {
 
         Region espaco = new Region();
         HBox.setHgrow(espaco, Priority.ALWAYS);
-        HBox topo = new HBox(8, rotulo, espaco, badge);
+        HBox topo = new HBox(8, rotulo, espaco);
         topo.setAlignment(Pos.CENTER_LEFT);
 
         Region esp2 = new Region();
@@ -58,7 +58,7 @@ public class KpiCard extends VBox {
     }
 
     public KpiCard titulo(String texto) {
-        rotulo.setText(texto.toUpperCase(java.util.Locale.of("pt", "BR")));
+        rotulo.setText(texto);
         return this;
     }
 

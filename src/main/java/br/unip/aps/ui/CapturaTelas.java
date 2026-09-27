@@ -150,7 +150,7 @@ final class CapturaTelas {
         try {
             Files.createDirectories(destino.resolve(nome).getParent());
             SnapshotParameters sp = new SnapshotParameters();
-            sp.setFill(javafx.scene.paint.Color.TRANSPARENT);
+            sp.setFill(javafx.scene.paint.Color.web(GerenciadorTema.get().escuro() ? "#0D0A09" : "#F3F2F0"));
             WritableImage img = no.snapshot(sp, null);
             ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", destino.resolve(nome).toFile());
         } catch (IOException | RuntimeException e) {

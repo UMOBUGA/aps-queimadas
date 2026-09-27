@@ -11,34 +11,34 @@
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
 <style>
   :root {
-    --surface: #FFFFFF; --text-1: #101828; --text-2: #475467; --text-3: #667085; --border: #E4E7EC;
-    --accent: #E8590C; --accent-subtle: #FFF4ED; --shadow: 0 8px 24px rgba(16,24,40,.14);
+    --surface: #FFFFFF; --text-1: #15100D; --text-2: #4A413B; --text-3: #6E635B; --border: #E2DFDB;
+    --accent: #D9480F; --accent-subtle: #FFF1E8; --shadow: 0 10px 28px rgba(21,16,13,.18);
   }
   body.escuro {
-    --surface: #151B23; --text-1: #F2F4F7; --text-2: #B4BDC9; --text-3: #8C97A6; --border: #273140;
-    --accent: #F97316; --accent-subtle: #2A1A12; --shadow: 0 8px 24px rgba(0,0,0,.5);
+    --surface: #15100E; --text-1: #F6EEE7; --text-2: #CDBDB1; --text-3: #A08D80; --border: #3F332D;
+    --accent: #FF6B1A; --accent-subtle: #2B150A; --shadow: 0 10px 28px rgba(0,0,0,.6);
   }
   html, body, #mapa { height: 100%; margin: 0; padding: 0; font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--surface); }
   .leaflet-container { background: var(--surface); font-family: inherit; }
   .legenda {
-    background: var(--surface); color: var(--text-2); padding: 10px 12px; border-radius: 10px; line-height: 1.7;
+    background: var(--surface); color: var(--text-2); padding: 12px 14px; border-radius: 5px; line-height: 1.7;
     box-shadow: var(--shadow); border: 1px solid var(--border); font-size: 12px; min-width: 150px;
   }
   .legenda b { color: var(--text-1); font-size: 13px; }
   .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; }
-  .legenda .grad { height: 8px; border-radius: 4px; margin: 6px 0 2px; }
-  .leaflet-popup-content-wrapper { background: var(--surface); color: var(--text-1); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+  .legenda .grad { height: 8px; border-radius: 2px; margin: 6px 0 2px; }
+  .leaflet-popup-content-wrapper { background: var(--surface); color: var(--text-1); border-radius: 5px; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .leaflet-popup-tip { background: var(--surface); border: 1px solid var(--border); }
   .leaflet-popup-content { margin: 12px 14px; font-size: 12.5px; line-height: 1.5; }
   .pop-titulo { font-weight: 600; font-size: 13.5px; color: var(--text-1); margin-bottom: 2px; }
   .pop-linha { color: var(--text-2); }
-  .pop-bioma { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--accent-subtle); color: var(--text-1); font-size: 11.5px; margin-top: 4px; }
+  .pop-bioma { display: inline-block; padding: 1px 8px; border-radius: 3px; background: var(--accent-subtle); color: var(--text-1); font-size: 11.5px; margin-top: 4px; }
   .leaflet-control-zoom a, .leaflet-control-layers { background: var(--surface) !important; color: var(--text-1) !important; border-color: var(--border) !important; }
   .leaflet-control-attribution { background: rgba(255,255,255,.7) !important; }
   body.escuro .leaflet-control-attribution { background: rgba(21,27,35,.75) !important; color: var(--text-3); }
   body.escuro .leaflet-control-attribution a { color: var(--text-2); }
-  .cluster { background: rgba(232, 89, 12, .22); border-radius: 50%; }
-  .cluster div { background: var(--accent); color: #fff; border-radius: 50%; width: 30px; height: 30px; margin: 5px;
+  .cluster { background: rgba(255, 107, 26, .25); border-radius: 50%; }
+  .cluster div { background: var(--accent); color: #1A0B02; border-radius: 50%; width: 30px; height: 30px; margin: 5px;
                  display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; }
   #aviso { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; background: var(--surface);
            color: var(--text-2); text-align: center; padding: 30px; font-size: 14px; line-height: 1.6; }
@@ -48,18 +48,18 @@
 <body>
 <div id="mapa"></div>
 <div id="aviso"><div><b>Não foi possível carregar o mapa</b><br>
-  O mapa usa a biblioteca Leaflet e mapas-base do OpenStreetMap/CARTO, que exigem internet.<br>
+  O mapa usa a biblioteca Leaflet e mapas-base da Esri e dados do OpenStreetMap, que exigem internet.<br>
   Verifique a conexão; as demais telas funcionam normalmente offline.</div></div>
 <script>
 window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + ':' + l); } catch (e) {} };
 (function () {
   var PALETA = {
     claro:  { bioma: {"Mata Atlântica": "#1F6E45", "Cerrado": "#C48E22", "Amazônia": "#2A78D6", "Caatinga": "#E87BA4", "Pantanal": "#4A3AA7", "Pampa": "#1BAF7A"},
-              outro: "#98A2B3", anoRecente: "#E8590C", anoAnterior: "#3D6DB5", borda: "#FFFFFF",
-              heat: ["#F0975C", "#E8590C", "#C4470A", "#963608", "#662405"], hotspot: "#C2410C" },
-    escuro: { bioma: {"Mata Atlântica": "#23804F", "Cerrado": "#BC862A", "Amazônia": "#3987E5", "Caatinga": "#D55181", "Pantanal": "#9085E9", "Pampa": "#199E70"},
-              outro: "#8C97A6", anoRecente: "#EC6325", anoAnterior: "#6A95D6", borda: "#151B23",
-              heat: ["#8A3208", "#B8440A", "#E8590C", "#F68A45", "#FCAE78"], hotspot: "#FB8A4C" }
+              outro: "#8C8178", anoRecente: "#D9480F", anoAnterior: "#3D6DB5", borda: "#FFFFFF",
+              heat: ["#FDDCA0", "#FCA50A", "#DD513A", "#932667", "#420A68"], hotspot: "#15100D" },
+    escuro: { bioma: {"Mata Atlântica": "#2E9E63", "Cerrado": "#D6A03A", "Amazônia": "#3987E5", "Caatinga": "#D55181", "Pantanal": "#9085E9", "Pampa": "#199E70"},
+              outro: "#A08D80", anoRecente: "#FF6B1A", anoAnterior: "#7FA3D1", borda: "#15100E",
+              heat: ["#420A68", "#932667", "#DD513A", "#FCA50A", "#FCFFA4"], hotspot: "#FCFFA4" }
   };
   if (typeof L === 'undefined') {
     document.getElementById('aviso').style.display = 'flex';
@@ -67,7 +67,8 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     return;
   }
   var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 }, hotspots: [], ajustar: true };
-  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: true, attributionControl: true }).setView([-22.3, -48.6], 7);
+  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: false, attributionControl: true }).setView([-22.3, -48.9], 7);
+  L.control.zoom({ position: 'topright' }).addTo(mapa);
   var atrib = 'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, HERE, Garmin, &copy; colaboradores do OpenStreetMap';
   var base = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
   var tiles = {

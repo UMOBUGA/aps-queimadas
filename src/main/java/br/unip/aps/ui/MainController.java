@@ -1,13 +1,14 @@
 package br.unip.aps.ui;
 
 import br.unip.aps.ApsException;
+import br.unip.aps.analysis.Estatisticas;
 import br.unip.aps.io.DataValidationException;
 import br.unip.aps.model.BaseDeFocos;
 import br.unip.aps.report.CodigoFonteReport;
 import br.unip.aps.report.ContextoRelatorio;
-import br.unip.aps.ui.componentes.Chip;
 import br.unip.aps.ui.componentes.Dialogos;
 import br.unip.aps.ui.componentes.EmptyState;
+import br.unip.aps.ui.componentes.FaixaTermica;
 import br.unip.aps.ui.componentes.Feedback;
 import br.unip.aps.ui.componentes.FilterBar;
 import br.unip.aps.ui.componentes.Icones;
@@ -30,7 +31,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Separator;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
@@ -74,9 +74,9 @@ public class MainController {
     private final Map<Pagina, Object> controllers = new EnumMap<>(Pagina.class);
     private final Map<Pagina, SidebarItem> itens = new EnumMap<>(Pagina.class);
     private final ToggleGroup grupoNav = new ToggleGroup();
-    private final Label breadcrumb = new Label();
     private final Label titulo = new Label();
-    private final HBox chipsContexto = new HBox(6);
+    private final Label linhaDados = new Label();
+    private final FaixaTermica faixa = new FaixaTermica();
     private final FilterBar filterBar = new FilterBar();
     private final Button btnTema = new Button();
     private final MenuButton exportar = new MenuButton("Exportar");
@@ -111,8 +111,14 @@ public class MainController {
         progressoTopo.progressProperty().bind(ctx.progressoProperty().map(p -> p.doubleValue() <= 0 ? -1.0 : p.doubleValue()));
         progressoTopo.visibleProperty().bind(ctx.ocupadoProperty());
 
+        faixa.setOnSelecionar((de, ate) -> {
+            if (exibida != null && !exibida.usaFiltro()) ctx.navegar(Pagina.VISAO_GERAL);
+            filterBar.periodo(de, ate);
+        });
+        ctx.filtroProperty().addListener((o, a, f) -> faixa.setSelecao(f == null ? null : f.de(), f == null ? null : f.ate()));
         ctx.baseProperty().addListener((o, a, b) -> {
             filterBar.setOpcoes(b);
+            if (b != null) faixa.setDados(new Estatisticas(b.getFocos()).serieMensal());
             atualizarChips(b);
             exibir(ctx.paginaProperty().get());
         });
@@ -131,11 +137,11 @@ public class MainController {
     }
 
     private void montarSidebar() {
-        StackPane marca = new StackPane(Icones.de(Icones.MARCA, 20));
+        StackPane marca = new StackPane(Icones.de(Icones.MARCA, 26));
         marca.getStyleClass().add("brand-mark");
-        Label nome = new Label("APS Queimadas");
+        Label nome = new Label("QUEIMADAS");
         nome.getStyleClass().add("brand-title");
-        Label sub = new Label("INPE · Estrutura de Dados");
+        Label sub = new Label("Focos de incêndio · INPE");
         sub.getStyleClass().add("brand-subtitle");
         marcaTextos = new VBox(1, nome, sub);
         HBox brand = new HBox(10, marca, marcaTextos);
@@ -143,7 +149,7 @@ public class MainController {
         brand.setAlignment(Pos.CENTER_LEFT);
 
         VBox nav = new VBox(2);
-        Label sec = new Label("ANÁLISE");
+        Label sec = new Label("Análise");
         sec.getStyleClass().add("sidebar-section");
         rotulosSecao.add(sec);
         nav.getChildren().add(sec);
@@ -170,12 +176,12 @@ public class MainController {
         Region esp = new Region();
         VBox.setVgrow(esp, Priority.ALWAYS);
         sidebar.getChildren().addAll(brand, nav, esp, rodape);
-        sidebar.setPrefWidth(236);
+        sidebar.setPrefWidth(240);
     }
 
     private void aplicarRecolhimento(boolean recolhida) {
-        sidebar.setPrefWidth(recolhida ? 64 : 236);
-        sidebar.setMinWidth(recolhida ? 64 : 236);
+        sidebar.setPrefWidth(recolhida ? 68 : 240);
+        sidebar.setMinWidth(recolhida ? 68 : 240);
         sidebar.getStyleClass().remove("recolhida");
         if (recolhida) sidebar.getStyleClass().add("recolhida");
         marcaTextos.setVisible(!recolhida);
@@ -191,12 +197,12 @@ public class MainController {
     }
 
     private void montarTopbar() {
-        breadcrumb.getStyleClass().add("breadcrumb");
         titulo.getStyleClass().add("page-title");
-        VBox textos = new VBox(1, breadcrumb, titulo);
+        titulo.setMinWidth(Region.USE_PREF_SIZE);
+        linhaDados.getStyleClass().add("breadcrumb");
+        VBox textos = new VBox(0, titulo, linhaDados);
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
-        chipsContexto.setAlignment(Pos.CENTER_LEFT);
 
         Button abrir = iconeAcao(Icones.ABRIR, "Abrir CSV (Ctrl+O)", this::abrirCsv);
         Button recarregar = iconeAcao(Icones.RECARREGAR, "Recarregar dados (Ctrl+R)", this::recarregar);
@@ -216,13 +222,14 @@ public class MainController {
         exportar.setTooltip(new Tooltip("Exportar relatórios (Ctrl+E)"));
         exportar.setPopupSide(Side.BOTTOM);
         exportar.setMinWidth(Region.USE_PREF_SIZE);
-        chipsContexto.setMinWidth(Region.USE_PREF_SIZE);
 
-        Separator sep = new Separator(javafx.geometry.Orientation.VERTICAL);
-        HBox barra = new HBox(12, textos, esp, chipsContexto, sep, abrir, recarregar, baixar, btnTema, exportar);
+        HBox acoes = new HBox(4, abrir, recarregar, baixar, btnTema, exportar);
+        acoes.setAlignment(Pos.CENTER_RIGHT);
+        acoes.setPadding(new javafx.geometry.Insets(0, 0, 10, 0));
+        HBox barra = new HBox(12, textos, esp, acoes);
         barra.getStyleClass().add("topbar");
-        barra.setAlignment(Pos.CENTER_LEFT);
-        topo.getChildren().add(barra);
+        barra.setAlignment(Pos.BOTTOM_LEFT);
+        topo.getChildren().addAll(barra, faixa);
     }
 
     private Button iconeAcao(String icone, String dica, Runnable acao) {
@@ -249,32 +256,31 @@ public class MainController {
     }
 
     private void atualizarChips(BaseDeFocos b) {
-        chipsContexto.getChildren().clear();
         if (b == null) {
-            chipsContexto.getChildren().add(Chip.de("Sem dados", Icones.SEM_DADOS, Chip.Variante.ALERTA));
+            linhaDados.setText("Nenhum dado carregado");
+            linhaDados.setTooltip(null);
             return;
         }
-        String uf = ctx.sessao().config().uf();
         List<Integer> anos = b.anos();
-        String faixa = anos.size() == 1 ? String.valueOf(anos.get(0)) : anos.get(0) + "–" + anos.get(anos.size() - 1);
-        Label cUf = Chip.de(uf, Icones.MUNICIPIO, Chip.Variante.NEUTRO);
-        cUf.setTooltip(new Tooltip(String.join(", ", b.estados())));
-        Label cAnos = Chip.de(faixa, Icones.CALENDARIO, Chip.Variante.NEUTRO);
-        Label cReg = Chip.de(Formatos.inteiro(b.tamanho()) + " focos", Icones.MARCA, Chip.Variante.DESTAQUE);
-        Label cArq = Chip.de(b.getFontes().size() + (b.getFontes().size() == 1 ? " arquivo" : " arquivos"), Icones.CSV, Chip.Variante.NEUTRO);
+        String faixaAnos = anos.size() == 1 ? String.valueOf(anos.get(0)) : anos.get(0) + "–" + anos.get(anos.size() - 1);
+        List<String> estados = new ArrayList<>();
+        b.estados().forEach(e -> estados.add(VisaoGeralController.capitalizar(e)));
+        linhaDados.setText(String.join(", ", estados) + "  ·  " + faixaAnos + "  ·  " + Formatos.inteiro(b.tamanho()) + " focos  ·  "
+                + b.getFontes().size() + (b.getFontes().size() == 1 ? " arquivo" : " arquivos"));
         List<String> nomes = new ArrayList<>();
         b.getFontes().forEach(p -> nomes.add(p.getFileName().toString()));
-        cArq.setTooltip(new Tooltip(String.join("\n", nomes)));
-        chipsContexto.getChildren().addAll(cUf, cAnos, cReg, cArq);
+        linhaDados.setTooltip(new Tooltip("Satélite de referência do INPE\n" + String.join("\n", nomes)));
     }
 
     private void exibir(Pagina p) {
         if (p == null) return;
         SidebarItem it = itens.get(p);
         if (it != null) it.setSelected(true);
-        breadcrumb.setText("APS Queimadas  ›  " + (p.rodape() ? "Sistema" : "Análise"));
-        titulo.setText(p.titulo());
+        titulo.setText(p.titulo().toUpperCase(java.util.Locale.of("pt", "BR")));
         boolean semDados = ctx.baseProperty().get() == null && !p.rodape();
+        boolean comFaixa = ctx.baseProperty().get() != null && !p.rodape();
+        faixa.setVisible(comFaixa);
+        faixa.setManaged(comFaixa);
         filterBar.setVisible(p.usaFiltro() && !semDados);
         filterBar.setManaged(p.usaFiltro() && !semDados);
 

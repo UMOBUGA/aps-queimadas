@@ -2,35 +2,37 @@
 
 <?import br.unip.aps.ui.componentes.ChartCard?>
 <?import br.unip.aps.ui.componentes.GradeResponsiva?>
-<?import br.unip.aps.ui.componentes.KpiCard?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.TextFlow?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="br.unip.aps.ui.VisaoGeralController" fitToWidth="true" styleClass="pagina-scroll">
     <VBox styleClass="page">
-        <GradeResponsiva larguraMinima="250" maxColunas="4" gap="16">
-            <KpiCard fx:id="kTotal" titulo="Total de focos" icone="mdi2f-fire"/>
-            <KpiCard fx:id="kAnoAnterior" titulo="Focos no ano anterior" icone="mdi2c-calendar-outline"/>
-            <KpiCard fx:id="kAnoRecente" titulo="Focos no ano recente" icone="mdi2c-calendar-outline"/>
-            <KpiCard fx:id="kVariacao" titulo="Variação anual" icone="mdi2t-trending-up"/>
-            <KpiCard fx:id="kMunicipios" titulo="Municípios afetados" icone="mdi2m-map-marker-outline"/>
-            <KpiCard fx:id="kPico" titulo="Mês de pico" icone="mdi2c-calendar-month-outline"/>
-            <KpiCard fx:id="kLider" titulo="Município líder" icone="mdi2t-trophy-outline"/>
-            <KpiCard fx:id="kBioma" titulo="Bioma predominante" icone="mdi2t-tree-outline"/>
+        <VBox styleClass="manchete">
+            <Label fx:id="mLinha" styleClass="manchete-linha"/>
+            <HBox fx:id="mNumeroLinha" spacing="16" alignment="BOTTOM_LEFT">
+                <Label fx:id="mNumero" styleClass="manchete-numero" text="—"/>
+                <Label fx:id="mUnidade" styleClass="manchete-unidade" text="focos de incêndio"/>
+            </HBox>
+            <TextFlow fx:id="mApoio" maxWidth="820"/>
+        </VBox>
+        <FlowPane fx:id="destaques" styleClass="destaques" vgap="18"/>
+        <ChartCard fx:id="cMensal" titulo="A temporada, mês a mês"
+                   subtitulo="Focos detectados por mês em cada ano da base" prefHeight="440"/>
+        <GradeResponsiva larguraMinima="520" maxColunas="2" gap="36">
+            <ChartCard fx:id="cMunicipios" titulo="Onde queima"
+                       subtitulo="Os 10 municípios com mais focos no período filtrado" prefHeight="440"/>
+            <ChartCard fx:id="cBiomas" titulo="Em que bioma"
+                       subtitulo="Participação de cada bioma do IBGE no total filtrado" prefHeight="440"/>
         </GradeResponsiva>
-        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="16">
-            <ChartCard fx:id="cMensal" titulo="Focos por mês"
-                       subtitulo="Comparação mês a mês entre os anos da base" prefHeight="380"/>
-            <ChartCard fx:id="cBiomas" titulo="Focos por bioma"
-                       subtitulo="Participação de cada bioma do IBGE no total filtrado" prefHeight="380"/>
-            <ChartCard fx:id="cMunicipios" titulo="Top 10 municípios"
-                       subtitulo="Municípios com mais focos no período filtrado" prefHeight="420"/>
-            <ChartCard fx:id="cHoras" titulo="Focos por hora local (UTC−3)"
-                       subtitulo="O satélite de referência (AQUA) passa sobre SP no início da tarde: por isso as detecções se concentram entre 13h e 15h"
-                       prefHeight="420"/>
-        </GradeResponsiva>
-        <ChartCard fx:id="cCalendario" titulo="Calendário de focos por dia"
-                   subtitulo="Cada quadrado é um dia; a cor indica a quantidade de focos detectados"/>
+        <ChartCard fx:id="cCalendario" titulo="Dia a dia"
+                   subtitulo="Cada quadrado é um dia; quanto mais quente a cor, mais focos detectados"/>
+        <ChartCard fx:id="cHoras" titulo="A que horas o satélite vê"
+                   subtitulo="Hora local (UTC−3). O satélite de referência (AQUA) passa sobre SP no início da tarde, por isso as detecções se concentram entre 13h e 15h"
+                   prefHeight="330"/>
     </VBox>
 </ScrollPane>

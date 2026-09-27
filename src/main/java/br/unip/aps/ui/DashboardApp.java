@@ -82,19 +82,19 @@ public class DashboardApp extends Application {
     }
 
     private Stage splash(GerenciadorTema tema) {
-        StackPane marca = new StackPane(Icones.de(Icones.MARCA, 30));
+        StackPane marca = new StackPane(Icones.de(Icones.MARCA, 34));
         marca.getStyleClass().add("brand-mark");
-        Label nome = new Label("APS Queimadas");
+        Label nome = new Label("QUEIMADAS");
         nome.getStyleClass().add("splash-titulo");
-        Label sub = new Label("Análise de performance de algoritmos de ordenação");
+        HBox titulo = new HBox(12, marca, nome);
+        titulo.setAlignment(Pos.CENTER_LEFT);
+        Label sub = new Label("Focos de incêndio em São Paulo e a performance dos algoritmos de ordenação");
         sub.getStyleClass().add("splash-sub");
-        VBox textos = new VBox(2, nome, sub);
-        HBox topo = new HBox(16, marca, textos);
-        topo.setAlignment(Pos.CENTER_LEFT);
+        VBox topo = new VBox(4, titulo, sub);
         ProgressBar barra = new ProgressBar(-1);
         barra.setMaxWidth(Double.MAX_VALUE);
         Label status = new Label("Carregando focos do INPE · SP 2023–2024");
-        status.getStyleClass().add("t-caption");
+        status.getStyleClass().add("splash-sub");
         VBox card = new VBox(18, topo, barra, status);
         card.getStyleClass().add("splash-card");
         StackPane raiz = new StackPane(card);
@@ -122,7 +122,7 @@ public class DashboardApp extends Application {
 
     static Image icone() {
         StackPane p = new StackPane(Icones.de(Icones.MARCA, 40));
-        p.getStyleClass().add("brand-mark");
+        p.getStyleClass().setAll("icone-app");
         p.setMinSize(64, 64);
         p.setPrefSize(64, 64);
         new Scene(p, 64, 64, Color.TRANSPARENT);

@@ -75,6 +75,8 @@ public class ChartCard extends VBox {
         HBox header = new HBox(10, textos, extras, acoes);
         header.getStyleClass().add("chart-card-header");
         header.setAlignment(Pos.TOP_LEFT);
+        header.setMinHeight(Region.USE_PREF_SIZE);
+        legenda.setMinHeight(Region.USE_PREF_SIZE);
 
         montarSkeleton();
         vazio = new EmptyState(Icones.VAZIO_FILTRO, "Sem dados para os filtros",

@@ -2,27 +2,27 @@
 .chart-content { -fx-padding: 6 6 0 0; }
 .chart-plot-background { -fx-background-color: transparent; }
 .chart-vertical-grid-lines { -fx-stroke: transparent; }
-.chart-horizontal-grid-lines { -fx-stroke: -aps-grid; -fx-stroke-dash-array: 3 4; -fx-stroke-width: 1; }
+.chart-horizontal-grid-lines { -fx-stroke: -aps-grid; -fx-stroke-width: 1; }
 .chart-alternative-row-fill, .chart-alternative-column-fill { -fx-fill: transparent; -fx-stroke: transparent; }
 .chart-vertical-zero-line, .chart-horizontal-zero-line { -fx-stroke: transparent; }
 .chart-title { -fx-font-size: 0; -fx-padding: 0; }
 .chart-legend { -fx-background-color: transparent; -fx-padding: 0; }
 
 .axis {
-    -fx-tick-label-fill: -aps-text-3;
-    -fx-tick-label-font-size: 11px;
+    -fx-tick-label-fill: -aps-text-2;
+    -fx-tick-label-font-size: 11.5px;
     -fx-tick-length: 0;
     -fx-minor-tick-visible: false;
     -fx-border-color: transparent;
 }
-.axis:bottom { -fx-border-color: -aps-border-strong transparent transparent transparent; -fx-border-width: 1 0 0 0; }
+.axis:bottom { -fx-border-color: -aps-rule transparent transparent transparent; -fx-border-width: 1.5 0 0 0; }
 .axis-tick-mark, .axis-minor-tick-mark { -fx-stroke: transparent; }
-.axis-label { -fx-text-fill: -aps-text-3; -fx-font-size: 11px; -fx-font-family: "Inter Medium"; }
+.axis-label { -fx-text-fill: -aps-text-2; -fx-font-size: 11.5px; -fx-font-family: "Inter Medium"; }
 
-.chart-series-area-line, .chart-series-line { -fx-stroke-width: 2.25px; -fx-stroke-line-join: round; -fx-stroke-line-cap: round; }
+.chart-series-area-line, .chart-series-line { -fx-stroke-width: 2.5px; -fx-stroke-line-join: round; -fx-stroke-line-cap: round; }
 .chart-series-area-fill { -fx-stroke: transparent; }
 
-.serie-ano-recente .chart-series-area-line, .chart-series-line.serie-ano-recente { -fx-stroke: -aps-ano-recente; }
+.serie-ano-recente .chart-series-area-line, .chart-series-line.serie-ano-recente { -fx-stroke: -aps-ano-recente; -fx-stroke-width: 3px; }
 .serie-ano-recente .chart-series-area-fill { -fx-fill: linear-gradient(to bottom, -aps-ano-recente-area 0%, -aps-ano-recente-area-0 100%); }
 .serie-ano-anterior .chart-series-area-line, .chart-series-line.serie-ano-anterior { -fx-stroke: -aps-ano-anterior; }
 .serie-ano-anterior .chart-series-area-fill { -fx-fill: linear-gradient(to bottom, -aps-ano-anterior-area 0%, -aps-ano-anterior-area-0 100%); }
@@ -66,7 +66,7 @@
 .legenda-marca.serie-7 { -fx-background-color: -aps-serie-7; }
 .legenda-marca.serie-neutra { -fx-background-color: -aps-serie-neutra; }
 
-.chart-bar { -fx-background-color: -aps-accent; -fx-background-radius: 4 4 0 0; -fx-background-insets: 0 1 0 1; }
+.chart-bar { -fx-background-color: -aps-accent; -fx-background-radius: 2 2 0 0; -fx-background-insets: 0 1 0 1; }
 .chart-bar:hover { -fx-background-color: -aps-accent-hover; }
 .chart-bar.barra-vazia { -fx-background-color: transparent; }
 .bar-chart { -fx-bar-gap: 3; -fx-category-gap: 6; }
@@ -80,9 +80,17 @@
 .donut-segmento.bioma-pampa { -fx-stroke: -aps-bioma-pampa; }
 .donut-segmento.bioma-outro { -fx-stroke: -aps-bioma-outro; }
 .donut-trilho { -fx-fill: transparent; -fx-stroke: -aps-surface-sunken; }
-.donut-total { -fx-font-family: "Inter"; -fx-font-weight: bold; -fx-font-size: 24px; -fx-fill: -aps-text-1; }
-.donut-legenda-rotulo { -fx-font-size: 11.5px; -fx-fill: -aps-text-3; }
-.donut-item { -fx-spacing: 10; -fx-alignment: center-left; -fx-padding: 6 0; -fx-border-color: transparent transparent -aps-border transparent; }
+.donut-total { -fx-font-family: "Big Shoulders Display Black"; -fx-font-size: 44px; -fx-fill: -aps-text-1; }
+.donut-legenda-rotulo { -fx-font-family: "Inter Medium"; -fx-font-size: 12px; -fx-fill: -aps-text-2; }
+.donut-item { -fx-spacing: 10; -fx-alignment: center-left; -fx-padding: 8 0; -fx-border-color: transparent transparent -aps-border transparent; }
 .donut-item-nome { -fx-font-family: "Inter Medium"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
-.donut-item-valor { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
-.donut-item-pct { -fx-font-size: 12px; -fx-text-fill: -aps-text-3; -fx-min-width: 48; -fx-alignment: center-right; }
+.donut-item-valor { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 22px; -fx-text-fill: -aps-text-1; }
+.donut-item-pct { -fx-font-size: 12.5px; -fx-text-fill: -aps-text-2; -fx-min-width: 52; -fx-alignment: center-right; }
+
+.chart-bar.hora-pico { -fx-background-color: -aps-heat-4; }
+.chart-bar.hora-alta { -fx-background-color: -aps-heat-3; }
+.chart-bar.hora-media { -fx-background-color: -aps-heat-2; }
+.chart-bar.hora-baixa { -fx-background-color: -aps-heat-1; }
+.rotulo-pico { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 20px; -fx-text-fill: -aps-text-1; }
+.rotulo-pico-sub { -fx-font-family: "Inter Medium"; -fx-font-size: 12px; -fx-text-fill: -aps-text-2; }
+.fio-pico { -fx-stroke: -aps-text-2; -fx-stroke-width: 1; -fx-stroke-dash-array: 2 3; }

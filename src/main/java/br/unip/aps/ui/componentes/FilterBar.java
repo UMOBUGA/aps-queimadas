@@ -119,7 +119,7 @@ public class FilterBar extends VBox {
         limpar.setOnAction(e -> limpar());
         limpar.setTooltip(new Tooltip("Remover todos os filtros"));
 
-        contagem.getStyleClass().add("t-small");
+        contagem.getStyleClass().add("contagem-filtro");
         contagem.setMinWidth(Region.USE_PREF_SIZE);
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
@@ -239,6 +239,15 @@ public class FilterBar extends VBox {
         atualizando = true;
         checksBioma.forEach(c -> c.setSelected(biomas.contains(c.getText())));
         checksAno.forEach(c -> c.setSelected(anos.contains(Integer.parseInt(c.getText()))));
+        atualizando = false;
+        aplicar();
+    }
+
+    /** Define o periodo (mes inicial e final); nulos removem o filtro de periodo. */
+    public void periodo(YearMonth de, YearMonth ate) {
+        atualizando = true;
+        cbDe.setValue(de);
+        cbAte.setValue(ate);
         atualizando = false;
         aplicar();
     }

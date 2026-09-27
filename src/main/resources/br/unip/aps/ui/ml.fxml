@@ -36,7 +36,7 @@
             </FlowPane>
         </VBox>
 
-        <GradeResponsiva larguraMinima="200" maxColunas="5" gap="12">
+        <GradeResponsiva larguraMinima="170" maxColunas="5" gap="24">
             <KpiCard fx:id="kMae" titulo="MAE · Random Forest" icone="mdi2t-target"/>
             <KpiCard fx:id="kRmse" titulo="RMSE" icone="mdi2s-sigma"/>
             <KpiCard fx:id="kR2" titulo="R²" icone="mdi2c-chart-scatter-plot"/>
@@ -44,14 +44,14 @@
             <KpiCard fx:id="kF1" titulo="F1 macro" icone="mdi2g-grid"/>
         </GradeResponsiva>
 
-        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="16">
+        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="32">
             <ChartCard fx:id="cPrevisao" titulo="Focos no estado por mês: real × previsto" subtitulo="Soma das previsões por município no ano de teste" prefHeight="400"/>
             <ChartCard fx:id="cMatriz" titulo="Nível de atividade: matriz de confusão" subtitulo="Linhas = classe real; cor = % da classe real prevista em cada coluna" prefHeight="400"/>
             <ChartCard fx:id="cImportancia" titulo="Importância das variáveis" subtitulo="Redução de impureza média nas árvores (regressão)" prefHeight="400"/>
             <ChartCard fx:id="cHotspots" titulo="Hotspots geográficos" subtitulo="Grupos de focos encontrados pela clusterização" prefHeight="400"/>
         </GradeResponsiva>
 
-        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="16">
+        <GradeResponsiva larguraMinima="540" maxColunas="2" gap="32">
             <ChartCard fx:id="cCotovelo" titulo="Método do cotovelo (K-Means)" subtitulo="Distorção média (km²) × k: o 'cotovelo' sugere um k adequado" prefHeight="300"/>
             <VBox styleClass="panel-card" spacing="8">
                 <Label text="Sobre os modelos" styleClass="card-title"/>
