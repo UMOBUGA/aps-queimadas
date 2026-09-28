@@ -77,30 +77,70 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     document.getElementById('aviso').style.display = 'flex';
     window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, setTema: function () {}, setModo: function () {},
                    setCorPor: function () {}, setMalha: function () {}, forcarOffline: function () {}, setCoropletico: function () {},
-                   setCirculo: function () {}, setDaltonico: function () {} };
+                   setCirculo: function () {}, setDaltonico: function () {}, setBase: function () {}, base: function () { return 'neutro'; } };
     return;
   }
   var SP = L.latLngBounds([-25.35, -53.15], [-19.75, -44.15]);
   var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 },
-                 hotspots: [], offline: false, malha: null, coro: null };
-  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: false, attributionControl: true });
+                 hotspots: [], offline: false, malha: null, coro: null, base: 'neutro' };
+  var mapa = L.map('mapa', { preferCanvas: true, zoomControl: false, attributionControl: true, maxZoom: 18, worldCopyJump: true });
   mapa.fitBounds(SP, { paddingTopLeft: [20, 80], paddingBottomRight: [20, 20] });
   L.control.zoom({ position: 'topright' }).addTo(mapa);
-  var atrib = 'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, HERE, Garmin, &copy; colaboradores do OpenStreetMap';
-  var base = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
-  var tiles = {
-    claro: L.tileLayer(base + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: atrib }),
-    escuro: L.tileLayer(base + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, attribution: atrib })
+  mapa.createPane('rotulos');
+  mapa.getPane('rotulos').style.zIndex = 350;
+  mapa.getPane('rotulos').style.pointerEvents = 'none';
+
+  var ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+  var OSM = '&copy; colaboradores do OpenStreetMap';
+  function esri(servico, fontes, nativo, pane) {
+    return L.tileLayer(ESRI + servico + '/MapServer/tile/{z}/{y}/{x}', {
+      maxNativeZoom: nativo || 16, maxZoom: 18, pane: pane || 'tilePane',
+      attribution: 'Mapa-base &copy; <a href="https://www.esri.com">Esri</a> &mdash; ' + fontes
+    });
+  }
+  var ROTULOS = 'Reference/World_Boundaries_and_Places';
+  var BASES = {
+    neutro: {
+      claro: [esri('Canvas/World_Light_Gray_Base', 'Esri, HERE, Garmin, ' + OSM)],
+      escuro: [esri('Canvas/World_Dark_Gray_Base', 'Esri, HERE, Garmin, ' + OSM)]
+    },
+    ruas: [esri('World_Street_Map', 'Esri, HERE, Garmin, USGS, ' + OSM)],
+    relevo: [esri('World_Topo_Map', 'Esri, HERE, Garmin, FAO, NOAA, USGS, ' + OSM)],
+    terreno: [esri('World_Terrain_Base', 'Esri, USGS, NOAA', 13), esri(ROTULOS, 'Esri, HERE, Garmin', 16, 'rotulos')],
+    satelite: [esri('World_Imagery', 'Esri, Maxar, Earthstar Geographics')],
+    hibrido: [esri('World_Imagery', 'Esri, Maxar, Earthstar Geographics'), esri(ROTULOS, 'Esri, HERE, Garmin', 16, 'rotulos')],
+    atlas: [esri('NatGeo_World_Map', 'National Geographic, Esri, Garmin, HERE, UNEP-WCMC, USGS, NASA, ESA, GEBCO, NOAA')]
   };
+  var SOBRE_IMAGEM = { satelite: true, hibrido: true };
   var tilesCarregados = 0, tilesComErro = 0;
-  ['claro', 'escuro'].forEach(function (k) {
-    tiles[k].on('tileload', function () { tilesCarregados++; });
-    tiles[k].on('tileerror', function () {
-      tilesComErro++;
-      if (tilesCarregados === 0 && tilesComErro >= 3) entrarOffline('falha ao baixar o mapa-base');
+  function camadasDaBase(id) {
+    var b = BASES[id] || BASES.neutro;
+    return Array.isArray(b) ? b : b[estado.tema];
+  }
+  Object.keys(BASES).forEach(function (id) {
+    var todas = Array.isArray(BASES[id]) ? BASES[id] : BASES[id].claro.concat(BASES[id].escuro);
+    todas.forEach(function (t) {
+      t.on('tileload', function () { tilesCarregados++; });
+      t.on('tileerror', function () {
+        tilesComErro++;
+        if (tilesCarregados === 0 && tilesComErro >= 3) entrarOffline('falha ao baixar o mapa-base');
+      });
     });
   });
-  tiles.claro.addTo(mapa);
+  var camadasAtivas = [];
+  function removerBase() {
+    camadasAtivas.forEach(function (t) { mapa.removeLayer(t); });
+    camadasAtivas = [];
+  }
+  function aplicarBase() {
+    removerBase();
+    document.body.classList.toggle('base-imagem', !!SOBRE_IMAGEM[estado.base]);
+    document.body.classList.toggle('base-rica', estado.base !== 'neutro');
+    if (estado.offline) return;
+    camadasAtivas = camadasDaBase(estado.base);
+    camadasAtivas.forEach(function (t) { t.addTo(mapa); });
+  }
+  aplicarBase();
   setTimeout(function () { if (tilesCarregados === 0) entrarOffline('mapa-base sem resposta'); }, 6000);
 
   var renderer = L.canvas({ padding: 0.5 });
@@ -123,10 +163,12 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
 
   function pal() {
     var p = PALETA[estado.tema];
-    if (!estado.daltonico) return p;
+    if (!estado.daltonico && estado.base === 'neutro') return p;
     var c = {};
     for (var k in p) c[k] = p[k];
-    c.bioma = BIOMA_CVD[estado.tema];
+    if (estado.daltonico) c.bioma = BIOMA_CVD[estado.tema];
+    if (estado.base !== 'neutro') c.borda = '#FFFFFF';
+    if (SOBRE_IMAGEM[estado.base]) c.hotspot = '#FCFFA4';
     return c;
   }
   function css(v) { return getComputedStyle(document.body).getPropertyValue(v).trim(); }
@@ -146,8 +188,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
   function entrarOffline(motivo) {
     if (estado.offline) return;
     estado.offline = true;
-    mapa.removeLayer(tiles.claro);
-    mapa.removeLayer(tiles.escuro);
+    removerBase();
     document.body.classList.add('offline');
     desenharBase();
     try { alert('OFFLINE: ' + motivo); } catch (e) {}
@@ -188,7 +229,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
 
   function desenhar() {
     camada.clearLayers();
-    var focos = estado.dados.focos, p = pal();
+    var focos = estado.dados.focos, p = pal(), rica = estado.base !== 'neutro';
     if (estado.modo === 'coropletico') {
       desenharCoropletico();
     } else {
@@ -218,7 +259,8 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
       camada.addLayer(grupo);
     } else if (estado.modo === 'pontos') {
       focos.forEach(function (f) {
-        L.circleMarker([f[0], f[1]], { renderer: renderer, radius: 3.6, weight: 0.8, color: p.borda, fillColor: cor(f), fillOpacity: 0.85 })
+        L.circleMarker([f[0], f[1]], { renderer: renderer, radius: rica ? 4 : 3.6, weight: rica ? 1.3 : 0.8, color: p.borda,
+                                       fillColor: cor(f), fillOpacity: rica ? 0.95 : 0.85 })
           .bindPopup(popup(f)).addTo(camada);
       });
     }
@@ -282,6 +324,13 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     setHotspots: function (h) { estado.hotspots = h; desenharHotspots(); },
     setModo: function (m) { estado.modo = m; desenhar(); },
     setDaltonico: function (d) { estado.daltonico = !!d; desenhar(); desenharHotspots(); },
+    setBase: function (id) {
+      estado.base = BASES[id] ? id : 'neutro';
+      aplicarBase();
+      desenhar();
+      desenharHotspots();
+    },
+    base: function () { return estado.base; },
     setCorPor: function (c) { estado.corPor = c; desenhar(); },
     setMalha: function (geo) { estado.malha = geo; desenharBase(); desenhar(); },
     setCoropletico: function (c) { estado.coro = c; if (estado.modo === 'coropletico') desenhar(); },
@@ -290,10 +339,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     setTema: function (escuro) {
       estado.tema = escuro ? 'escuro' : 'claro';
       document.body.classList.toggle('escuro', escuro);
-      if (!estado.offline) {
-        mapa.removeLayer(escuro ? tiles.claro : tiles.escuro);
-        (escuro ? tiles.escuro : tiles.claro).addTo(mapa);
-      }
+      aplicarBase();
       desenharBase();
       desenhar();
       desenharHotspots();

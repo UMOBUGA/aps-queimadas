@@ -181,4 +181,40 @@ class InteracaoTest {
         esperar();
         assertEquals(100, GerenciadorTema.get().escalaTextoProperty().get());
     }
+
+    @Test
+    @Order(6)
+    @DisplayName("no Mapa, o seletor de mapa-base abre, troca o estilo, fecha com Esc e bloqueia estilos online sem internet")
+    void seletorDeMapaBase() {
+        ROBO.interact(() -> ctx.navegar(Pagina.MAPA));
+        esperar();
+        MapaController mapa = (MapaController) main.controllerDe(Pagina.MAPA);
+        br.unip.aps.ui.componentes.SeletorMapaBase seletor = mapa.seletorBase();
+        String original = seletor.selecionadaProperty().get();
+        ROBO.interact(() -> seletor.setOffline(false));
+
+        ROBO.clickOn("#btnMapaBase");
+        esperar();
+        assertTrue(seletor.aberto(), "o painel deveria abrir");
+        ROBO.clickOn("#base-relevo");
+        esperar();
+        assertEquals("relevo", seletor.selecionadaProperty().get());
+        assertFalse(seletor.aberto(), "o painel fecha depois da escolha");
+
+        ROBO.clickOn("#btnMapaBase");
+        esperar();
+        ROBO.type(KeyCode.ESCAPE);
+        esperar();
+        assertFalse(seletor.aberto(), "Esc fecha o painel");
+
+        ROBO.interact(() -> seletor.setOffline(true));
+        assertTrue(ROBO.lookup("#base-satelite").query().isDisabled(), "sem internet, o satélite fica indisponível");
+        assertFalse(ROBO.lookup("#base-neutro").query().isDisabled(), "o Neutro continua disponível");
+        ROBO.interact(() -> {
+            seletor.setOffline(false);
+            seletor.escolher(original);
+        });
+        esperar();
+        assertEquals(original, seletor.selecionadaProperty().get());
+    }
 }

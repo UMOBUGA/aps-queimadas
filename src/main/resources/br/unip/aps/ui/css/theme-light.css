@@ -23,6 +23,15 @@
     -aps-accent-muted:    #FFD9C2;
     -aps-accent-text:     #B93A0A;
 
+    -aps-rail-bg:        -aps-bg-app;
+    -aps-rail-border:    -aps-border;
+    -aps-rail-hover:     #E7E4E0;
+    -aps-rail-selected:  -aps-accent-subtle;
+    -aps-rail-text-1:    -aps-text-1;
+    -aps-rail-text-2:    -aps-text-2;
+    -aps-rail-text-3:    -aps-text-3;
+    -aps-rail-accent:    -aps-accent-text;
+
     -aps-success:        #067647;
     -aps-success-subtle: #ECFDF3;
     -aps-warning:        #B54708;

@@ -2,6 +2,14 @@
 
 Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Adicionado
+- **Mapa-base à escolha** com miniaturas: Neutro, Ruas e cidades, Relevo, Terreno, Satélite, Satélite com nomes e Atlas (Esri), com escolha salva e contorno branco nos focos em fundos coloridos.
+
+### Alterado
+- Menu lateral no tema claro com a mesma cor da página e texto escuro.
+
 ## [2.0.0] - 2026-09-27
 
 ### Adicionado

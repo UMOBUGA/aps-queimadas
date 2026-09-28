@@ -121,7 +121,21 @@ final class CapturaTelas {
                         esperar(4000, () -> {
                             salvar(String.format("%02d-mapa-municipios.png", n[0]++));
                             mc.modo("pontos");
-                            proximo();
+                            String baseOriginal = mc.seletorBase().selecionadaProperty().get();
+                            mc.seletorBase().abrir();
+                            esperar(3000, () -> {
+                                salvar(String.format("%02d-mapa-base-seletor.png", n[0]++));
+                                mc.seletorBase().escolher("hibrido");
+                                esperar(5000, () -> {
+                                    salvar(String.format("%02d-mapa-satelite.png", n[0]++));
+                                    mc.seletorBase().escolher("relevo");
+                                    esperar(5000, () -> {
+                                        salvar(String.format("%02d-mapa-relevo.png", n[0]++));
+                                        mc.seletorBase().escolher(baseOriginal);
+                                        proximo();
+                                    });
+                                });
+                            });
                         });
                     });
                 });

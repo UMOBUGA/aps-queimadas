@@ -59,6 +59,10 @@ Mede os algoritmos com tamanhos crescentes e três cenários. Os gráficos usam 
 
 Mostra os focos como pontos, agrupados, em mapa de calor ou por município (coroplético por densidade, com quebras de Jenks ou quantis). O botão **Hotspots do ML** sobrepõe os agrupamentos encontrados pelo DBSCAN.
 
+O botão **Mapa-base** abre miniaturas dos estilos de fundo: Neutro (acompanha o tema), Ruas e cidades, Relevo, Terreno, Satélite, Satélite com nomes e Atlas. A escolha fica salva. Nos fundos coloridos, os focos ganham contorno branco para continuar visíveis. Sem internet, só o Neutro fica disponível e o programa usa a malha dos municípios.
+
+![Mapa-base](prints/25-mapa-base-seletor.png)
+
 ## Machine Learning
 
 Prevê focos por município e mês com Random Forest e compara com previsões ingênuas. A tela mostra a validação em janelas de tempo, o efeito de cada grupo de variáveis e o estudo de agosto de 2024.

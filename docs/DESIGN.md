@@ -168,6 +168,8 @@ Todas as animações podem ser desligadas em Configurações. Nada anima em atal
 - **Densidade compacta** (Configurações): reduz espaçamentos para telas pequenas.
 - **Passo a passo com pseudocódigo:** na visualização da ordenação, o pseudocódigo do algoritmo fica ao lado das barras e a linha da operação atual (comparação, troca ou escrita) é destacada; botões avançam e voltam um passo, e uma frase descreve a operação ("Compara a[3] = 17 com a[4] = 9").
 - **Seis temporadas e São Paulo no Brasil:** a Visão geral mostra a série mensal de 2019 a 2024 e o ranking dos estados no ano escolhido (ordenado pelo Merge Sort do projeto), com a participação de SP no total nacional.
+- **Mapa-base à escolha:** um painel com miniaturas reais de sete estilos (Neutro, Ruas, Relevo, Terreno, Satélite, Satélite com nomes e Atlas, todos da Esri e cobrindo o mundo inteiro). A escolha é salva; em fundos coloridos os pontos ganham contorno branco e os hotspots viram amarelo-claro sobre imagem de satélite. Abre em 180 ms com desaceleração forte, fecha com Esc ou clique fora e funciona pelo teclado.
+- **Menu lateral no tema claro:** mesma cor de fundo da página, com texto escuro; no tema escuro continua carvão.
 - **Estruturas aplicadas:** autocompletar com Trie, focos num raio com árvore k-d (com botão que desenha o círculo no mapa) e vizinhança por grafo com busca em largura.
 
 ---

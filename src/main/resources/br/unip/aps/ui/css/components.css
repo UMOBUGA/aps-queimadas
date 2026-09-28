@@ -640,3 +640,41 @@
 .pseudocodigo-linha.atual { -fx-background-color: -aps-accent-subtle; -fx-text-fill: -aps-text-1; -fx-font-weight: bold; -fx-border-color: -aps-accent; -fx-border-radius: 3; -fx-border-width: 1; }
 .pseudocodigo-operacao { -fx-font-family: "Inter Medium"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; -fx-min-height: 40; }
 .modo-apresentacao .pseudocodigo-linha { -fx-font-size: 15px; }
+
+.mapa-base-botao { -fx-graphic-text-gap: 9; -fx-padding: 6 12 6 7; }
+.mapa-base-botao-miniatura { -fx-background-color: -aps-surface-hover; -fx-background-radius: 3; }
+.mapa-base-painel {
+    -fx-background-color: -aps-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -aps-border-strong;
+    -fx-border-radius: 8;
+    -fx-padding: 18 18 14 18;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.28), 28, 0.12, 0, 10);
+}
+.mapa-base-titulo { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 24px; -fx-text-fill: -aps-text-1; }
+.mapa-base-rodape { -fx-font-size: 11.5px; -fx-text-fill: -aps-text-3; -fx-max-width: 560; }
+.mapa-base-cartao {
+    -fx-background-color: transparent;
+    -fx-background-radius: 7;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-border-radius: 7;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+    -fx-alignment: top-left;
+}
+.mapa-base-cartao:hover { -fx-background-color: -aps-surface-hover; }
+.mapa-base-cartao:pressed { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+.mapa-base-cartao:focused { -fx-border-color: -aps-focus-ring; }
+.mapa-base-cartao.selecionado { -fx-border-color: -aps-accent; -fx-background-color: -aps-accent-subtle; }
+.mapa-base-cartao:disabled { -fx-opacity: 0.45; }
+.mapa-base-miniatura { -fx-background-color: -aps-surface-hover; }
+.mapa-base-marca { -fx-opacity: 0; -fx-padding: 5; }
+.mapa-base-marca .ikonli-font-icon { -fx-icon-color: #FFFFFF; }
+.mapa-base-cartao.selecionado .mapa-base-marca {
+    -fx-opacity: 1;
+    -fx-background-color: -aps-accent;
+    -fx-background-radius: 0 7 0 7;
+}
+.mapa-base-nome { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
+.mapa-base-descricao { -fx-font-size: 11.5px; -fx-text-fill: -aps-text-3; }

@@ -33,6 +33,10 @@ public class MapaController implements Pagina.Controlador {
     @FXML private Label lblContagem, lblContagemTexto;
     @FXML private StackPane moldura;
     @FXML private WebView webView;
+    @FXML private javafx.scene.layout.HBox controles;
+
+    private final java.util.prefs.Preferences prefs = preferencias();
+    private br.unip.aps.ui.componentes.SeletorMapaBase seletorBase;
 
     private WebEngine engine;
     private boolean paginaPronta;
@@ -88,11 +92,26 @@ public class MapaController implements Pagina.Controlador {
             else js("APS.setCorPor('" + (n == tgAno ? "ano" : "bioma") + "')");
         });
 
+        seletorBase = new br.unip.aps.ui.componentes.SeletorMapaBase(prefs.get("mapaBase", "neutro"));
+        controles.getChildren().add(0, seletorBase.botao());
+        javafx.scene.layout.VBox painelBase = seletorBase.painel();
+        StackPane.setAlignment(painelBase, javafx.geometry.Pos.TOP_RIGHT);
+        StackPane.setMargin(painelBase, new javafx.geometry.Insets(78, 64, 0, 0));
+        moldura.getChildren().add(painelBase);
+        seletorBase.fecharAoClicarFora(moldura);
+        seletorBase.selecionadaProperty().addListener((o, a, id) -> {
+            prefs.put("mapaBase", id);
+            js("APS.setBase('" + id + "')");
+        });
+
         engine = webView.getEngine();
         engine.setUserAgent(engine.getUserAgent() + " APS-Queimadas-UNIP/1.0");
         engine.setOnAlert(e -> {
             LOG.info("mapa: " + e.getData());
-            if (e.getData() != null && e.getData().startsWith("OFFLINE")) modoOffline = true;
+            if (e.getData() != null && e.getData().startsWith("OFFLINE")) {
+                modoOffline = true;
+                seletorBase.setOffline(true);
+            }
         });
         engine.getLoadWorker().stateProperty().addListener((o, a, s) -> {
             if (s == Worker.State.SUCCEEDED) {
@@ -101,6 +120,7 @@ public class MapaController implements Pagina.Controlador {
                 if (Boolean.getBoolean("aps.mapa.offline")) js("APS.forcarOffline()");
                 aplicarTema();
                 js("APS.setDaltonico(" + GerenciadorTema.get().daltonicoProperty().get() + ")");
+                js("APS.setBase('" + seletorBase.selecionadaProperty().get() + "')");
                 if (visivel) enviarFocos();
                 enviarHotspots();
                 enviarCirculo();
@@ -125,6 +145,19 @@ public class MapaController implements Pagina.Controlador {
         GerenciadorTema.get().daltonicoProperty().addListener((o, a, n) -> js("APS.setDaltonico(" + n + ")"));
     }
 
+    private static java.util.prefs.Preferences preferencias() {
+        try {
+            return java.util.prefs.Preferences.userNodeForPackage(MapaController.class);
+        } catch (SecurityException e) {
+            return java.util.prefs.Preferences.userRoot().node("aps-queimadas-temp");
+        }
+    }
+
+    /** Seletor de mapa-base (usado pela captura de telas e pelos testes de interacao). */
+    br.unip.aps.ui.componentes.SeletorMapaBase seletorBase() {
+        return seletorBase;
+    }
+
     @Override
     public void aoExibir() {
         visivel = true;
@@ -134,6 +167,7 @@ public class MapaController implements Pagina.Controlador {
     @Override
     public void aoOcultar() {
         visivel = false;
+        seletorBase.fechar();
     }
 
     private void indisponivel() {
