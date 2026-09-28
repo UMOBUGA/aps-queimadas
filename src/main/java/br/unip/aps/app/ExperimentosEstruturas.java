@@ -52,6 +52,7 @@ public final class ExperimentosEstruturas {
         topK(focos);
         memoria(focos);
         paralelo(focos, csvsBrasil);
+        espaciais(focos);
         if (!csvsBrasil.isEmpty()) externo(csvsBrasil, memoriaRegistros, temp);
         return md.toString();
     }
@@ -212,6 +213,41 @@ public final class ExperimentosEstruturas {
         }
     }
 
+    private void espaciais(List<FocoIncendio> focos) {
+        log.accept("Trie, arvore k-d e grafo");
+        br.unip.aps.busca.ServicoGeografico g = new br.unip.aps.busca.ServicoGeografico();
+        md.append("\n## 7. Trie, árvore k-d e grafo de municípios\n\n");
+        md.append("### Autocompletar (Trie × testar o prefixo em todos os nomes)\n\n");
+        md.append("| Prefixo | Nomes encontrados | Nós visitados na Trie | Caracteres comparados testando todos |\n|---|---:|---:|---:|\n");
+        for (String prefixo : List.of("S", "SAO", "SAO J", "SANTA", "RIB")) {
+            br.unip.aps.busca.ServicoGeografico.Prefixo r = g.prefixo(focos, prefixo, 1_000);
+            md.append("| ").append(prefixo).append(" | ").append(Formatos.inteiro(r.total())).append(" | ")
+                    .append(Formatos.inteiro(r.passosTrie())).append(" | ").append(Formatos.inteiro(r.comparacoesLinear())).append(" |\n");
+        }
+        String lider = new br.unip.aps.analysis.Estatisticas(focos).topMunicipios(1).get(0).chave();
+        md.append("\n### Focos num raio a partir do centro de ").append(lider).append(" (árvore k-d × calcular todas as distâncias)\n\n");
+        md.append("| Raio | Focos no raio | Distâncias calculadas (árvore) | Distâncias calculadas (todas) | Economia |\n|---:|---:|---:|---:|---:|\n");
+        for (int raio : new int[]{10, 25, 50, 100}) {
+            br.unip.aps.busca.ServicoGeografico.Raio r = g.raio(focos, lider, raio);
+            md.append("| ").append(raio).append(" km | ").append(Formatos.inteiro(r.focos().size())).append(" | ")
+                    .append(Formatos.inteiro(r.distanciasArvore())).append(" | ").append(Formatos.inteiro(r.distanciasLinear())).append(" | ")
+                    .append(Formatos.decimal(100.0 * (1 - (double) r.distanciasArvore() / r.distanciasLinear()), 1)).append("% |\n");
+        }
+        br.unip.aps.busca.ServicoGeografico.Propagacao p = g.propagacao(focos);
+        md.append("\n### O fogo pula para o vizinho? (grafo de fronteiras do IBGE + busca em largura)\n\n");
+        md.append("Grafo com ").append(Formatos.inteiro(p.municipiosNoGrafo())).append(" municípios e ").append(Formatos.inteiro(p.arestas()))
+                .append(" fronteiras. Caso = município sem focos num mês; verifica-se se ele teve focos no mês seguinte, separando quem tinha")
+                .append(" um vizinho com focos no mês do caso.\n\n");
+        md.append("| Situação no mês | Casos | Com focos no mês seguinte | Taxa |\n|---|---:|---:|---:|\n");
+        md.append("| Algum vizinho com focos | ").append(Formatos.inteiro(p.casosComVizinho())).append(" | ").append(Formatos.inteiro(p.novosComVizinho()))
+                .append(" | ").append(Formatos.decimal(100 * p.taxaComVizinho(), 1)).append("% |\n");
+        md.append("| Nenhum vizinho com focos | ").append(Formatos.inteiro(p.casosSemVizinho())).append(" | ").append(Formatos.inteiro(p.novosSemVizinho()))
+                .append(" | ").append(Formatos.decimal(100 * p.taxaSemVizinho(), 1)).append("% |\n\n");
+        md.append("Razão entre as taxas: **").append(Double.isNaN(p.razao()) ? "—" : Formatos.decimal(p.razao(), 2) + "×")
+                .append("**. É uma associação, não prova de causa: municípios vizinhos também dividem clima, relevo e uso do solo.")
+                .append(" Focos sem município na malha: ").append(Formatos.inteiro(p.focosSemMunicipio())).append(".\n");
+    }
+
     private static Long[] chavesSp(List<FocoIncendio> focos) {
         Long[] r = new Long[focos.size()];
         for (int i = 0; i < r.length; i++) r[i] = focos.get(i).getDataHora().toEpochSecond(ZoneOffset.UTC);
@@ -254,7 +290,7 @@ public final class ExperimentosEstruturas {
 
     private void externo(List<Path> csvs, int memoria, Path temp) throws IOException {
         log.accept("External Merge Sort do Brasil");
-        md.append("\n## 7. External Merge Sort: focos do Brasil com memória limitada\n\n");
+        md.append("\n## 8. External Merge Sort: focos do Brasil com memória limitada\n\n");
         Path saida = temp.resolve("brasil-ordenado.csv");
         ExternalMergeSort.Resultado r = new ExternalMergeSort().ordenar(csvs, saida, memoria, log);
         md.append("| Medida | Valor |\n|---|---:|\n");

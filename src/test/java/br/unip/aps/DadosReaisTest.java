@@ -53,7 +53,7 @@ class DadosReaisTest {
     void criteriosExigidos(AlgoritmoTipo tipo) throws Exception {
         ServicoOrdenacao s = new ServicoOrdenacao(Integer.MAX_VALUE);
         int n = tipo.quadratico() ? 3_000 : 0;
-        List<CriterioOrdenacao> crits = new ArrayList<>(List.of(CriterioOrdenacao.DATA));
+        List<CriterioOrdenacao> crits = new ArrayList<>(List.of(tipo == AlgoritmoTipo.COUNTING ? CriterioOrdenacao.HORA_LOCAL : CriterioOrdenacao.DATA));
         if (!tipo.exigeChaveNumerica()) crits.addAll(List.of(CriterioOrdenacao.BIOMA, CriterioOrdenacao.MUNICIPIO));
         for (CriterioOrdenacao c : crits) {
             ResultadoOrdenacao<FocoIncendio> r = s.ordenar(base.getFocos(), new ServicoOrdenacao.Solicitacao(tipo,

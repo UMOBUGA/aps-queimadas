@@ -223,6 +223,24 @@ public final class UiContexto {
         return Dialogos.confirmar(stage, titulo, msg, "Continuar");
     }
 
+    private final javafx.beans.property.ObjectProperty<double[]> circuloMapa = new javafx.beans.property.SimpleObjectProperty<>();
+    private final javafx.beans.property.StringProperty rotuloCirculo = new javafx.beans.property.SimpleStringProperty("");
+
+    /** Pede ao mapa um circulo de raio em km ({lat, lon, raio}); null apaga. */
+    public void mostrarCirculoNoMapa(double lat, double lon, double raioKm, String rotulo) {
+        rotuloCirculo.set(rotulo);
+        circuloMapa.set(new double[]{lat, lon, raioKm});
+        navegar(Pagina.MAPA);
+    }
+
+    public javafx.beans.property.ObjectProperty<double[]> circuloMapaProperty() {
+        return circuloMapa;
+    }
+
+    public String rotuloCirculo() {
+        return rotuloCirculo.get();
+    }
+
     /** Registra um grafico para inclusao (snapshot) nos relatorios PDF. */
     public void registrarGrafico(String titulo, Node no) {
         graficos.put(titulo, no);

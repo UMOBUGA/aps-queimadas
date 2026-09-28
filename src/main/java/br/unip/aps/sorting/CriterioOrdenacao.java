@@ -10,6 +10,7 @@ import java.util.function.ToLongFunction;
 /** Criterios de ordenacao disponiveis para os focos de incendio. */
 public enum CriterioOrdenacao {
     DATA("Data/hora", false, FocoIncendio::getDataHora, f -> f.getDataHora().toEpochSecond(ZoneOffset.UTC)),
+    HORA_LOCAL("Hora local", false, CriterioOrdenacao::horaLocal, f -> horaLocal(f)),
     BIOMA("Bioma", false, FocoIncendio::getChaveBioma, null),
     MUNICIPIO("Município", false, FocoIncendio::getChaveMunicipio, null),
     LATITUDE("Latitude", false, FocoIncendio::getLatitude, f -> chaveDouble(f.getLatitude())),
@@ -63,6 +64,11 @@ public enum CriterioOrdenacao {
 
     public boolean temChaveNumerica() {
         return chaveNumerica != null;
+    }
+
+    /** Hora do dia em Sao Paulo (UTC-3): data_pas vem em GMT. */
+    static int horaLocal(FocoIncendio f) {
+        return (f.getDataHora().getHour() + 21) % 24;
     }
 
     static long chaveDouble(double d) {

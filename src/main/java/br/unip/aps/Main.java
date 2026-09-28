@@ -66,6 +66,10 @@ public final class Main {
                 case "estruturas" -> estruturas(sessao, op, out);
                 case "historico" -> historico(sessao, op, out);
                 case "ml-estudo" -> mlEstudo(op, out);
+                case "manual" -> out.println("Manual: " + br.unip.aps.report.ManualPdf.gerar(Path.of("docs", "MANUAL.md"),
+                        Path.of("docs", "MANUAL.pdf")).toAbsolutePath());
+                case "agregados" -> out.println(br.unip.aps.app.Agregados.gerar(Path.of("data", "historico"), Path.of("data", "brasil"),
+                        Path.of("src", "main", "resources", "dados")));
                 case "help", "ajuda", "h" -> ajuda(out);
                 default -> {
                     out.println("Modo desconhecido: " + args[0]);
@@ -357,6 +361,10 @@ public final class Main {
                                         [--brasil 2019-2024] baixa o Brasil para data/brasil; [--memoria 200000]
                                         grava docs/resultados/estruturas.md
                   historico             --anos 2019-2024 [--meteorologia]  baixa o historico de SP para data/historico
+                  ml-estudo             validacao em janelas, ablacao, intervalo conforme e permutacao com o historico;
+                                        grava docs/resultados/ml-estudo.md
+                  manual                gera docs/MANUAL.pdf a partir de docs/MANUAL.md
+                  agregados             resume data/historico (SP 2019-2024) e data/brasil (estados) nos CSVs embarcados
 
                 Algoritmos: """ + SortAlgorithmFactory.nomes());
     }

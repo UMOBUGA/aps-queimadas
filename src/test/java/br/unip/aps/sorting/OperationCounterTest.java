@@ -21,6 +21,42 @@ class OperationCounterTest {
     }
 
     @Test
+    @DisplayName("Counting: zero comparacoes e exatamente 2n escritas, em qualquer ordem")
+    void counting() {
+        for (boolean inversa : new boolean[]{false, true}) {
+            OperationMetrics m = AlgoritmoTipo.COUNTING.criar().ordenar(seq(inversa), NATURAL, Integer::longValue);
+            assertEquals(0, m.comparacoes());
+            assertEquals(0, m.trocas());
+            assertEquals(2L * N, m.atribuicoes());
+        }
+    }
+
+    @Test
+    @DisplayName("Intro e Quick 2 pivos: n log n comparacoes mesmo com a entrada ja ordenada ou invertida")
+    void introEDoisPivos() {
+        int n = 4096;
+        double limite = 3.0 * n * (Math.log(n) / Math.log(2));
+        for (AlgoritmoTipo t : new AlgoritmoTipo[]{AlgoritmoTipo.INTRO, AlgoritmoTipo.QUICK_2PIVOS}) {
+            for (boolean inversa : new boolean[]{false, true}) {
+                Integer[] a = new Integer[n];
+                for (int i = 0; i < n; i++) a[i] = inversa ? n - i : i;
+                OperationMetrics m = t.criar().ordenar(a, NATURAL);
+                assertTrue(m.comparacoes() < limite, t.nome() + " fez " + m.comparacoes() + " comparacoes");
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Counting recusa intervalo de chaves grande demais com mensagem que indica o Radix")
+    void countingFaixa() {
+        Integer[] a = {0, 1 << 30};
+        IllegalArgumentException e = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> AlgoritmoTipo.COUNTING.criar().ordenar(a, NATURAL, Integer::longValue));
+        assertTrue(e.getMessage().contains("Radix"));
+        assertTrue(AlgoritmoTipo.COUNTING.aceita(java.util.List.of(3, 7, 23), Integer::longValue));
+    }
+
+    @Test
     @DisplayName("Bubble: melhor caso n-1 comparacoes e 0 trocas; pior caso n(n-1)/2 de cada")
     void bubble() {
         OperationMetrics melhor = AlgoritmoTipo.BUBBLE.criar().ordenar(seq(false), NATURAL);

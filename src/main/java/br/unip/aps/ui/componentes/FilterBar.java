@@ -51,6 +51,7 @@ public class FilterBar extends VBox {
     private final List<CheckBox> checksAno = new ArrayList<>();
     private final PauseTransition debounce = new PauseTransition(Duration.millis(380));
     private List<String> municipios = List.of();
+    private br.unip.aps.estruturas.Trie<String> trie;
     private boolean municipioExato;
     private boolean atualizando;
 
@@ -168,6 +169,8 @@ public class FilterBar extends VBox {
             for (String bioma : b.biomas()) mbBioma.getItems().add(itemCheck(bioma, checksBioma, Graficos.classeBioma(bioma)));
             for (Integer ano : b.anos()) mbAno.getItems().add(itemCheck(String.valueOf(ano), checksAno, null));
             municipios = b.municipios();
+            trie = new br.unip.aps.estruturas.Trie<>(new br.unip.aps.sorting.OperationCounter());
+            for (String m : municipios) trie.inserir(m, m);
             List<YearMonth> meses = new ArrayList<>();
             for (YearMonth ym = YearMonth.from(b.dataInicial()).withMonth(1); !ym.isAfter(YearMonth.from(b.dataFinal()).withMonth(12)); ym = ym.plusMonths(1)) {
                 meses.add(ym);
@@ -203,21 +206,23 @@ public class FilterBar extends VBox {
             return;
         }
         String alvo = Textos.semAcentos(texto.strip());
-        List<MenuItem> itens = new ArrayList<>();
+        List<String> candidatos = new ArrayList<>(trie == null ? List.of() : trie.comPrefixo(texto, 8));
         for (String m : municipios) {
-            if (Textos.semAcentos(m).contains(alvo)) {
-                MenuItem it = new MenuItem(m, Icones.de(Icones.MUNICIPIO, 15));
-                it.setOnAction(e -> {
-                    atualizando = true;
-                    tfMunicipio.setText(m);
-                    tfMunicipio.positionCaret(m.length());
-                    atualizando = false;
-                    municipioExato = true;
-                    aplicar();
-                });
-                itens.add(it);
-                if (itens.size() == 8) break;
-            }
+            if (candidatos.size() >= 8) break;
+            if (!candidatos.contains(m) && Textos.semAcentos(m).contains(alvo)) candidatos.add(m);
+        }
+        List<MenuItem> itens = new ArrayList<>();
+        for (String m : candidatos) {
+            MenuItem it = new MenuItem(m, Icones.de(Icones.MUNICIPIO, 15));
+            it.setOnAction(e -> {
+                atualizando = true;
+                tfMunicipio.setText(m);
+                tfMunicipio.positionCaret(m.length());
+                atualizando = false;
+                municipioExato = true;
+                aplicar();
+            });
+            itens.add(it);
         }
         if (itens.isEmpty()) {
             MenuItem nada = new MenuItem("Nenhum município encontrado");

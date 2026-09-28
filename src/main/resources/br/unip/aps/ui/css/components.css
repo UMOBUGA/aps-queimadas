@@ -634,3 +634,9 @@
 .comparar-variacao { -fx-font-family: "Big Shoulders Display Bold"; -fx-font-size: 22px; -fx-text-fill: -aps-text-2; }
 .comparar-variacao.alta { -fx-text-fill: -aps-accent; }
 .comparar-variacao.queda { -fx-text-fill: -aps-success; }
+
+.pseudocodigo { -fx-padding: 10 0 10 0; -fx-border-color: -aps-border transparent -aps-border transparent; -fx-border-width: 1 0 1 0; }
+.pseudocodigo-linha { -fx-font-family: "Consolas", "Menlo", "DejaVu Sans Mono", monospace; -fx-font-size: 12.5px; -fx-text-fill: -aps-text-2; -fx-padding: 3 8 3 8; -fx-background-radius: 3; }
+.pseudocodigo-linha.atual { -fx-background-color: -aps-accent-subtle; -fx-text-fill: -aps-text-1; -fx-font-weight: bold; -fx-border-color: -aps-accent; -fx-border-radius: 3; -fx-border-width: 1; }
+.pseudocodigo-operacao { -fx-font-family: "Inter Medium"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; -fx-min-height: 40; }
+.modo-apresentacao .pseudocodigo-linha { -fx-font-size: 15px; }

@@ -28,7 +28,7 @@ final class ModoApresentacao {
 
     private static final List<Etapa> ETAPAS = List.of(
             new Etapa("dados", "Os dados", "Focos do satélite de referência do INPE em SP, 2023–2024: o que aconteceu na temporada", Pagina.VISAO_GERAL),
-            new Etapa("ordenacao", "Ordenação", "Dez algoritmos implementados à mão, com a contagem de cada operação", Pagina.ORDENACAO),
+            new Etapa("ordenacao", "Ordenação", "Treze algoritmos implementados à mão, com a contagem de cada operação", Pagina.ORDENACAO),
             new Etapa("estruturas", "Estruturas e busca", "Por que ordenar: busca binária, árvore AVL, hash e heap sobre os mesmos focos", Pagina.ESTRUTURAS),
             new Etapa("benchmark", "Benchmark", "Custo × tamanho da entrada: na escala log-log, a inclinação é o expoente da complexidade", Pagina.BENCHMARK),
             new Etapa("mapa", "Mapa", "Onde queima: pontos, densidade por município e os agrupamentos encontrados pelo ML", Pagina.MAPA),

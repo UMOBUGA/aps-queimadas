@@ -19,6 +19,11 @@ public interface SortAlgorithm {
         return false;
     }
 
+    /** Indica se o algoritmo consegue ordenar chaves nesse intervalo (o Counting Sort so aceita intervalos pequenos). */
+    default boolean aceitaFaixa(long minimo, long maximo) {
+        return true;
+    }
+
     /** Ordena um vetor in-place e devolve as metricas da execucao. */
     default <T> OperationMetrics ordenar(T[] dados, Comparator<? super T> comparador) {
         return ordenar(dados, comparador, null);

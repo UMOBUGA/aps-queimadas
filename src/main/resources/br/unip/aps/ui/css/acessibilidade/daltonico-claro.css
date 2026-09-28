@@ -1,0 +1,16 @@
+/* Modo daltonico (tema claro): paleta Okabe-Ito escurecida para contraste minimo de 3:1 sobre o fundo claro. */
+.root {
+    -aps-bioma-mata:     #0072B2;
+    -aps-bioma-cerrado:  #B35900;
+    -aps-success:        #0072B2;
+    -aps-success-subtle: #E8F2FA;
+    -aps-danger:         #B35900;
+    -aps-danger-subtle:  #FBF0E6;
+    -aps-serie-1: #0072B2;
+    -aps-serie-2: #C44E00;
+    -aps-serie-3: #00805E;
+    -aps-serie-4: #4F46C8;
+    -aps-serie-5: #7A5C00;
+    -aps-serie-6: #B0407E;
+    -aps-serie-7: -aps-serie-neutra;
+}

@@ -100,8 +100,10 @@ public class MapaController implements Pagina.Controlador {
                 js("APS.setMalha(" + br.unip.aps.geo.MalhaMunicipal.sp().geojson() + ")");
                 if (Boolean.getBoolean("aps.mapa.offline")) js("APS.forcarOffline()");
                 aplicarTema();
+                js("APS.setDaltonico(" + GerenciadorTema.get().daltonicoProperty().get() + ")");
                 if (visivel) enviarFocos();
                 enviarHotspots();
+                enviarCirculo();
             } else if (s == Worker.State.FAILED) {
                 indisponivel();
             }
@@ -118,7 +120,9 @@ public class MapaController implements Pagina.Controlador {
             enviarHotspots();
         });
         tgHotspots.selectedProperty().addListener((o, a, n) -> enviarHotspots());
+        ctx.circuloMapaProperty().addListener((o, a, n) -> enviarCirculo());
         GerenciadorTema.get().temaProperty().addListener((o, a, n) -> aplicarTema());
+        GerenciadorTema.get().daltonicoProperty().addListener((o, a, n) -> js("APS.setDaltonico(" + n + ")"));
     }
 
     @Override
@@ -257,6 +261,16 @@ public class MapaController implements Pagina.Controlador {
                     .append(Json.texto(h.municipioPrincipal())).append(',').append(Json.texto(h.biomaPredominante())).append(']');
         }
         js("APS.setHotspots(" + sb.append(']') + ")");
+    }
+
+    private void enviarCirculo() {
+        double[] c = ctx.circuloMapaProperty().get();
+        if (c == null) {
+            js("APS.setCirculo(null)");
+            return;
+        }
+        js("APS.setCirculo({lat:" + Json.numero(c[0], 5) + ",lon:" + Json.numero(c[1], 5) + ",raioKm:" + Json.numero(c[2], 2)
+                + ",rotulo:" + Json.texto(ctx.rotuloCirculo()) + "})");
     }
 
     private void js(String codigo) {

@@ -1,0 +1,16 @@
+/* Modo daltonico (tema escuro): paleta Okabe-Ito, separavel em protanopia, deuteranopia e tritanopia. */
+.root {
+    -aps-bioma-mata:     #56B4E9;
+    -aps-bioma-cerrado:  #E69F00;
+    -aps-success:        #56B4E9;
+    -aps-success-subtle: #0F2238;
+    -aps-danger:         #E69F00;
+    -aps-danger-subtle:  #2E200A;
+    -aps-serie-1: #56B4E9;
+    -aps-serie-2: #E69F00;
+    -aps-serie-3: #009E73;
+    -aps-serie-4: #D55E00;
+    -aps-serie-5: #CC79A7;
+    -aps-serie-6: #F0E442;
+    -aps-serie-7: -aps-serie-neutra;
+}

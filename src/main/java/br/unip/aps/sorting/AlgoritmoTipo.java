@@ -1,8 +1,11 @@
 package br.unip.aps.sorting;
 
 import br.unip.aps.sorting.algorithms.BubbleSort;
+import br.unip.aps.sorting.algorithms.CountingSort;
+import br.unip.aps.sorting.algorithms.DualPivotQuickSort;
 import br.unip.aps.sorting.algorithms.HeapSort;
 import br.unip.aps.sorting.algorithms.InsertionSort;
+import br.unip.aps.sorting.algorithms.IntroSort;
 import br.unip.aps.sorting.algorithms.MergeSort;
 import br.unip.aps.sorting.algorithms.QuickSort;
 import br.unip.aps.sorting.algorithms.QuickSort3Way;
@@ -22,9 +25,12 @@ public enum AlgoritmoTipo {
     MERGE(MergeSort::new),
     QUICK(QuickSort::new),
     QUICK_3WAY(QuickSort3Way::new),
+    QUICK_2PIVOS(DualPivotQuickSort::new),
+    INTRO(IntroSort::new),
     HEAP(HeapSort::new),
     TIM(TimSortSimplificado::new),
-    RADIX(RadixSort::new);
+    RADIX(RadixSort::new),
+    COUNTING(CountingSort::new);
 
     private final Supplier<SortAlgorithm> fabrica;
     private final SortAlgorithm prototipo;
@@ -52,6 +58,19 @@ public enum AlgoritmoTipo {
 
     public boolean exigeChaveNumerica() {
         return prototipo.exigeChaveNumerica();
+    }
+
+    /** Indica se o algoritmo consegue ordenar esses dados: tem a chave necessaria e o intervalo de chaves e suportado. */
+    public <T> boolean aceita(Iterable<T> dados, java.util.function.ToLongFunction<? super T> chave) {
+        if (!exigeChaveNumerica()) return true;
+        if (chave == null) return false;
+        long min = Long.MAX_VALUE, max = Long.MIN_VALUE;
+        for (T d : dados) {
+            long k = chave.applyAsLong(d);
+            min = Math.min(min, k);
+            max = Math.max(max, k);
+        }
+        return min > max || prototipo.aceitaFaixa(min, max);
     }
 
     @Override

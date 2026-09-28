@@ -66,6 +66,11 @@ class SortAlgorithmsTest {
         List<Integer> ref = new ArrayList<>(Arrays.asList(esperado));
         Collections.sort(ref);
         Integer[] obtido = entrada.clone();
+        if (!tipo.aceita(Arrays.asList(entrada), Integer::longValue)) {
+            assertThrows(IllegalArgumentException.class, () -> tipo.criar().ordenar(obtido, NATURAL, Integer::longValue),
+                    tipo.nome() + " deveria recusar um intervalo de chaves grande demais");
+            return;
+        }
         OperationMetrics m = tipo.criar().ordenar(obtido, NATURAL, Integer::longValue);
         assertArrayEquals(ref.toArray(new Integer[0]), obtido, tipo.nome() + " falhou em: " + caso);
         assertTrue(m.nanos() >= 0);
@@ -102,7 +107,7 @@ class SortAlgorithmsTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = AlgoritmoTipo.class, mode = EnumSource.Mode.EXCLUDE, names = "RADIX")
+    @EnumSource(value = AlgoritmoTipo.class, mode = EnumSource.Mode.EXCLUDE, names = {"RADIX", "COUNTING"})
     @DisplayName("valores nulos com Comparator.nullsFirst")
     void valoresNulos(AlgoritmoTipo tipo) {
         Integer[] a = {3, null, 1, null, 2};
@@ -111,7 +116,7 @@ class SortAlgorithmsTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = AlgoritmoTipo.class, mode = EnumSource.Mode.EXCLUDE, names = "RADIX")
+    @EnumSource(value = AlgoritmoTipo.class, mode = EnumSource.Mode.EXCLUDE, names = {"RADIX", "COUNTING"})
     @DisplayName("multicriterio em focos: bioma -> municipio -> data desc")
     void multicriterioEmFocos(AlgoritmoTipo tipo) {
         List<FocoIncendio> base = Focos.aleatorios(1_500, 99);
@@ -180,7 +185,7 @@ class SortAlgorithmsTest {
         assertEquals(AlgoritmoTipo.MERGE, SortAlgorithmFactory.tipo("Merge Sort"));
         assertEquals(AlgoritmoTipo.QUICK_3WAY, SortAlgorithmFactory.tipo("quick 3-way"));
         assertEquals(AlgoritmoTipo.TIM, SortAlgorithmFactory.tipo("Tim Sort (simplificado)"));
-        assertEquals(10, SortAlgorithmFactory.todos().size());
+        assertEquals(13, SortAlgorithmFactory.todos().size());
         assertThrows(IllegalArgumentException.class, () -> SortAlgorithmFactory.tipo("gnome"));
     }
 }

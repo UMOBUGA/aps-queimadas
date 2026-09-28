@@ -55,6 +55,13 @@
         <ChartCard fx:id="cArvore" titulo="Árvore AVL: cada inserção mantém a altura em O(log n)"
                    subtitulo="Inserir em ordem alfabética transformaria uma árvore de busca comum numa lista; a AVL rotaciona e continua baixa"/>
 
+        <ChartCard fx:id="cTrie" titulo="Autocompletar com uma Trie"
+                   subtitulo="A árvore de prefixos examina só as letras digitadas; testar o prefixo em todos os nomes olha cada município"/>
+        <ChartCard fx:id="cRaio" titulo="Focos num raio: árvore k-d"
+                   subtitulo="Corta o estado ao meio alternando latitude e longitude; descarta regiões inteiras sem calcular a distância de cada foco"/>
+        <ChartCard fx:id="cGrafo" titulo="Vizinhos no mapa: grafo e busca em largura"
+                   subtitulo="Cada município é um vértice e cada fronteira da malha do IBGE, uma aresta. A busca em largura mede a distância em fronteiras"/>
+
         <GradeResponsiva larguraMinima="520" maxColunas="2" gap="36">
             <ChartCard fx:id="cTopK" titulo="Top K com heap" subtitulo="Heap mínimo de tamanho K sobre as contagens da tabela hash × ordenar todos os municípios" prefHeight="440"/>
             <ChartCard fx:id="cMemoria" titulo="Memória extra por algoritmo" subtitulo="Bytes alocados durante a ordenação (critério data/hora), descontado o custo fixo da instrumentação · escala logarítmica" prefHeight="440"/>

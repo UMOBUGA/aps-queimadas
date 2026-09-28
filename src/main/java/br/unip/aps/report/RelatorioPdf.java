@@ -525,7 +525,7 @@ final class RelatorioPdf {
     }
 
     private void comparativo(Document doc, List<ResultadoOrdenacao<FocoIncendio>> lista) throws DocumentException {
-        texto(doc, "Os dez algoritmos ordenaram a mesma cópia dos dados. Critério: " + lista.get(0).criterio() + " · cenário: "
+        texto(doc, "Os " + lista.size() + " algoritmos compatíveis com o critério ordenaram a mesma cópia dos dados. Critério: " + lista.get(0).criterio() + " · cenário: "
                 + lista.get(0).cenario() + " · n = " + Formatos.inteiro(lista.get(0).tamanho()) + ".");
         PdfPTable t = ReportExporter.Pdf.tabela(new float[]{3, 2.2f, 2, 2.2f, 2, 1.4f}, "Algoritmo", "Comparações", "Trocas", "Acessos", "Tempo", "Verificado");
         for (ResultadoOrdenacao<FocoIncendio> r : lista) {
@@ -638,7 +638,7 @@ final class RelatorioPdf {
         nota(doc, "Limpeza", Formatos.inteiro(rel.getTotalLidas()) + " linhas lidas, " + Formatos.inteiro(rel.getTotalAceitas()) + " aceitas, "
                 + Formatos.inteiro(rel.getTotalRejeitadas()) + " rejeitadas e " + Formatos.inteiro(rel.getDuplicadosRemovidos())
                 + " duplicadas removidas. Linhas inválidas não interrompem a carga: ficam registradas com o motivo na aba Qualidade dos dados.");
-        nota(doc, "Ordenação", "Os dez algoritmos foram implementados à mão, sem Collections.sort, Arrays.sort ou estruturas ordenadas da "
+        nota(doc, "Ordenação", "Os treze algoritmos foram implementados à mão, sem Collections.sort, Arrays.sort ou estruturas ordenadas da "
                 + "biblioteca padrão (um teste de arquitetura impede o uso). Cada algoritmo acessa os dados apenas por um vetor instrumentado, "
                 + "que conta comparações, trocas, atribuições e acessos. A ordenação trabalha sobre uma cópia e o resultado é verificado.");
         if (ctx.benchmark() != null && !ctx.benchmark().isEmpty()) {

@@ -61,7 +61,7 @@ public final class BenchmarkRunner {
                         String caso = tipo.nome() + " | " + criterio.rotulo() + " | " + cenario + " | n=" + n;
                         ouvinte.accept(new Progresso(concluidos, total, caso));
                         concluidos++;
-                        if (tipo.exigeChaveNumerica() && chave == null) continue;
+                        if (!tipo.aceita(amostra, chave)) continue;
                         if (tipo.quadratico() && n > config.limiteQuadratico()) {
                             LOG.info(() -> "Pulado (O(n²) acima do limite): " + caso);
                             continue;
@@ -116,7 +116,7 @@ public final class BenchmarkRunner {
             Criterios crit = Criterios.de(c, Ordem.CRESCENTE);
             FocoIncendio[] entrada = amostra.toArray(new FocoIncendio[0]);
             for (AlgoritmoTipo t : config.algoritmos()) {
-                if (t.exigeChaveNumerica() && crit.chaveNumerica() == null) continue;
+                if (!t.aceita(amostra, crit.chaveNumerica())) continue;
                 for (int i = 0; i < 3; i++) {
                     verificarCancelamento();
                     t.criar().ordenar(Arrays.copyOf(entrada, entrada.length), crit.comparador(), crit.chaveNumerica());

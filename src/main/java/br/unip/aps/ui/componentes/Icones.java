@@ -60,6 +60,8 @@ public final class Icones {
     public static final String EXECUTAR = "mdi2p-play";
     public static final String PAUSAR = "mdi2p-pause";
     public static final String REINICIAR = "mdi2s-skip-previous";
+    public static final String PASSO_ANTERIOR = "mdi2c-chevron-left";
+    public static final String PASSO_SEGUINTE = "mdi2c-chevron-right";
     public static final String COMPARAR = "mdi2c-compare-horizontal";
     public static final String ANIMAR = "mdi2a-animation-play-outline";
     public static final String COMPARACOES = "mdi2c-counter";

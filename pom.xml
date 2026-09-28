@@ -127,6 +127,18 @@
 
         <!-- Testes -->
         <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <version>21.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
@@ -155,7 +167,24 @@
                 <configuration>
                     <argLine>@{argLine} -Xss8m -Dfile.encoding=UTF-8 -Daps.semTour=true</argLine>
                     <workingDirectory>${project.basedir}</workingDirectory>
+                    <excludes>
+                        <exclude>**/*InteracaoTest.java</exclude>
+                    </excludes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>interacao</id>
+                        <goals><goal>test</goal></goals>
+                        <configuration>
+                            <excludes combine.self="override"/>
+                            <includes>
+                                <include>**/*InteracaoTest.java</include>
+                            </includes>
+                            <argLine>@{argLine} -Xss8m -Dfile.encoding=UTF-8 -Daps.semTour=true -Dtestfx.robot=glass -Dtestfx.headless=true
+                                -Dprism.order=sw -Dprism.text=t2k -Dglass.platform=Monocle -Dmonocle.platform=Headless -Djava.awt.headless=true</argLine>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Cobertura de testes: relatorio em target/site/jacoco/index.html -->

@@ -55,6 +55,36 @@
                 </HBox>
             </VBox>
 
+            <VBox styleClass="panel-card" spacing="4">
+                <Label text="Acessibilidade" styleClass="card-title"/>
+                <Label text="Valem para todas as telas, o mapa e os gráficos." styleClass="card-subtitle"/>
+                <HBox styleClass="config-linha">
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Cores para daltonismo" styleClass="t-h3"/>
+                        <Label text="Troca verde, amarelo e vermelho por azul e laranja (paleta Okabe-Ito), distinguíveis em protanopia, deuteranopia e tritanopia." styleClass="t-small" wrapText="true"/>
+                    </VBox>
+                    <ToggleSwitch fx:id="swDaltonico"/>
+                </HBox>
+                <HBox styleClass="config-linha">
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Alto contraste" styleClass="t-h3"/>
+                        <Label text="Fundo puro, textos secundários com a mesma força do principal e bordas mais visíveis." styleClass="t-small" wrapText="true"/>
+                    </VBox>
+                    <ToggleSwitch fx:id="swContraste"/>
+                </HBox>
+                <HBox styleClass="config-linha">
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Tamanho do texto" styleClass="t-h3"/>
+                        <Label text="Amplia todas as fontes da interface; útil em projetores e telas de alta resolução." styleClass="t-small" wrapText="true"/>
+                    </VBox>
+                    <HBox styleClass="segmented">
+                        <ToggleButton fx:id="tgTexto100" text="Normal"/>
+                        <ToggleButton fx:id="tgTexto115" text="Grande"/>
+                        <ToggleButton fx:id="tgTexto130" text="Maior"/>
+                    </HBox>
+                </HBox>
+            </VBox>
+
             <VBox styleClass="panel-card" spacing="10">
                 <Label text="Atalhos de teclado" styleClass="card-title"/>
                 <Label text="Navegação completa pelo teclado; Tab percorre os controles com foco visível." styleClass="card-subtitle"/>

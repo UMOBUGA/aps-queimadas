@@ -36,6 +36,9 @@ public class SortVisualizer extends VBox {
     private final Label lblPasso = new Label();
     private final Label lblComp = new Label();
     private final Label lblMov = new Label();
+    private final VBox codigo = new VBox(2);
+    private final Label lblOperacao = new Label();
+    private Pseudocodigo pseudo;
     private final Button play = new Button();
     private final Slider velocidade = new Slider(1, 60, 22);
     private final Timeline timeline = new Timeline();
@@ -80,13 +83,34 @@ public class SortVisualizer extends VBox {
         for (Label l : List.of(lblPasso, lblComp, lblMov)) l.getStyleClass().add("chip");
         lblComp.setGraphic(Icones.de(Icones.COMPARACOES, 14));
         lblMov.setGraphic(Icones.de(Icones.TROCAS, 14));
+        Button anterior = new Button(null, Icones.de(Icones.PASSO_ANTERIOR, 16));
+        anterior.getStyleClass().add("btn-secondary");
+        anterior.setTooltip(new Tooltip("Voltar um passo"));
+        anterior.setAccessibleText("Voltar um passo");
+        anterior.setOnAction(e -> voltarPasso());
+        Button seguinte = new Button(null, Icones.de(Icones.PASSO_SEGUINTE, 16));
+        seguinte.getStyleClass().add("btn-secondary");
+        seguinte.setTooltip(new Tooltip("Avançar um passo"));
+        seguinte.setAccessibleText("Avançar um passo");
+        seguinte.setOnAction(e -> avancarPasso());
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
-        HBox controles = new HBox(8, play, reiniciar, embaralhar, esp, vel, velocidade);
+        HBox controles = new HBox(8, play, anterior, seguinte, reiniciar, embaralhar, esp, vel, velocidade);
         controles.setAlignment(Pos.CENTER_LEFT);
         HBox contadores = new HBox(8, lblPasso, lblComp, lblMov, legenda());
         contadores.setAlignment(Pos.CENTER_LEFT);
-        getChildren().addAll(controles, palco, contadores);
+        codigo.getStyleClass().add("pseudocodigo");
+        codigo.setMinWidth(280);
+        codigo.setPrefWidth(320);
+        codigo.setMaxWidth(360);
+        palco.setPrefWidth(640);
+        lblOperacao.getStyleClass().add("pseudocodigo-operacao");
+        lblOperacao.setWrapText(true);
+        VBox lateral = new VBox(10, codigo, lblOperacao);
+        HBox.setHgrow(palco, Priority.ALWAYS);
+        HBox area = new HBox(20, palco, lateral);
+        VBox.setVgrow(area, Priority.ALWAYS);
+        getChildren().addAll(controles, area, contadores);
         timeline.setCycleCount(Timeline.INDEFINITE);
         velocidade.valueProperty().addListener((o, a, n) -> ajustarRitmo());
         embaralharInicial();
@@ -125,8 +149,62 @@ public class SortVisualizer extends VBox {
         }
     }
 
+    private void montarCodigo() {
+        pseudo = Pseudocodigo.de(algoritmo);
+        codigo.getChildren().clear();
+        for (int i = 0; i < pseudo.linhas().size(); i++) {
+            Label l = new Label(String.format("%2d  %s", i + 1, pseudo.linhas().get(i)));
+            l.getStyleClass().add("pseudocodigo-linha");
+            l.setMaxWidth(Double.MAX_VALUE);
+            codigo.getChildren().add(l);
+        }
+        codigo.setAccessibleText("Pseudocódigo do " + algoritmo.nome());
+    }
+
+    private void destacarLinha(int linha) {
+        for (int i = 0; i < codigo.getChildren().size(); i++) {
+            codigo.getChildren().get(i).getStyleClass().remove("atual");
+            if (i == linha) codigo.getChildren().get(i).getStyleClass().add("atual");
+        }
+    }
+
+    private void voltarPasso() {
+        timeline.stop();
+        int alvo = Math.max(0, passo - 1);
+        atual = inicial.clone();
+        passo = 0;
+        comparacoes = 0;
+        movimentos = 0;
+        barras.forEach(b -> b.getStyleClass().removeAll("comparando", "trocando", "ordenada"));
+        while (passo < alvo - 1) aplicar(eventos.get(passo++), false);
+        if (alvo > 0) avancar();
+        else {
+            destacarLinha(-1);
+            lblOperacao.setText("Início: vetor embaralhado com " + N + " valores.");
+            atualizarRotulos();
+            desenhar();
+        }
+        pausado();
+    }
+
+    private void avancarPasso() {
+        timeline.stop();
+        avancar();
+        pausado();
+    }
+
+    private void pausado() {
+        if (passo < eventos.size()) {
+            play.setText(passo == 0 ? "Reproduzir" : "Continuar");
+            play.setGraphic(Icones.de(Icones.EXECUTAR, 16));
+        }
+    }
+
     private void preparar(boolean novaAmostra) {
         timeline.stop();
+        montarCodigo();
+        destacarLinha(-1);
+        lblOperacao.setText("Início: vetor embaralhado com " + N + " valores. Use os botões de passo para seguir linha a linha.");
         if (novaAmostra) embaralharInicial();
         atual = inicial.clone();
         eventos = gravar(algoritmo, inicial);
@@ -148,6 +226,11 @@ public class SortVisualizer extends VBox {
             @Override
             public void comparacao(int i, int j) {
                 ev.add(new Evento(Evento.COMPARA, i, j, 0));
+            }
+
+            @Override
+            public void comparacaoDeValores() {
+                ev.add(new Evento(Evento.COMPARA, -1, -1, 0));
             }
 
             @Override
@@ -195,34 +278,52 @@ public class SortVisualizer extends VBox {
             barras.forEach(b -> {
                 if (!b.getStyleClass().contains("ordenada")) b.getStyleClass().add("ordenada");
             });
+            destacarLinha(-1);
+            lblOperacao.setText("Fim: vetor ordenado em " + Formatos.inteiro(eventos.size()) + " passos.");
             play.setText("Repetir");
             play.setGraphic(Icones.de(Icones.REINICIAR, 16));
             atualizarRotulos();
             return;
         }
-        Evento e = eventos.get(passo++);
+        aplicar(eventos.get(passo++), true);
+        atualizarRotulos();
+        desenhar();
+    }
+
+    private void aplicar(Evento e, boolean visual) {
         switch (e.tipo()) {
             case Evento.COMPARA -> {
                 comparacoes++;
-                marcar(e.i(), "comparando");
-                marcar(e.j(), "comparando");
+                if (visual) {
+                    marcar(e.i(), "comparando");
+                    marcar(e.j(), "comparando");
+                    destacarLinha(pseudo.comparacao());
+                    lblOperacao.setText(e.i() < 0 ? "Compara o valor guardado com o elemento da vez"
+                            : "Compara a[" + e.i() + "] = " + atual[e.i()] + " com a[" + e.j() + "] = " + atual[e.j()]);
+                }
             }
             case Evento.TROCA -> {
                 movimentos++;
                 int t = atual[e.i()];
                 atual[e.i()] = atual[e.j()];
                 atual[e.j()] = t;
-                marcar(e.i(), "trocando");
-                marcar(e.j(), "trocando");
+                if (visual) {
+                    marcar(e.i(), "trocando");
+                    marcar(e.j(), "trocando");
+                    destacarLinha(pseudo.troca());
+                    lblOperacao.setText("Troca a[" + e.i() + "] e a[" + e.j() + "]: agora " + atual[e.i()] + " e " + atual[e.j()]);
+                }
             }
             default -> {
                 movimentos++;
                 atual[e.i()] = e.valor();
-                marcar(e.i(), "trocando");
+                if (visual) {
+                    marcar(e.i(), "trocando");
+                    destacarLinha(pseudo.escrita());
+                    lblOperacao.setText("Escreve " + e.valor() + " em a[" + e.i() + "]");
+                }
             }
         }
-        atualizarRotulos();
-        desenhar();
     }
 
     private void marcar(int i, String classe) {

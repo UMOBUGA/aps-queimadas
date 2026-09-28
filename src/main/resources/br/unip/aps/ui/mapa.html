@@ -62,17 +62,22 @@
 window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + ':' + l); } catch (e) {} };
 (function () {
   var PALETA = {
-    claro:  { bioma: {"Mata Atlântica": "#1F6E45", "Cerrado": "#96650E", "Amazônia": "#2A78D6", "Caatinga": "#E87BA4", "Pantanal": "#4A3AA7", "Pampa": "#1BAF7A"},
+    claro:  { bioma: {"Mata Atlântica": "#1F6E45", "Cerrado": "#A67C00", "Amazônia": "#2A78D6", "Caatinga": "#E87BA4", "Pantanal": "#4A3AA7", "Pampa": "#1BAF7A"},
               outro: "#8C8178", anoRecente: "#D9480F", anoAnterior: "#3D6DB5", borda: "#FFFFFF",
               heat: ["#F6C26B", "#E0691C", "#A8263B", "#6E1B5E", "#2E0A4F"], hotspot: "#15100D" },
     escuro: { bioma: {"Mata Atlântica": "#2E9E63", "Cerrado": "#E8C15A", "Amazônia": "#3987E5", "Caatinga": "#D55181", "Pantanal": "#9085E9", "Pampa": "#199E70"},
               outro: "#A08D80", anoRecente: "#FF6B1A", anoAnterior: "#7FA3D1", borda: "#15100E",
               heat: ["#420A68", "#932667", "#DD513A", "#FCA50A", "#FCFFA4"], hotspot: "#FCFFA4" }
   };
+  var BIOMA_CVD = {
+    claro:  {"Mata Atlântica": "#0072B2", "Cerrado": "#B35900", "Amazônia": "#00805E", "Caatinga": "#B0407E", "Pantanal": "#4F46C8", "Pampa": "#7A5C00"},
+    escuro: {"Mata Atlântica": "#56B4E9", "Cerrado": "#E69F00", "Amazônia": "#009E73", "Caatinga": "#CC79A7", "Pantanal": "#D55E00", "Pampa": "#F0E442"}
+  };
   if (typeof L === 'undefined') {
     document.getElementById('aviso').style.display = 'flex';
     window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, setTema: function () {}, setModo: function () {},
-                   setCorPor: function () {}, setMalha: function () {}, forcarOffline: function () {}, setCoropletico: function () {} };
+                   setCorPor: function () {}, setMalha: function () {}, forcarOffline: function () {}, setCoropletico: function () {},
+                   setCirculo: function () {}, setDaltonico: function () {} };
     return;
   }
   var SP = L.latLngBounds([-25.35, -53.15], [-19.75, -44.15]);
@@ -116,7 +121,14 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
   legenda.onAdd = function () { legendaDiv = L.DomUtil.create('div', 'legenda'); return legendaDiv; };
   legenda.addTo(mapa);
 
-  function pal() { return PALETA[estado.tema]; }
+  function pal() {
+    var p = PALETA[estado.tema];
+    if (!estado.daltonico) return p;
+    var c = {};
+    for (var k in p) c[k] = p[k];
+    c.bioma = BIOMA_CVD[estado.tema];
+    return c;
+  }
   function css(v) { return getComputedStyle(document.body).getPropertyValue(v).trim(); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmt(n) { return n.toLocaleString('pt-BR'); }
@@ -246,8 +258,18 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     desenharLegenda();
   }
 
+  var camadaCirculo = L.layerGroup().addTo(mapa);
+
   window.APS = {
     pronto: true,
+    setCirculo: function (c) {
+      camadaCirculo.clearLayers();
+      if (!c) return;
+      var circulo = L.circle([c.lat, c.lon], { radius: c.raioKm * 1000, color: pal().hotspot, weight: 2, fillColor: pal().hotspot, fillOpacity: 0.06 })
+        .bindTooltip(esc(c.rotulo), { permanent: true, direction: 'top', className: 'rotulo-circulo' })
+        .addTo(camadaCirculo);
+      mapa.fitBounds(circulo.getBounds(), { paddingTopLeft: [24, 80], paddingBottomRight: [24, 24] });
+    },
     setFocos: function (dados) {
       estado.dados = dados;
       desenhar();
@@ -259,6 +281,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     },
     setHotspots: function (h) { estado.hotspots = h; desenharHotspots(); },
     setModo: function (m) { estado.modo = m; desenhar(); },
+    setDaltonico: function (d) { estado.daltonico = !!d; desenhar(); desenharHotspots(); },
     setCorPor: function (c) { estado.corPor = c; desenhar(); },
     setMalha: function (geo) { estado.malha = geo; desenharBase(); desenhar(); },
     setCoropletico: function (c) { estado.coro = c; if (estado.modo === 'coropletico') desenhar(); },

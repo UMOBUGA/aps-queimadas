@@ -57,7 +57,7 @@ public final class ServicoOrdenacao {
                                                                 boolean incluirQuadraticos) throws ApsException {
         List<ResultadoOrdenacao<FocoIncendio>> r = new ArrayList<>();
         for (AlgoritmoTipo t : AlgoritmoTipo.values()) {
-            if (t.exigeChaveNumerica() && criterios.chaveNumerica() == null) continue;
+            if (!t.aceita(base, criterios.chaveNumerica())) continue;
             int n = tamanho <= 0 ? base.size() : Math.min(tamanho, base.size());
             if (!incluirQuadraticos && t.quadratico() && n > limiteQuadratico) continue;
             r.add(ordenar(base, new Solicitacao(t, criterios, tamanho, false, cenario, 42L)));
@@ -74,7 +74,11 @@ public final class ServicoOrdenacao {
         }
         if (s.algoritmo().exigeChaveNumerica() && s.criterios().chaveNumerica() == null) {
             throw new ApsException(s.algoritmo().nome() + " nao compara elementos: so ordena por um unico criterio "
-                    + "numerico (Data/hora, Latitude, Longitude ou ID). Escolha outro algoritmo ou criterio.");
+                    + "numerico (Data/hora, Hora local, Latitude, Longitude ou ID). Escolha outro algoritmo ou criterio.");
+        }
+        if (!s.algoritmo().aceita(base, s.criterios().chaveNumerica())) {
+            throw new ApsException(s.algoritmo().nome() + " precisa de chaves num intervalo pequeno, como a Hora local. "
+                    + "Para este criterio, use o Radix Sort.");
         }
     }
 

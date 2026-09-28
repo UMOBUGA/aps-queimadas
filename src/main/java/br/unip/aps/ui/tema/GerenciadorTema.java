@@ -47,6 +47,10 @@ public final class GerenciadorTema {
     private final BooleanProperty animacoes = new SimpleBooleanProperty();
     private final BooleanProperty sidebarRecolhida = new SimpleBooleanProperty();
     private final BooleanProperty compacto = new SimpleBooleanProperty();
+    private final BooleanProperty daltonico = new SimpleBooleanProperty();
+    private final BooleanProperty altoContraste = new SimpleBooleanProperty();
+    private final javafx.beans.property.IntegerProperty escalaTexto = new javafx.beans.property.SimpleIntegerProperty(100);
+    private final java.util.Map<String, String> folhasAmpliadas = new java.util.HashMap<>();
     private final List<Scene> cenas = new ArrayList<>();
 
     private GerenciadorTema(Preferences prefs) {
@@ -55,6 +59,21 @@ public final class GerenciadorTema {
         animacoes.set(prefs.getBoolean("animacoes", true));
         sidebarRecolhida.set(prefs.getBoolean("sidebarRecolhida", false));
         compacto.set(prefs.getBoolean("compacto", false));
+        daltonico.set(prefs.getBoolean("daltonico", false));
+        altoContraste.set(prefs.getBoolean("altoContraste", false));
+        escalaTexto.set(normalizarEscala(prefs.getInt("escalaTexto", 100)));
+        daltonico.addListener((o, a, n) -> {
+            prefs.putBoolean("daltonico", n);
+            aplicarGlobal();
+        });
+        altoContraste.addListener((o, a, n) -> {
+            prefs.putBoolean("altoContraste", n);
+            aplicarGlobal();
+        });
+        escalaTexto.addListener((o, a, n) -> {
+            prefs.putInt("escalaTexto", n.intValue());
+            aplicarGlobal();
+        });
         compacto.addListener((o, a, n) -> {
             prefs.putBoolean("compacto", n);
             for (Scene s : cenas) aplicarDensidade(s);
@@ -124,11 +143,49 @@ public final class GerenciadorTema {
 
     public List<String> folhas() {
         List<String> r = new ArrayList<>();
-        for (String f : List.of("tokens.css", tema.get().arquivo, "base.css", "components.css", "charts.css")) {
+        String sufixo = tema.get() == Tema.ESCURO ? "escuro" : "claro";
+        List<String> arquivos = new ArrayList<>(List.of("tokens.css", tema.get().arquivo, "base.css", "components.css", "charts.css"));
+        if (daltonico.get()) arquivos.add("acessibilidade/daltonico-" + sufixo + ".css");
+        if (altoContraste.get()) arquivos.add("acessibilidade/contraste-" + sufixo + ".css");
+        for (String f : arquivos) {
             URL u = GerenciadorTema.class.getResource(BASE_CSS + f);
-            if (u != null) r.add(u.toExternalForm());
+            if (u == null) continue;
+            r.add(escalaTexto.get() != 100 && TEM_TEXTO.contains(f) ? ampliada(f, u) : u.toExternalForm());
         }
         return r;
+    }
+
+    private static final List<String> TEM_TEXTO = List.of("base.css", "components.css", "charts.css");
+    private static final java.util.regex.Pattern TAMANHO = java.util.regex.Pattern.compile("(-fx-font-size:\\s*)([0-9.]+)px");
+
+    private String ampliada(String arquivo, URL original) {
+        String chave = arquivo + "@" + escalaTexto.get();
+        String pronta = folhasAmpliadas.get(chave);
+        if (pronta != null) return pronta;
+        try (InputStream in = original.openStream()) {
+            String css = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            double fator = escalaTexto.get() / 100.0;
+            java.util.regex.Matcher m = TAMANHO.matcher(css);
+            StringBuilder sb = new StringBuilder();
+            while (m.find()) {
+                double px = Double.parseDouble(m.group(2)) * fator;
+                m.appendReplacement(sb, m.group(1) + String.format(java.util.Locale.ROOT, "%.1f", px) + "px");
+            }
+            m.appendTail(sb);
+            java.nio.file.Path tmp = java.nio.file.Files.createTempFile("aps-" + arquivo.replace(".css", "") + "-" + escalaTexto.get() + "-", ".css");
+            tmp.toFile().deleteOnExit();
+            java.nio.file.Files.writeString(tmp, sb, java.nio.charset.StandardCharsets.UTF_8);
+            String url = tmp.toUri().toString();
+            folhasAmpliadas.put(chave, url);
+            return url;
+        } catch (java.io.IOException e) {
+            LOG.warning("Não foi possível ampliar " + arquivo + ": " + e.getMessage());
+            return original.toExternalForm();
+        }
+    }
+
+    private static int normalizarEscala(int v) {
+        return v >= 125 ? 130 : v >= 110 ? 115 : 100;
     }
 
     /** Alterna entre claro e escuro. */
@@ -147,6 +204,10 @@ public final class GerenciadorTema {
     }
 
     public BooleanProperty compactoProperty() { return compacto; }
+    public BooleanProperty daltonicoProperty() { return daltonico; }
+    public BooleanProperty altoContrasteProperty() { return altoContraste; }
+    /** Tamanho do texto em porcentagem: 100, 115 ou 130. */
+    public javafx.beans.property.IntegerProperty escalaTextoProperty() { return escalaTexto; }
 
     public ObjectProperty<Tema> temaProperty() { return tema; }
     public BooleanProperty animacoesProperty() { return animacoes; }
@@ -158,5 +219,8 @@ public final class GerenciadorTema {
         animacoes.set(true);
         sidebarRecolhida.set(false);
         compacto.set(false);
+        daltonico.set(false);
+        altoContraste.set(false);
+        escalaTexto.set(100);
     }
 }

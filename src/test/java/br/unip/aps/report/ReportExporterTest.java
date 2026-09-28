@@ -101,6 +101,18 @@ class ReportExporterTest {
     }
 
     @Test
+    @DisplayName("manual do usuario: o Markdown vira PDF com titulos, listas e o texto em negrito")
+    void manual() throws Exception {
+        Path pdf = ManualPdf.gerar(Path.of("docs", "MANUAL.md"), dir.resolve("manual.pdf"));
+        try (com.lowagie.text.pdf.PdfReader r = new com.lowagie.text.pdf.PdfReader(pdf.toString())) {
+            assertTrue(r.getNumberOfPages() >= 3);
+            String p1 = new com.lowagie.text.pdf.parser.PdfTextExtractor(r).getTextFromPage(1);
+            assertTrue(p1.contains("Manual do usuário") && p1.contains("Instalar e abrir"), p1);
+        }
+        assertEquals(4, ManualPdf.formatar("a **b** `c`", 10).getChunks().size(), "texto, negrito, espaco e codigo");
+    }
+
+    @Test
     @DisplayName("CSV nao deixa texto virar formula no Excel, mas preserva numeros negativos")
     void csvSemFormula() {
         assertEquals("'=HYPERLINK(\"x\")", ReportExporter.semFormula("=HYPERLINK(\"x\")"));

@@ -333,7 +333,7 @@ public class OrdenacaoController implements Pagina.Controlador {
                 chipMono("Espaço " + c.espaco(), Chip.Variante.NEUTRO),
                 Chip.de(c.estavel() ? "Estável" : "Instável", c.estavel() ? Icones.SUCESSO : Icones.ALERTA,
                         c.estavel() ? Chip.Variante.SUCESSO : Chip.Variante.NEUTRO));
-        lblDescricao.setText(DescricoesAlgoritmos.de(t) + (t.exigeChaveNumerica() ? " Só para um critério numérico (data, latitude, longitude, id)." : ""));
+        lblDescricao.setText(DescricoesAlgoritmos.de(t) + (t.exigeChaveNumerica() ? " Só para um critério numérico (data, hora local, latitude, longitude, id)." : ""));
     }
 
     private static Label chipMono(String texto, Chip.Variante v) {
@@ -448,7 +448,7 @@ public class OrdenacaoController implements Pagina.Controlador {
                     if (Thread.currentThread().isInterrupted()) throw new java.util.concurrent.CancellationException();
                     AlgoritmoTipo t = tipos[i];
                     progresso.accept((double) i / tipos.length, t.nome());
-                    if (t.exigeChaveNumerica() && crit.chaveNumerica() == null) continue;
+                    if (!t.aceita(dados, crit.chaveNumerica())) continue;
                     r.add(ctx.sessao().servicoOrdenacao().ordenar(dados, new ServicoOrdenacao.Solicitacao(t, crit, n, aleatoria, cen, 42L)));
                 }
                 return r;
@@ -636,11 +636,15 @@ public class OrdenacaoController implements Pagina.Controlador {
         concluido.run();
     }
 
+    SortVisualizer visualizador() {
+        return visualizador;
+    }
+
     void demonstrarVisualizacao() {
-        cbAlgoritmo.getSelectionModel().select(AlgoritmoTipo.QUICK);
+        cbAlgoritmo.getSelectionModel().select(AlgoritmoTipo.INSERTION);
         tgVisualizar.setSelected(true);
         mostrarVisao();
-        visualizador.setAlgoritmo(AlgoritmoTipo.QUICK);
+        visualizador.setAlgoritmo(AlgoritmoTipo.INSERTION);
         visualizador.reproduzir();
     }
 }

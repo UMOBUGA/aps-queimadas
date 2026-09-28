@@ -58,7 +58,7 @@ public class EstruturasController implements Pagina.Controlador {
     private final UiContexto ctx;
 
     @FXML private TextFlow tfManchete;
-    @FXML private ChartCard cConsultas, cTotal, cArvore, cTopK, cMemoria, cExterno, cParalelo;
+    @FXML private ChartCard cConsultas, cTotal, cArvore, cTopK, cMemoria, cExterno, cParalelo, cTrie, cRaio, cGrafo;
     @FXML private ToggleButton tgMunicipio, tgIntervalo;
     @FXML private ComboBox<String> cbMunicipio;
     @FXML private HBox boxDatas;
@@ -85,9 +85,11 @@ public class EstruturasController implements Pagina.Controlador {
     private int proximo;
     private Timeline reproducao;
     private boolean pendente = true;
+    private final EstruturasEspaciaisPainel espaciais;
 
     public EstruturasController(UiContexto ctx) {
         this.ctx = ctx;
+        this.espaciais = new EstruturasEspaciaisPainel(ctx);
     }
 
     @FXML
@@ -117,6 +119,7 @@ public class EstruturasController implements Pagina.Controlador {
         cMemoria.estado(ChartCard.Estado.CONTEUDO);
         montarExterno();
         montarParalelo();
+        espaciais.montar(cTrie, cRaio, cGrafo);
         ctx.registrarGrafico("Consultas: custo total", cTotal);
         ctx.registrarGrafico("Árvore AVL", cArvore);
         ctx.registrarGrafico("Top K com heap", cTopK);
@@ -144,6 +147,7 @@ public class EstruturasController implements Pagina.Controlador {
         dpDe.setValue(LocalDate.of(2024, 8, 1));
         dpAte.setValue(LocalDate.of(2024, 8, 31));
         reiniciarArvore();
+        espaciais.atualizar(b.getFocos());
     }
 
     @Override

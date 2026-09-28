@@ -33,6 +33,11 @@ class OuvinteArrayTest {
                     }
 
                     @Override
+                    public void comparacaoDeValores() {
+                        comparacoesVistas[0]++;
+                    }
+
+                    @Override
                     public void troca(int i, int j) {
                         Integer t = replay[i];
                         replay[i] = replay[j];
@@ -51,6 +56,6 @@ class OuvinteArrayTest {
         assertEquals(m1.comparacoes(), contador.getComparacoes(), "o ouvinte nao altera a contagem");
         assertEquals(m1.trocas(), contador.getTrocas());
         assertEquals(m1.atribuicoes(), contador.getAtribuicoes());
-        assertEquals(true, comparacoesVistas[0] <= contador.getComparacoes());
+        assertEquals(contador.getComparacoes(), comparacoesVistas[0], "a animação vê todas as comparações contadas");
     }
 }

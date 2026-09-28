@@ -56,7 +56,10 @@ public class VisaoGeralController implements Pagina.Controlador {
     @FXML private Label mLinha, mNumero, mUnidade;
     @FXML private TextFlow mApoio;
     @FXML private FlowPane destaques;
-    @FXML private ChartCard cMensal, cBiomas, cMunicipios, cHoras, cCalendario, cBiomasMes, cComparar;
+    @FXML private ChartCard cMensal, cBiomas, cMunicipios, cHoras, cCalendario, cBiomasMes, cComparar, cHistorico, cBrasil;
+    private final ComboBox<Integer> cbAnoBrasil = new ComboBox<>();
+    private final BarrasHorizontais barrasBrasil = new BarrasHorizontais();
+    private final Label lblBrasil = new Label();
 
     private final ToggleButton tgLinear = new ToggleButton("Linear"), tgLog = new ToggleButton("Log");
     private final HBox escala = new HBox(tgLinear, tgLog);
@@ -101,6 +104,8 @@ public class VisaoGeralController implements Pagina.Controlador {
             else if (ultimaEst != null) montarMensal(ultimaEst, ultimosAnos, ultimoAnoMax);
         });
         montarComparacao();
+        montarHistorico();
+        montarBrasil();
         horas.setLegendVisible(false);
         horas.setAnimated(false);
         horas.setVerticalGridLinesVisible(false);
@@ -434,6 +439,151 @@ public class VisaoGeralController implements Pagina.Controlador {
         anot.setAlignment(Pos.TOP_RIGHT);
         cCalendario.setExtra(anot);
         cCalendario.estado(ChartCard.Estado.CONTEUDO);
+    }
+
+    private void montarHistorico() {
+        List<br.unip.aps.app.Agregados.Mes> meses = br.unip.aps.app.Agregados.historicoSp();
+        if (meses.isEmpty()) {
+            cHistorico.estado(ChartCard.Estado.VAZIO);
+            return;
+        }
+        int anoMin = Integer.MAX_VALUE, anoMax = Integer.MIN_VALUE;
+        for (var m : meses) {
+            anoMin = Math.min(anoMin, m.ano());
+            anoMax = Math.max(anoMax, m.ano());
+        }
+        int anos = anoMax - anoMin + 1;
+        long[] serie = new long[anos * 12];
+        long[] porAno = new long[anos];
+        for (var m : meses) {
+            serie[(m.ano() - anoMin) * 12 + m.mes() - 1] = m.focos();
+            porAno[m.ano() - anoMin] += m.focos();
+        }
+        NumberAxis x = new NumberAxis(0, serie.length - 1, 12);
+        final int base = anoMin;
+        x.setTickLabelFormatter(new StringConverter<>() {
+            @Override
+            public String toString(Number v) {
+                int i = (int) Math.round(v.doubleValue());
+                return i % 12 == 0 ? String.valueOf(base + i / 12) : "";
+            }
+
+            @Override
+            public Number fromString(String s) {
+                return 0;
+            }
+        });
+        x.setMinorTickVisible(false);
+        NumberAxis y = new NumberAxis();
+        y.setMinorTickVisible(false);
+        Graficos.eixoLog(y, false);
+        AreaChart<Number, Number> g = new AreaChart<>(x, y);
+        g.setLegendVisible(false);
+        g.setAnimated(false);
+        g.setCreateSymbols(false);
+        g.setVerticalGridLinesVisible(false);
+        XYChart.Series<Number, Number> s = new XYChart.Series<>();
+        List<String[]> linhas = new ArrayList<>();
+        int pico = 0;
+        for (int i = 0; i < serie.length; i++) {
+            s.getData().add(new XYChart.Data<>(i, serie[i]));
+            if (serie[i] > serie[pico]) pico = i;
+            linhas.add(new String[]{Estatisticas.MESES[i % 12] + "/" + (anoMin + i / 12), Formatos.inteiro(serie[i])});
+        }
+        g.getData().add(s);
+        Graficos.classe(s, "serie-ano-recente");
+        Graficos.tooltips(s, d -> {
+            int i = d.getXValue().intValue();
+            return Estatisticas.MESES[i % 12] + "/" + (base + i / 12) + ": " + Formatos.inteiro(d.getYValue().longValue()) + " focos";
+        });
+        FlowPane anosResumo = new FlowPane(28, 8);
+        for (int a = 0; a < anos; a++) {
+            Label v = new Label(Formatos.inteiro(porAno[a]));
+            v.getStyleClass().addAll("comparar-valor", a == anos - 1 ? "alerta" : "comparacao");
+            Label r = new Label(String.valueOf(anoMin + a));
+            r.getStyleClass().add("destaque-rot");
+            anosResumo.getChildren().add(new VBox(0, v, r));
+        }
+        Label num = new Label(Formatos.inteiro(serie[pico]));
+        num.getStyleClass().add("rotulo-pico");
+        Label sub = new Label("maior mês em seis anos, " + Estatisticas.MESES[pico % 12] + "/" + (anoMin + pico / 12));
+        sub.getStyleClass().add("rotulo-pico-sub");
+        VBox anot = new VBox(0, num, sub);
+        anot.setAlignment(Pos.TOP_RIGHT);
+        cHistorico.setExtra(anot);
+        g.setPrefHeight(260);
+        g.setMinHeight(260);
+        cHistorico.conteudo(new VBox(12, anosResumo, g));
+        cHistorico.setDados(new String[]{"Mês", "Focos"}, () -> linhas);
+        cHistorico.estado(ChartCard.Estado.CONTEUDO);
+        ctx.registrarGrafico("Seis temporadas (2019–2024)", cHistorico);
+    }
+
+    private void montarBrasil() {
+        List<br.unip.aps.app.Agregados.Estado> dados = br.unip.aps.app.Agregados.brasil();
+        if (dados.isEmpty()) {
+            cBrasil.estado(ChartCard.Estado.VAZIO);
+            return;
+        }
+        List<Integer> anos = new ArrayList<>();
+        for (var e : dados) if (!anos.contains(e.ano())) anos.add(e.ano());
+        cbAnoBrasil.getItems().setAll(br.unip.aps.sorting.Ordenacoes.ordenar(anos, java.util.Comparator.<Integer>naturalOrder()));
+        cbAnoBrasil.setAccessibleText("Ano do ranking dos estados");
+        cbAnoBrasil.valueProperty().addListener((o, a, n) -> atualizarBrasil(dados));
+        lblBrasil.getStyleClass().add("t-small");
+        lblBrasil.setWrapText(true);
+        HBox topo = new HBox(16, cbAnoBrasil, lblBrasil);
+        topo.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(lblBrasil, Priority.ALWAYS);
+        cBrasil.conteudo(new VBox(16, topo, barrasBrasil));
+        cbAnoBrasil.setValue(cbAnoBrasil.getItems().get(cbAnoBrasil.getItems().size() - 1));
+        ctx.registrarGrafico("São Paulo no Brasil", cBrasil);
+    }
+
+    private void atualizarBrasil(List<br.unip.aps.app.Agregados.Estado> dados) {
+        Integer ano = cbAnoBrasil.getValue();
+        if (ano == null) return;
+        List<br.unip.aps.app.Agregados.Estado> doAno = new ArrayList<>();
+        long total = 0, totalAnterior = 0, sp = 0, spAnterior = 0;
+        for (var e : dados) {
+            if (e.ano() == ano) {
+                doAno.add(e);
+                total += e.focos();
+                if (e.estado().equals("SÃO PAULO")) sp = e.focos();
+            } else if (e.ano() == ano - 1) {
+                totalAnterior += e.focos();
+                if (e.estado().equals("SÃO PAULO")) spAnterior = e.focos();
+            }
+        }
+        List<br.unip.aps.app.Agregados.Estado> ranking = br.unip.aps.sorting.Ordenacoes.ordenar(doAno,
+                java.util.Comparator.comparingLong(br.unip.aps.app.Agregados.Estado::focos).reversed());
+        List<BarrasHorizontais.Item> itens = new ArrayList<>();
+        List<String[]> linhas = new ArrayList<>();
+        int posicaoSp = 0;
+        for (int i = 0; i < ranking.size(); i++) {
+            var e = ranking.get(i);
+            boolean ehSp = e.estado().equals("SÃO PAULO");
+            if (ehSp) posicaoSp = i + 1;
+            double pct = total == 0 ? 0 : 100.0 * e.focos() / total;
+            itens.add(new BarrasHorizontais.Item((i + 1) + "º " + capitalizar(e.estado()), e.focos(), Formatos.inteiro(e.focos()),
+                    ehSp ? "lider" : "", ehSp, capitalizar(e.estado()) + ": " + Formatos.inteiro(e.focos()) + " focos ("
+                    + Formatos.decimal(pct, 1) + "% do Brasil)"));
+            linhas.add(new String[]{(i + 1) + "º", capitalizar(e.estado()), Formatos.inteiro(e.focos()), Formatos.decimal(pct, 2) + "%"});
+        }
+        barrasBrasil.setItens(itens);
+        String variacao = "";
+        if (totalAnterior > 0 && spAnterior > 0) {
+            variacao = " De " + (ano - 1) + " para " + ano + ", São Paulo variou " + sinal(100.0 * (sp - spAnterior) / spAnterior)
+                    + " e o Brasil, " + sinal(100.0 * (total - totalAnterior) / totalAnterior) + ".";
+        }
+        lblBrasil.setText("Em " + ano + ", São Paulo foi o " + posicaoSp + "º estado em focos, com "
+                + Formatos.decimal(total == 0 ? 0 : 100.0 * sp / total, 1) + "% do total nacional (" + Formatos.inteiro(total) + " focos)." + variacao);
+        cBrasil.setDados(new String[]{"Posição", "Estado", "Focos", "% do Brasil"}, () -> linhas);
+        cBrasil.estado(ChartCard.Estado.CONTEUDO);
+    }
+
+    private static String sinal(double pct) {
+        return (pct >= 0 ? "+" : "−") + Formatos.decimal(Math.abs(pct), 0) + "%";
     }
 
     private static int indiceMes(String abrev) {

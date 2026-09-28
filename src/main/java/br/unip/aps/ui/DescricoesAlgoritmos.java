@@ -28,6 +28,12 @@ final class DescricoesAlgoritmos {
                     + "estável e muito eficiente em dados parcialmente ordenados.";
             case RADIX -> "Distribui os elementos pelos bytes da chave numérica (Counting Sort estável por dígito): zero "
                     + "comparações e tempo linear.";
+            case QUICK_2PIVOS -> "Quick Sort com dois pivôs (Yaroslavskiy): divide em três partes (< p, entre p e q, > q) e faz menos "
+                    + "acessos à memória que o clássico. É a base do Arrays.sort do Java para números.";
+            case INTRO -> "Quick Sort que vigia a própria profundidade: passando de 2·log₂(n), a parte vira Heap Sort, e partes "
+                    + "pequenas vão para o Insertion Sort. O(n log n) garantido (std::sort do C++).";
+            case COUNTING -> "Conta quantas vezes cada chave aparece e reposiciona de forma estável: zero comparações e O(n + k). "
+                    + "Ideal com poucas chaves distintas, como a Hora local; inviável quando o intervalo é enorme.";
         };
     }
 }

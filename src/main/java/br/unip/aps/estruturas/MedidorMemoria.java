@@ -37,7 +37,7 @@ public final class MedidorMemoria {
         List<Medicao> r = new ArrayList<>();
         for (AlgoritmoTipo tipo : algoritmos) {
             SortAlgorithm alg = tipo.criar();
-            if (alg.exigeChaveNumerica() && chaveNumerica == null) continue;
+            if (!tipo.aceita(java.util.Arrays.asList(entrada), chaveNumerica)) continue;
             T[] copia = entrada.clone();
             alg.ordenar(entrada.clone(), c, chaveNumerica);
             T[] unitario = java.util.Arrays.copyOf(entrada, Math.min(1, entrada.length));

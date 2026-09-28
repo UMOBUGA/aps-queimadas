@@ -1,0 +1,15 @@
+/* Alto contraste (tema escuro): fundo preto, texto branco, bordas visiveis e foco amarelo. */
+.root {
+    -aps-bg-app:         #000000;
+    -aps-surface:        #000000;
+    -aps-surface-muted:  #0A0A0A;
+    -aps-surface-sunken: #000000;
+    -aps-border:         #8A8A8A;
+    -aps-border-strong:  #D0D0D0;
+    -aps-rule:           #FFFFFF;
+    -aps-text-1:         #FFFFFF;
+    -aps-text-2:         #FFFFFF;
+    -aps-text-3:         #E0E0E0;
+    -aps-grid:           #5A5A5A;
+    -aps-focus-ring:     #FFD60A;
+}

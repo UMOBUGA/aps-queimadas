@@ -569,4 +569,12 @@ public class MainController {
     StackPane raiz() {
         return raiz;
     }
+
+    br.unip.aps.ui.componentes.PaletaComandos paleta() {
+        return paleta;
+    }
+
+    boolean apresentando() {
+        return apresentacao.ativo();
+    }
 }

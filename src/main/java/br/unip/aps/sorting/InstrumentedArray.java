@@ -15,6 +15,9 @@ public final class InstrumentedArray<T> {
     public interface Ouvinte {
         default void comparacao(int i, int j) { }
 
+        /** Comparacao entre valores ja lidos (ex.: o elemento guardado pelo Insertion Sort), sem posicao no vetor. */
+        default void comparacaoDeValores() { }
+
         default void troca(int i, int j) { }
 
         default void atribuicao(int i, Object valor) { }
@@ -76,6 +79,7 @@ public final class InstrumentedArray<T> {
 
     /** Compara dois valores ja lidos (1 comparacao, nenhuma leitura). */
     public int compareValues(T x, T y) {
+        if (ouvinte != null) ouvinte.comparacaoDeValores();
         return contador.comparar(comparador, x, y);
     }
 

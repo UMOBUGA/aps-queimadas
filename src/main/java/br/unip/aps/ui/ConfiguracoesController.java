@@ -18,8 +18,8 @@ import javafx.scene.layout.HBox;
 public class ConfiguracoesController implements Pagina.Controlador {
     private final UiContexto ctx;
 
-    @FXML private ToggleButton tgClaro, tgEscuro;
-    @FXML private ToggleSwitch swAnimacoes, swSidebar, swCompacto;
+    @FXML private ToggleButton tgClaro, tgEscuro, tgTexto100, tgTexto115, tgTexto130;
+    @FXML private ToggleSwitch swAnimacoes, swSidebar, swCompacto, swDaltonico, swContraste;
     @FXML private Button btnRestaurar;
     @FXML private GridPane gridAtalhos, gridDados;
 
@@ -47,6 +47,19 @@ public class ConfiguracoesController implements Pagina.Controlador {
         swAnimacoes.selectedProperty().bindBidirectional(t.animacoesProperty());
         swSidebar.selectedProperty().bindBidirectional(t.sidebarRecolhidaProperty());
         swCompacto.selectedProperty().bindBidirectional(t.compactoProperty());
+        swDaltonico.selectedProperty().bindBidirectional(t.daltonicoProperty());
+        swContraste.selectedProperty().bindBidirectional(t.altoContrasteProperty());
+        ToggleGroup texto = new ToggleGroup();
+        for (ToggleButton b : new ToggleButton[]{tgTexto100, tgTexto115, tgTexto130}) b.setToggleGroup(texto);
+        sincronizarTexto();
+        t.escalaTextoProperty().addListener((o, a, n) -> sincronizarTexto());
+        texto.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) {
+                a.setSelected(true);
+                return;
+            }
+            t.escalaTextoProperty().set(n == tgTexto130 ? 130 : n == tgTexto115 ? 115 : 100);
+        });
         btnRestaurar.setGraphic(Icones.de(Icones.RECARREGAR, 16));
 
         String[][] atalhos = {
@@ -59,6 +72,7 @@ public class ConfiguracoesController implements Pagina.Controlador {
         for (int i = 0; i < atalhos.length; i++) {
             Label k = new Label(atalhos[i][0]);
             k.getStyleClass().add("atalho");
+            k.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
             Label d = new Label(atalhos[i][1]);
             d.getStyleClass().add("t-small");
             gridAtalhos.add(new HBox(k), 0, i);
@@ -83,6 +97,11 @@ public class ConfiguracoesController implements Pagina.Controlador {
         }
     }
 
+    private void sincronizarTexto() {
+        int e = GerenciadorTema.get().escalaTextoProperty().get();
+        (e == 130 ? tgTexto130 : e == 115 ? tgTexto115 : tgTexto100).setSelected(true);
+    }
+
     private void sincronizarTema() {
         boolean escuro = GerenciadorTema.get().escuro();
         tgEscuro.setSelected(escuro);
@@ -92,7 +111,7 @@ public class ConfiguracoesController implements Pagina.Controlador {
     @FXML
     private void restaurar() {
         GerenciadorTema.get().restaurarPadroes();
-        Feedback.info("Preferências restauradas", "Tema claro, animações ligadas e menu expandido.");
+        Feedback.info("Preferências restauradas", "Tema escuro, animações ligadas, menu expandido e acessibilidade no padrão.");
     }
 
     private static String relativo(java.nio.file.Path p) {

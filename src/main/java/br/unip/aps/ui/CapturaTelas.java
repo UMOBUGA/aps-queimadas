@@ -101,7 +101,7 @@ final class CapturaTelas {
                     oc.demonstrarVisualizacao();
                     esperar(2500, () -> {
                         salvar(String.format("%02d-ordenacao-visualizacao.png", n[0]++));
-                        proximo();
+                        quadrosGif(oc.visualizador(), 0, this::proximo);
                     });
                 })));
             } else {
@@ -129,6 +129,16 @@ final class CapturaTelas {
                 proximo();
             }
         });
+    }
+
+    /** Grava quadros da animacao da ordenacao (gif/quadro-NN.png) para montar o GIF de demonstracao. */
+    private void quadrosGif(javafx.scene.Node no, int i, Runnable depois) {
+        if (i >= 70) {
+            depois.run();
+            return;
+        }
+        salvarNo(no, String.format("gif/quadro-%02d.png", i));
+        esperar(110, () -> quadrosGif(no, i + 1, depois));
     }
 
     private void proximo() {
