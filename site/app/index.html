@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Queimadas SP · versão web</title>
+<meta name="description" content="Os 10.378 focos de incêndio do INPE em São Paulo (2023–2024) no celular: mapa mês a mês, ficha e comparação de municípios e o custo real dos 13 algoritmos de ordenação da APS.">
+<meta name="theme-color" content="#0A0807" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F7F5F2" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Queimadas">
+<link rel="preload" href="../fonts/BigShouldersDisplay-Black.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <a class="marca" href="#mapa" aria-label="Queimadas SP, início">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-marca"/></svg>
+    <span>Queimadas <small>SP · 2023–2024</small></span>
+  </a>
+  <nav class="abas" aria-label="Seções">
+    <a href="#mapa" data-aba="mapa"><svg aria-hidden="true"><use href="#i-mapa"/></svg><span>Mapa</span></a>
+    <a href="#municipios" data-aba="municipios"><svg aria-hidden="true"><use href="#i-lista"/></svg><span>Municípios</span></a>
+    <a href="#algoritmos" data-aba="algoritmos"><svg aria-hidden="true"><use href="#i-ordenar"/></svg><span>Algoritmos</span></a>
+    <a href="#sobre" data-aba="sobre"><svg aria-hidden="true"><use href="#i-info"/></svg><span>Sobre</span></a>
+  </nav>
+</header>
+
+<main id="conteudo">
+  <section id="aba-mapa" class="aba" aria-labelledby="t-mapa">
+    <h1 id="t-mapa" class="sr">Mapa dos focos</h1>
+    <div id="mapa" class="mapa" role="application" aria-label="Mapa dos focos de incêndio em São Paulo"></div>
+    <div class="placar" aria-live="polite">
+      <strong id="placar-numero">—</strong>
+      <span id="placar-texto">focos no mapa</span>
+    </div>
+    <div class="linha-tempo">
+      <div class="linha-topo">
+        <button id="tocar" class="botao primario" type="button"><svg aria-hidden="true"><use href="#i-play"/></svg><span>Tocar</span></button>
+        <div class="linha-periodo"><small>Linha do tempo</small><b id="periodo">Todos os meses</b></div>
+        <button id="todos" class="botao fantasma" type="button" disabled>Todos</button>
+      </div>
+      <div id="faixa" class="faixa" role="group" aria-label="Focos por mês; toque num mês para vê-lo no mapa"></div>
+    </div>
+  </section>
+
+  <section id="aba-municipios" class="aba" aria-labelledby="t-municipios" hidden>
+    <div class="pagina">
+      <p class="sobretitulo">Ranking do estado</p>
+      <h1 id="t-municipios" class="titulo">Municípios</h1>
+      <p class="apoio" id="municipios-apoio"></p>
+      <label class="busca">
+        <svg aria-hidden="true"><use href="#i-busca"/></svg>
+        <span class="sr">Buscar município</span>
+        <input id="busca" type="search" placeholder="Buscar município…" autocomplete="off" enterkeyhint="search">
+      </label>
+      <ol id="ranking" class="ranking"></ol>
+      <button id="mais" class="botao secundario largo" type="button">Mostrar mais</button>
+    </div>
+  </section>
+
+  <section id="aba-algoritmos" class="aba" aria-labelledby="t-algoritmos" hidden>
+    <div class="pagina">
+      <p class="sobretitulo">Custo real, medido pelo programa em Java</p>
+      <h1 id="t-algoritmos" class="titulo">Algoritmos</h1>
+      <p class="apoio" id="algoritmos-apoio"></p>
+      <div class="chips" role="radiogroup" aria-label="Critério de ordenação" id="criterios"></div>
+      <div class="chips" role="radiogroup" aria-label="Ordenar a lista por" id="ordem">
+        <button type="button" role="radio" data-ordem="ms" aria-checked="true">Tempo</button>
+        <button type="button" role="radio" data-ordem="comparacoes" aria-checked="false">Comparações</button>
+        <button type="button" role="radio" data-ordem="trocas" aria-checked="false">Trocas</button>
+      </div>
+      <ol id="algoritmos" class="algoritmos"></ol>
+      <section class="bloco" aria-labelledby="t-curvas">
+        <h2 id="t-curvas">Como o custo cresce</h2>
+        <p class="apoio" id="curvas-apoio"></p>
+        <label class="seletor">Destacar
+          <select id="curva-algoritmo"></select>
+        </label>
+        <figure class="curvas">
+          <svg id="curvas" role="img" aria-labelledby="curvas-legenda"></svg>
+          <figcaption id="curvas-legenda"></figcaption>
+        </figure>
+        <table class="tabela" id="curva-tabela"></table>
+      </section>
+    </div>
+  </section>
+
+  <section id="aba-sobre" class="aba" aria-labelledby="t-sobre" hidden>
+    <div class="pagina">
+      <p class="sobretitulo">APS · Estrutura de Dados · UNIP</p>
+      <h1 id="t-sobre" class="titulo">Sobre esta versão</h1>
+      <p class="texto">Esta é a versão de bolso do <b>APS Queimadas</b>. Todo o cálculo foi feito pelo programa em Java: a ordenação com os 13 algoritmos implementados à mão, a contagem de operações, o ranking, as fichas dos municípios e os vizinhos pela malha do IBGE. Aqui você vê esses resultados, sem instalar nada.</p>
+      <dl class="numeros" id="sobre-numeros"></dl>
+      <h2>Fontes</h2>
+      <ul class="fontes">
+        <li><b>Focos:</b> INPE, BDQueimadas, satélite de referência (horários em GMT).</li>
+        <li><b>Municípios, áreas e vizinhança:</b> IBGE, malha municipal de São Paulo.</li>
+        <li><b>Países (sem internet):</b> Natural Earth, domínio público.</li>
+        <li><b>Mapa-base:</b> Esri, quando há conexão.</li>
+      </ul>
+      <div class="acoes">
+        <a class="botao primario" href="https://github.com/gustavoblopes79/aps-queimadas/releases/latest">Baixar o programa completo</a>
+        <a class="botao secundario" href="../">Site do projeto</a>
+      </div>
+      <p class="nota" id="sobre-versao"></p>
+      <p class="nota" id="instalar-dica"></p>
+    </div>
+  </section>
+</main>
+
+<div id="fundo-folha" class="fundo-folha" hidden></div>
+<aside id="folha" class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" hidden>
+  <button class="alca" id="alca" type="button" aria-label="Fechar"><span></span></button>
+  <div class="folha-cabeca">
+    <div>
+      <p class="sobretitulo" id="folha-sobre">Ficha do município</p>
+      <h2 id="folha-titulo"></h2>
+    </div>
+    <button class="icone" id="fechar-folha" type="button" aria-label="Fechar"><svg aria-hidden="true"><use href="#i-fechar"/></svg></button>
+  </div>
+  <div class="folha-corpo" id="folha-corpo"></div>
+</aside>
+
+<div id="aviso" class="aviso" role="status" hidden></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-marca" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#932667"/><stop offset=".4" stop-color="#EB6A26"/><stop offset=".75" stop-color="#FCA50A"/><stop offset="1" stop-color="#FCFFA4"/></linearGradient>
+    <symbol id="i-marca" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0A0807"/><path fill="url(#g-marca)" d="M12 1.5C12.6 4.8 15.5 6.6 17.2 9.4C19.4 13 18.6 17.8 15 19.9C11.6 21.9 6.9 20.8 5.3 17.2C4.2 14.7 4.9 11.9 6.6 9.9C6.9 11.6 7.8 12.8 9.2 13.3C8.2 9.7 10.2 5.6 12 1.5Z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-ordenar" viewBox="0 0 24 24"><path d="M4 20V14M9 20V9M14 20V12M19 20V4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6M12 7.5v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5v14l12-7L7 5Z" fill="currentColor"/></symbol>
+    <symbol id="i-pausa" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></symbol>
+    <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-fechar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-alvo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+<script src="vendor/leaflet.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

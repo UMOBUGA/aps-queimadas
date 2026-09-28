@@ -70,6 +70,7 @@ public final class Main {
                         Path.of("docs", "MANUAL.pdf")).toAbsolutePath());
                 case "agregados" -> out.println(br.unip.aps.app.Agregados.gerar(Path.of("data", "historico"), Path.of("data", "brasil"),
                         Path.of("src", "main", "resources", "dados")));
+                case "web" -> web(sessao, op, out);
                 case "help", "ajuda", "h" -> ajuda(out);
                 default -> {
                     out.println("Modo desconhecido: " + args[0]);
@@ -182,6 +183,25 @@ public final class Main {
         out.println("Benchmark CSV: " + s.exporter().exportarBenchmarkCsv(s.ultimoBenchmark(), s.arquivoRelatorio("benchmark", ".csv")).toAbsolutePath());
         out.println("Excel:         " + s.exporter().exportarExcel(ctx, s.arquivoRelatorio("resultados", ".xlsx")).toAbsolutePath());
         out.println("PDF:           " + s.exporter().exportarPdf(ctx, s.arquivoRelatorio("resultados", ".pdf")).toAbsolutePath());
+    }
+
+    private static void web(Sessao s, Map<String, String> op, PrintStream out) throws ApsException {
+        s.carregar();
+        List<List<ResultadoOrdenacao<FocoIncendio>>> rs = new ArrayList<>();
+        for (String c : List.of("bioma,municipio,data", "data", "hora")) {
+            Map<String, String> o = new HashMap<>();
+            o.put("criterios", c);
+            o.put("cenario", "original");
+            rs.add(comparar(s, o, out));
+        }
+        Path destino = Path.of(op.getOrDefault("saida", "site/app"));
+        try {
+            br.unip.aps.report.ExportadorWeb.Resultado r = br.unip.aps.report.ExportadorWeb.gerar(s.base(), rs, destino);
+            out.println("Versao web: " + Formatos.inteiro(r.focos()) + " focos, " + Formatos.inteiro(r.municipios()) + " municipios, "
+                    + r.algoritmos() + " algoritmos, " + Formatos.inteiro(r.bytes() / 1024) + " KB em " + r.pasta().toAbsolutePath());
+        } catch (java.io.IOException e) {
+            throw new ApsException("Não foi possível gravar a versão web em " + destino + ": " + e.getMessage(), e);
+        }
     }
 
     private static void relatorioCodigo(Sessao s, PrintStream out) throws ApsException {
@@ -365,6 +385,7 @@ public final class Main {
                                         grava docs/resultados/ml-estudo.md
                   manual                gera docs/MANUAL.pdf a partir de docs/MANUAL.md
                   agregados             resume data/historico (SP 2019-2024) e data/brasil (estados) nos CSVs embarcados
+                  web [--saida DIR]     gera os dados da versao web para celular (padrao: site/app)
 
                 Algoritmos: """ + SortAlgorithmFactory.nomes());
     }

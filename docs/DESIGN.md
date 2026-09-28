@@ -255,6 +255,7 @@ O ano recente recebe a cor mais quente e o anterior, uma cor fria. Isso reforça
 | `25-mapa-base-seletor.png` · `26-mapa-satelite.png` · `27-mapa-relevo.png` | Seletor de mapa-base e dois estilos |
 | `28-mapa-agosto-2024.png` | Linha do tempo parada em agosto de 2024, o pico da série |
 | `29-mapa-ficha-municipio.png` | Ficha do município com mais focos |
-| `30-mapa-offline-mundo.png` | Modo offline: países do Natural Earth sob a malha do IBGE |
+| `30-mapa-comparacao.png` | Comparação de dois municípios, com as cores laranja e azul também no mapa |
+| `31-mapa-offline-mundo.png` | Modo offline: países do Natural Earth sob a malha do IBGE |
 | `completa/15-ml-escuro.png` | Machine Learning: validação em janelas, ablação, permutação e estudo de agosto/2024 |
 | `completa/16-qualidade-escuro.png` | Qualidade dos dados |

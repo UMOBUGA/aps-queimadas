@@ -710,3 +710,20 @@
 .ficha-secao-cabecalho { -fx-border-color: -aps-border transparent transparent transparent; -fx-padding: 12 0 0 0; }
 .ficha-secao { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13.5px; -fx-text-fill: -aps-text-1; }
 .ficha-faixa .faixa-legenda { -fx-font-size: 10.5px; }
+
+.comparacao-tabela { -fx-padding: 4 0 0 0; }
+.comparacao-rotulo { -fx-font-size: 12px; -fx-text-fill: -aps-text-3; }
+.comparacao-nome { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13.5px; -fx-text-fill: -aps-text-1; -fx-border-width: 0 0 3 0; -fx-padding: 0 0 4 0; }
+.comparacao-nome.comparacao-a { -fx-border-color: -aps-ano-recente; }
+.comparacao-nome.comparacao-b { -fx-border-color: -aps-ano-anterior; }
+.comparacao-numero { -fx-font-family: "Big Shoulders Display Black"; -fx-font-size: 40px; -fx-text-fill: -aps-text-1; -fx-padding: -6 0 -6 0; }
+.comparacao-valor { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 20px; -fx-text-fill: -aps-text-1; }
+.comparacao-texto { -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
+.comparacao-barra.comparacao-a { -fx-background-color: -aps-ano-recente; -fx-background-radius: 2 2 0 0; }
+.comparacao-barra.comparacao-b { -fx-background-color: -aps-ano-anterior; -fx-background-radius: 2 2 0 0; }
+.comparacao-alvo { -fx-background-color: transparent; }
+.comparacao-alvo:hover { -fx-background-color: -aps-surface-hover; -fx-opacity: 0.5; }
+.comparacao-legenda { -fx-font-size: 12.5px; -fx-text-fill: -aps-text-2; -fx-graphic-text-gap: 6; }
+.comparacao-legenda.comparacao-a { -fx-border-color: transparent transparent transparent -aps-ano-recente; -fx-border-width: 0 0 0 10; -fx-padding: 0 0 0 6; }
+.comparacao-legenda.comparacao-b { -fx-border-color: transparent transparent transparent -aps-ano-anterior; -fx-border-width: 0 0 0 10; -fx-padding: 0 0 0 6; }
+.ficha-sugestoes { -fx-background-color: -aps-surface; -fx-border-color: -aps-border-strong; -fx-border-radius: 4; -fx-background-radius: 4; }

@@ -68,6 +68,19 @@ class PerfilMunicipioTest {
     }
 
     @Test
+    @DisplayName("todas as fichas de uma vez batem com as fichas avulsas e vêm do maior para o menor")
+    void todos() {
+        List<PerfilMunicipio> todos = PerfilMunicipio.todos(base());
+        assertEquals(4, todos.size());
+        assertEquals("Presidente Prudente", todos.get(0).nome());
+        assertEquals("Valinhos", todos.get(3).nome());
+        PerfilMunicipio campinas = todos.get(1);
+        assertEquals(PerfilMunicipio.de(base(), "CAMPINAS"), campinas);
+        assertEquals(100.0, campinas.variacao(), 1e-9);
+        assertTrue(Double.isNaN(todos.get(0).variacao()), "sem focos no primeiro ano, a variação não existe");
+    }
+
+    @Test
     @DisplayName("município da malha sem focos tem ficha zerada; nome desconhecido é recusado")
     void semFocosEDesconhecido() {
         PerfilMunicipio p = PerfilMunicipio.de(base(), "Jundiaí");

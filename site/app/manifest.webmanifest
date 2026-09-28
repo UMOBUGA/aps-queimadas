@@ -1,0 +1,18 @@
+{
+  "name": "Queimadas SP · APS",
+  "short_name": "Queimadas",
+  "description": "Focos de incêndio do INPE em São Paulo (2023–2024): mapa mês a mês, fichas e comparação de municípios e o custo real dos algoritmos de ordenação.",
+  "lang": "pt-BR",
+  "start_url": "./#mapa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0807",
+  "theme_color": "#0A0807",
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icones/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "../favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

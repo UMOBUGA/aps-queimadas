@@ -6,6 +6,7 @@ import br.unip.aps.ml.ClusterizacaoHotspots;
 import br.unip.aps.ml.Preditor;
 import br.unip.aps.model.BaseDeFocos;
 import br.unip.aps.model.FocoIncendio;
+import br.unip.aps.ui.componentes.ComparacaoMunicipios;
 import br.unip.aps.ui.componentes.Feedback;
 import br.unip.aps.ui.componentes.FichaMunicipio;
 import br.unip.aps.ui.componentes.Icones;
@@ -63,6 +64,8 @@ public class MapaController implements Pagina.Controlador {
     private br.unip.aps.ui.componentes.SeletorMapaBase seletorBase;
     private final LinhaDoTempo linha = new LinhaDoTempo();
     private final FichaMunicipio ficha = new FichaMunicipio();
+    private final ComparacaoMunicipios comparacao = new ComparacaoMunicipios();
+    private boolean gravando;
     private final Button btnExportar = new Button("PNG");
 
     /** Escala da imagem exportada: o dobro dos pixels da tela, bom para impressao. */
@@ -150,9 +153,19 @@ public class MapaController implements Pagina.Controlador {
         ficha.setOnMes(linha::setPeriodo);
         ficha.setOnVerNoMapa(p -> js("APS.destacar(" + Json.texto(chaveIbge(p)) + ", true)"));
         ficha.visibleProperty().addListener((o, a, v) -> {
-            if (!v) js("APS.destacar(null)");
+            if (!v && !comparacao.isVisible()) js("APS.destacar(null)");
         });
-        moldura.getChildren().addAll(linha, ficha);
+        ficha.setOnComparar((p, outro) -> comparar(p.nomeInpe(), outro));
+        StackPane.setAlignment(comparacao, Pos.TOP_RIGHT);
+        StackPane.setMargin(comparacao, new Insets(78, 16, 118, 0));
+        comparacao.setMaxHeight(Double.MAX_VALUE);
+        comparacao.setOnVerNoMapa((a, b) -> js("APS.destacar([" + Json.texto(chaveIbge(a)) + "," + Json.texto(chaveIbge(b)) + "], true)"));
+        comparacao.setOnVoltar(p -> abrirFicha(p.nomeInpe()));
+        comparacao.visibleProperty().addListener((o, a, v) -> {
+            if (!v && !ficha.isVisible()) js("APS.destacar(null)");
+        });
+        linha.setOnGravar(this::escolherArquivoGif);
+        moldura.getChildren().addAll(linha, ficha, comparacao);
 
         btnExportar.setId("btnExportarMapa");
         btnExportar.getStyleClass().add("btn-secondary");
@@ -234,6 +247,7 @@ public class MapaController implements Pagina.Controlador {
     public void aoOcultar() {
         visivel = false;
         seletorBase.fechar();
+        comparacao.fechar();
         linha.pausar();
     }
 
@@ -261,8 +275,98 @@ public class MapaController implements Pagina.Controlador {
             return;
         }
         seletorBase.fechar();
+        comparacao.fechar();
+        ficha.setMunicipios(nomesDosMunicipios(b));
         ficha.mostrar(p);
         js("APS.destacar(" + Json.texto(chaveIbge(p)) + ", false)");
+    }
+
+    ComparacaoMunicipios comparacao() {
+        return comparacao;
+    }
+
+    /** Abre o painel com os dois municipios lado a lado e destaca os dois no mapa. */
+    void comparar(String municipioA, String municipioB) {
+        BaseDeFocos b = ctx.baseProperty().get();
+        if (b == null) return;
+        PerfilMunicipio pa, pb;
+        try {
+            pa = PerfilMunicipio.de(b.getFocos(), municipioA);
+            pb = PerfilMunicipio.de(b.getFocos(), municipioB);
+        } catch (IllegalArgumentException e) {
+            Feedback.info("Município não encontrado", "Confira o nome e tente de novo.");
+            return;
+        }
+        seletorBase.fechar();
+        ficha.fechar();
+        comparacao.mostrar(pa, pb);
+        js("APS.destacar([" + Json.texto(chaveIbge(pa)) + "," + Json.texto(chaveIbge(pb)) + "], false)");
+    }
+
+    private static List<String> nomesDosMunicipios(BaseDeFocos b) {
+        List<String> r = new ArrayList<>();
+        for (String m : b.municipios()) {
+            MalhaMunicipal.Municipio mm = MalhaMunicipal.sp().buscar(m);
+            r.add(mm == null ? br.unip.aps.util.Textos.nomeProprio(m) : mm.nome());
+        }
+        return r;
+    }
+
+    private void escolherArquivoGif() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Salvar a linha do tempo em GIF");
+        fc.setInitialFileName("linha-do-tempo-focos.gif");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("GIF animado", "*.gif"));
+        File arq = fc.showSaveDialog(ctx.stage());
+        if (arq != null) gravarLinhaDoTempo(arq.toPath(), p -> Feedback.sucesso("GIF gravado", p.toAbsolutePath().toString()));
+    }
+
+    /** Passa pelos meses, fotografa o mapa em cada um e grava tudo como GIF em segundo plano. */
+    void gravarLinhaDoTempo(Path destino, java.util.function.Consumer<Path> aoTerminar) {
+        List<YearMonth> meses = linha.meses();
+        if (meses.isEmpty() || gravando) return;
+        gravando = true;
+        linha.pausar();
+        YearMonth deAntes = linha.inicio(), ateAntes = linha.fim();
+        List<Node> esconder = List.of(controles, ficha, comparacao, seletorBase.painel());
+        List<Boolean> antes = new ArrayList<>();
+        for (Node n : esconder) {
+            antes.add(n.isVisible());
+            n.setVisible(false);
+        }
+        List<java.awt.image.BufferedImage> quadros = new ArrayList<>();
+        Runnable[] passo = new Runnable[1];
+        passo[0] = () -> {
+            int i = quadros.size();
+            if (i >= meses.size()) {
+                for (int k = 0; k < esconder.size(); k++) esconder.get(k).setVisible(antes.get(k));
+                linha.setPeriodo(deAntes, ateAntes);
+                linha.setGravacao("Salvando…");
+                ctx.executar("Gravando a linha do tempo em GIF", () -> {
+                    try {
+                        return br.unip.aps.util.GifAnimado.gravar(quadros, 700, 2200, 1280, destino);
+                    } catch (IOException e) {
+                        LOG.warning("Falha ao gravar o GIF: " + e.getMessage());
+                        return null;
+                    }
+                }, p -> {
+                    gravando = false;
+                    linha.setGravacao(null);
+                    if (p == null) Feedback.erro("Não foi possível gravar o GIF", "Verifique se a pasta permite gravação.");
+                    else aoTerminar.accept(p);
+                });
+                return;
+            }
+            linha.setGravacao((i + 1) + "/" + meses.size());
+            linha.setPeriodo(meses.get(i), meses.get(i));
+            javafx.animation.PauseTransition espera = new javafx.animation.PauseTransition(javafx.util.Duration.millis(380));
+            espera.setOnFinished(e -> {
+                quadros.add(SwingFXUtils.fromFXImage(moldura.snapshot(new SnapshotParameters(), null), null));
+                passo[0].run();
+            });
+            espera.play();
+        };
+        passo[0].run();
     }
 
     private static String chaveIbge(PerfilMunicipio p) {
@@ -287,7 +391,7 @@ public class MapaController implements Pagina.Controlador {
 
     /** Grava o mapa em PNG no dobro da resolucao da tela, escondendo controles, linha do tempo e ficha. */
     Path exportarPng(Path destino) throws IOException {
-        List<Node> esconder = List.of(controles, linha, ficha, seletorBase.painel());
+        List<Node> esconder = List.of(controles, linha, ficha, comparacao, seletorBase.painel());
         List<Boolean> antes = new ArrayList<>();
         for (Node n : esconder) {
             antes.add(n.isVisible());

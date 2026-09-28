@@ -303,4 +303,55 @@ class InteracaoTest {
         assertEquals(Math.round(largura * MapaController.ESCALA_PNG), img.getWidth(), 2);
         assertTrue(ROBO.lookup("#linhaDoTempo").query().isVisible(), "os controles voltam depois da exportação");
     }
+
+    @Test
+    @Order(10)
+    @DisplayName("na ficha, digitar outro município e Enter abre a comparação; Voltar retorna à ficha")
+    void comparacaoDeMunicipios() {
+        ROBO.interact(() -> ctx.navegar(Pagina.MAPA));
+        esperar();
+        MapaController mapa = (MapaController) main.controllerDe(Pagina.MAPA);
+        ROBO.interact(() -> mapa.abrirFicha("BAURU"));
+        esperar();
+        rolarAte("#campoComparar");
+        ROBO.clickOn("#campoComparar").write("itu");
+        esperar();
+        ROBO.type(KeyCode.ENTER);
+        esperar();
+        assertTrue(mapa.comparacao().aberta(), "a comparação deveria abrir");
+        assertFalse(mapa.ficha().aberta());
+        assertEquals("Bauru", mapa.comparacao().a().nome());
+        assertEquals("Itu", mapa.comparacao().b().nome());
+        long itu = ctx.baseProperty().get().getFocos().stream().filter(f -> f.getMunicipio().equals("ITU")).count();
+        assertEquals(itu, mapa.comparacao().b().total());
+        rolarAte("#btnVoltarFicha");
+        ROBO.clickOn("#btnVoltarFicha");
+        esperar();
+        assertTrue(mapa.ficha().aberta());
+        assertFalse(mapa.comparacao().aberta());
+        ROBO.clickOn("#btnFecharFicha");
+        esperar();
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("a linha do tempo é gravada como GIF com um quadro por mês")
+    void gravarLinhaDoTempoEmGif(@TempDir Path pasta) throws Exception {
+        ROBO.interact(() -> ctx.navegar(Pagina.MAPA));
+        esperar();
+        MapaController mapa = (MapaController) main.controllerDe(Pagina.MAPA);
+        Path destino = pasta.resolve("linha.gif");
+        java.util.concurrent.atomic.AtomicReference<Path> pronto = new java.util.concurrent.atomic.AtomicReference<>();
+        ROBO.interact(() -> mapa.gravarLinhaDoTempo(destino, pronto::set));
+        WaitForAsyncUtils.waitFor(120, java.util.concurrent.TimeUnit.SECONDS, () -> pronto.get() != null);
+        javax.imageio.ImageReader leitor = javax.imageio.ImageIO.getImageReadersByFormatName("gif").next();
+        try (javax.imageio.stream.ImageInputStream in = javax.imageio.ImageIO.createImageInputStream(destino.toFile())) {
+            leitor.setInput(in);
+            assertEquals(24, leitor.getNumImages(true), "um quadro para cada mês de 2023 e 2024");
+        } finally {
+            leitor.dispose();
+        }
+        assertNull(mapa.linhaDoTempo().inicio(), "o período volta ao que era antes da gravação");
+        assertTrue(ROBO.lookup("#controles").query().isVisible(), "os controles voltam depois da gravação");
+    }
 }

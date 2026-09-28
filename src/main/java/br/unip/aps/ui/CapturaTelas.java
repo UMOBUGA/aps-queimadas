@@ -139,11 +139,17 @@ final class CapturaTelas {
                                             mc.abrirFicha(municipioComMaisFocos());
                                             esperar(3000, () -> {
                                                 salvar(String.format("%02d-mapa-ficha-municipio.png", n[0]++));
-                                                mc.ficha().fechar();
-                                                mc.forcarOffline();
-                                                esperar(4000, () -> {
-                                                    salvar(String.format("%02d-mapa-offline-mundo.png", n[0]++));
-                                                    proximo();
+                                                br.unip.aps.geo.PerfilMunicipio p = mc.ficha().perfil();
+                                                if (p != null && !p.vizinhosComFocos().isEmpty()) mc.comparar(p.nomeInpe(), p.vizinhosComFocos().get(0).chave());
+                                                esperar(3000, () -> {
+                                                    salvar(String.format("%02d-mapa-comparacao.png", n[0]++));
+                                                    mc.comparacao().fechar();
+                                                    mc.ficha().fechar();
+                                                    mc.forcarOffline();
+                                                    esperar(4000, () -> {
+                                                        salvar(String.format("%02d-mapa-offline-mundo.png", n[0]++));
+                                                        proximo();
+                                                    });
                                                 });
                                             });
                                         });

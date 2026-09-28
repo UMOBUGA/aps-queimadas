@@ -393,12 +393,19 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     destacar: function (chave, enquadrar) {
       camadaDestaque.clearLayers();
       if (!chave || !estado.malha) return false;
-      var alvo = estado.malha.features.filter(function (f) { return f.properties.chave === chave; });
-      if (!alvo.length) return false;
-      var cor = css('--accent');
-      var g = L.geoJSON(alvo, { style: function () { return { color: cor, weight: 3, fillColor: cor, fillOpacity: 0.08 }; }, interactive: false })
-        .addTo(camadaDestaque);
-      if (enquadrar) mapa.fitBounds(g.getBounds(), { paddingTopLeft: [40, 90], paddingBottomRight: [440, 40], maxZoom: 11 });
+      var chaves = Array.isArray(chave) ? chave : [chave], p = pal();
+      var cores = chaves.length > 1 ? [p.anoRecente, p.anoAnterior] : [css('--accent')];
+      var limites = null;
+      chaves.forEach(function (k, i) {
+        var alvo = estado.malha.features.filter(function (f) { return f.properties.chave === k; });
+        if (!alvo.length) return;
+        var cor = cores[i % cores.length];
+        var g = L.geoJSON(alvo, { style: function () { return { color: cor, weight: 3, fillColor: cor, fillOpacity: 0.1 }; }, interactive: false })
+          .addTo(camadaDestaque);
+        limites = limites ? limites.extend(g.getBounds()) : g.getBounds();
+      });
+      if (!limites) return false;
+      if (enquadrar) mapa.fitBounds(limites, { paddingTopLeft: [40, 90], paddingBottomRight: [chaves.length > 1 ? 600 : 440, 40], maxZoom: 11 });
       return true;
     },
     setCorPor: function (c) { estado.corPor = c; desenhar(); },

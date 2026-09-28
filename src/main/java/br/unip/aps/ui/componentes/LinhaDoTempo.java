@@ -27,6 +27,7 @@ public class LinhaDoTempo extends HBox {
     private final FaixaTermica faixa = new FaixaTermica();
     private final Button tocar = new Button();
     private final Button todos = new Button("Todos os meses");
+    private final Button gravar = new Button("GIF");
     private final Label periodo = new Label("Todos os meses");
     private final Timeline relogio = new Timeline();
     private final List<YearMonth> meses = new ArrayList<>();
@@ -69,7 +70,13 @@ public class LinhaDoTempo extends HBox {
             pausar();
             mudar(a, b);
         });
-        getChildren().addAll(tocar, textos, faixa, todos);
+        gravar.setId("btnGravarGif");
+        gravar.getStyleClass().add("btn-secondary");
+        gravar.setGraphic(Icones.de(Icones.ANIMAR, 15));
+        gravar.setTooltip(new Tooltip("Gravar a animação mês a mês como GIF, para a apresentação"));
+        gravar.setAccessibleText("Gravar a linha do tempo em GIF");
+        Layout.naoEncolher(gravar);
+        getChildren().addAll(tocar, textos, faixa, todos, gravar);
 
         relogio.getKeyFrames().add(new KeyFrame(PASSO, e -> avancar()));
         relogio.setCycleCount(Animation.INDEFINITE);
@@ -124,6 +131,23 @@ public class LinhaDoTempo extends HBox {
 
     public YearMonth fim() {
         return ate;
+    }
+
+    /** Meses da faixa, em ordem cronologica. */
+    public List<YearMonth> meses() {
+        return List.copyOf(meses);
+    }
+
+    public void setOnGravar(Runnable acao) {
+        gravar.setOnAction(e -> acao.run());
+    }
+
+    /** Mostra o andamento da gravacao no botao (null volta ao normal). */
+    public void setGravacao(String andamento) {
+        boolean ativa = andamento != null;
+        gravar.setText(ativa ? andamento : "GIF");
+        gravar.setDisable(ativa);
+        tocar.setDisable(ativa);
     }
 
     public void setOnMudar(BiConsumer<YearMonth, YearMonth> acao) {

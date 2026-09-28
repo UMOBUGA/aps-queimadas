@@ -4,13 +4,16 @@ import br.unip.aps.analysis.Contagem;
 import br.unip.aps.analysis.Estatisticas;
 import br.unip.aps.geo.PerfilMunicipio;
 import br.unip.aps.util.Formatos;
+import br.unip.aps.util.Textos;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -23,6 +26,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -41,8 +45,12 @@ public class FichaMunicipio extends VBox {
     private final BarrasHorizontais vizinhos = new BarrasHorizontais();
     private final Label vizinhosTexto = new Label();
     private final Button verNoMapa = new Button("Ver no mapa");
+    private final TextField campoComparar = new TextField();
+    private final ListView<String> sugestoes = new ListView<>();
+    private List<String> municipios = List.of();
     private PerfilMunicipio perfil;
     private Consumer<PerfilMunicipio> aoVerNoMapa;
+    private BiConsumer<PerfilMunicipio, String> aoComparar;
 
     public FichaMunicipio() {
         getStyleClass().add("ficha-painel");
@@ -89,11 +97,42 @@ public class FichaMunicipio extends VBox {
         });
         Layout.naoEncolher(verNoMapa);
 
+        campoComparar.setId("campoComparar");
+        campoComparar.setPromptText("Digite outro município…");
+        campoComparar.setAccessibleText("Comparar com outro município");
+        campoComparar.textProperty().addListener((o, a, n) -> filtrarSugestoes(n));
+        campoComparar.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER && !sugestoes.getItems().isEmpty()) {
+                String s = sugestoes.getSelectionModel().getSelectedItem();
+                comparar(s == null ? sugestoes.getItems().get(0) : s);
+                e.consume();
+            } else if (e.getCode() == KeyCode.DOWN && !sugestoes.getItems().isEmpty()) {
+                sugestoes.requestFocus();
+                sugestoes.getSelectionModel().selectFirst();
+                e.consume();
+            }
+        });
+        sugestoes.setId("sugestoesComparar");
+        sugestoes.getStyleClass().add("ficha-sugestoes");
+        sugestoes.setFixedCellSize(30);
+        sugestoes.setVisible(false);
+        sugestoes.setManaged(false);
+        sugestoes.setOnMouseClicked(e -> comparar(sugestoes.getSelectionModel().getSelectedItem()));
+        sugestoes.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                comparar(sugestoes.getSelectionModel().getSelectedItem());
+                e.consume();
+            }
+        });
+        HBox linhaComparar = new HBox(8, Icones.de(Icones.COMPARAR, 16), campoComparar);
+        linhaComparar.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(campoComparar, Priority.ALWAYS);
+
         VBox conteudo = new VBox(16,
                 new VBox(0, total, totalTexto), ranking, numeros,
                 secao("Focos por mês", "Clique num mês para vê-lo no mapa."), faixa, pico,
                 secao("Vizinhos com focos", "Municípios que fazem fronteira, pela malha do IBGE."), vizinhos, vizinhosTexto,
-                verNoMapa);
+                verNoMapa, secao("Comparar", "Coloque este município lado a lado com outro."), linhaComparar, sugestoes);
         conteudo.getStyleClass().add("ficha-conteudo");
         ScrollPane rolagem = new ScrollPane(conteudo);
         rolagem.setFitToWidth(true);
@@ -153,6 +192,7 @@ public class FichaMunicipio extends VBox {
                 : p.vizinhosComFocos().size() + " de " + p.vizinhos() + " vizinhos tiveram focos"
                 + (p.vizinhosComFocos().size() > MAX_VIZINHOS ? "; aqui estão os " + MAX_VIZINHOS + " com mais." : "."));
         verNoMapa.setDisable(Double.isNaN(p.latitude()));
+        campoComparar.clear();
         setAccessibleText("Ficha de " + p.nome() + ": " + total.getText() + " " + totalTexto.getText() + ". " + ranking.getText());
 
         boolean jaAberta = isVisible();
@@ -186,6 +226,47 @@ public class FichaMunicipio extends VBox {
         Label r = new Label(rotulo);
         r.getStyleClass().add("ficha-rotulo");
         return new VBox(0, v, r);
+    }
+
+    private void filtrarSugestoes(String texto) {
+        String q = Textos.semAcentos(texto == null ? "" : texto.strip()).toLowerCase(Locale.ROOT);
+        List<String> inicio = new ArrayList<>(), meio = new ArrayList<>();
+        if (!q.isEmpty()) {
+            for (String m : municipios) {
+                if (perfil != null && m.equalsIgnoreCase(perfil.nome())) continue;
+                String k = Textos.semAcentos(m).toLowerCase(Locale.ROOT);
+                if (k.startsWith(q)) inicio.add(m);
+                else if (k.contains(q)) meio.add(m);
+            }
+        }
+        inicio.addAll(meio);
+        List<String> itens = inicio.subList(0, Math.min(6, inicio.size()));
+        sugestoes.getItems().setAll(itens);
+        sugestoes.setPrefHeight(itens.size() * 30 + 4);
+        sugestoes.setVisible(!itens.isEmpty());
+        sugestoes.setManaged(!itens.isEmpty());
+    }
+
+    private void comparar(String outro) {
+        if (outro == null || perfil == null || aoComparar == null) return;
+        sugestoes.setVisible(false);
+        sugestoes.setManaged(false);
+        aoComparar.accept(perfil, outro);
+    }
+
+    /** Nomes que o campo "Comparar" sugere (normalmente os municipios da base). */
+    public void setMunicipios(List<String> nomes) {
+        this.municipios = List.copyOf(nomes);
+    }
+
+    /** Chamado com a ficha atual e o nome escolhido para comparar. */
+    public void setOnComparar(BiConsumer<PerfilMunicipio, String> acao) {
+        this.aoComparar = acao;
+    }
+
+    /** Digita no campo de comparacao (usado pelos testes e pela captura de telas). */
+    public void digitarComparacao(String texto) {
+        campoComparar.setText(texto);
     }
 
     public void fechar() {

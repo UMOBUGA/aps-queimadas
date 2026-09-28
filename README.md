@@ -45,7 +45,9 @@ Todos os valores vêm de execuções reais gravadas em [`docs/resultados`](docs/
 
 ## Como rodar
 
-**Sem instalar nada:** baixe o pacote da [última versão](https://github.com/gustavoblopes79/aps-queimadas/releases/latest). Os pacotes trazem o próprio Java.
+**No celular:** abra a [versão web](https://gustavoblopes79.github.io/aps-queimadas/app/): mapa mês a mês, ranking, ficha e comparação de municípios e o custo real dos 13 algoritmos. Dá para instalar como app, e ela funciona sem internet.
+
+**No computador, sem instalar nada:** baixe o pacote da [última versão](https://github.com/gustavoblopes79/aps-queimadas/releases/latest). Os pacotes trazem o próprio Java.
 
 | Sistema | Pacote |
 |---|---|
@@ -131,6 +133,7 @@ Todos os prints estão em [`docs/prints/`](docs/prints/) (páginas inteiras em `
 | `manual` | `docs/MANUAL.pdf` a partir de `docs/MANUAL.md` |
 | `agregados` | Resume o histórico de SP e os estados do Brasil nos CSVs embarcados |
 | `capturas [--saida docs/prints]` | Captura todas as telas nos dois temas |
+| `web [--saida site/app]` | Roda os 13 algoritmos na base real e grava os dados da versão web |
 
 ---
 

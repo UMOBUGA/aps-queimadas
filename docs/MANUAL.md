@@ -79,6 +79,22 @@ Clique num foco e depois em **Ficha do município**, ou clique num município no
 
 O botão **PNG** salva o mapa como imagem com o dobro dos pixels da tela, sem os controles, pronta para o relatório ou a dissertação.
 
+### Comparar municípios
+
+No fim da ficha, digite outro município em **Comparar** e tecle Enter. O painel mostra os dois lado a lado, com os focos mês a mês na mesma escala e uma frase de resumo ("Andradina teve 1,9 vezes os focos de Pereira Barreto. Os dois fazem fronteira."). No mapa, o primeiro fica em laranja e o segundo em azul.
+
+![Comparação](prints/30-mapa-comparacao.png)
+
+### Gravar a linha do tempo em GIF
+
+O botão **GIF**, na linha do tempo, passa pelos 24 meses, fotografa o mapa em cada um e salva um GIF animado. Leva uns 15 segundos; o botão mostra o andamento.
+
+## Versão web (celular)
+
+Em <https://gustavoblopes79.github.io/aps-queimadas/app/> há uma versão para o celular: mapa com a linha do tempo, ranking dos municípios com busca, ficha, comparação e o custo real dos 13 algoritmos. No menu do navegador, "Instalar app" ou "Adicionar à tela inicial" a deixa como um aplicativo, que abre até sem internet.
+
+Os números da versão web não são recalculados no celular: o programa em Java gera tudo com `java -jar aps-queimadas-2.2.0-all.jar web`, que ordena os focos com os 13 algoritmos, conta as operações e grava os resultados em `site/app/dados`.
+
 ## Machine Learning
 
 Prevê focos por município e mês com Random Forest e compara com previsões ingênuas. A tela mostra a validação em janelas de tempo, o efeito de cada grupo de variáveis e o estudo de agosto de 2024.
