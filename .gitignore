@@ -28,3 +28,4 @@ data/brasil/
 
 # Todos os satelites (meteorologia, dezenas de MB): baixe com o modo historico --meteorologia
 data/historico/*todos-sats*
+docs/prints/gif/
