@@ -163,7 +163,7 @@ Detalhes, modelo de custo e como adicionar um algoritmo: [ALGORITMOS.md](docs/AL
 
 - **Padrões:** Strategy e Factory (algoritmos), Decorator e Observer (`InstrumentedArray`), MVC (JavaFX), Facade e Adapter (ML), Builder, Command (paleta) e Memento (visões salvas).
 - **Regras garantidas pelo build:** nenhuma ordenação pronta em produção (`ArquiteturaTest` e Checkstyle), estruturas de busca sem coleções prontas, cobertura mínima.
-- **Cada `./mvnw verify` roda:** 315 testes, Checkstyle, PMD, SpotBugs e JaCoCo (≥ 65% no total, ≥ 85% nos pacotes centrais). Teste de mutação com PIT no perfil `mutacao`.
+- **Cada `./mvnw verify` roda:** 321 testes, Checkstyle, PMD, SpotBugs e JaCoCo (≥ 65% no total, ≥ 85% nos pacotes centrais). Teste de mutação com PIT no perfil `mutacao`.
 - **CI/CD:** GitHub Actions para build a cada push, instaladores a cada tag `v*` e o site com o Javadoc no GitHub Pages.
 
 UML, camadas e fluxos: [ARQUITETURA.md](docs/ARQUITETURA.md). Decisões: [docs/adr](docs/adr/). Qualidade e revisão de segurança: [QUALIDADE.md](docs/QUALIDADE.md).
