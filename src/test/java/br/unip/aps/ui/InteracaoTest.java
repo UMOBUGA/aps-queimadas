@@ -10,6 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterAll;
@@ -19,17 +20,20 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.api.FxToolkit;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.nio.file.Path;
+import java.time.YearMonth;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Interacao real com a interface (teclado e mouse simulados pelo TestFX, numa tela virtual Monocle). */
@@ -216,5 +220,87 @@ class InteracaoTest {
         });
         esperar();
         assertEquals(original, seletor.selecionadaProperty().get());
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("a linha do tempo toca e pausa, e escolher um mês muda a contagem do mapa")
+    void linhaDoTempo() {
+        ROBO.interact(() -> ctx.navegar(Pagina.MAPA));
+        esperar();
+        MapaController mapa = (MapaController) main.controllerDe(Pagina.MAPA);
+        br.unip.aps.ui.componentes.LinhaDoTempo linha = mapa.linhaDoTempo();
+
+        ROBO.clickOn("#btnTocarMeses");
+        esperar();
+        assertTrue(linha.tocando(), "o botão deveria começar a tocar os meses");
+        assertEquals(YearMonth.of(2023, 1), linha.inicio());
+        ROBO.clickOn("#btnTocarMeses");
+        esperar();
+        assertFalse(linha.tocando(), "o segundo clique pausa");
+
+        YearMonth agosto = YearMonth.of(2024, 8);
+        ROBO.interact(() -> linha.setPeriodo(agosto, agosto));
+        esperar();
+        long esperado = ctx.focosFiltradosProperty().get().stream().filter(f -> f.getAno() == 2024 && f.getMes() == 8).count();
+        assertEquals(br.unip.aps.util.Formatos.inteiro(esperado), ROBO.lookup("#lblContagem").queryAs(Label.class).getText());
+        assertEquals("focos em ago/2024", ROBO.lookup("#lblContagemTexto").queryAs(Label.class).getText());
+
+        ROBO.clickOn("#btnTodosMeses");
+        esperar();
+        assertNull(linha.inicio());
+        assertEquals("600", ROBO.lookup("#lblContagem").queryAs(Label.class).getText());
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("a ficha do município abre pela paleta (Ctrl+K) e fecha no X")
+    void fichaDoMunicipio() {
+        ROBO.interact(() -> ctx.navegar(Pagina.VISAO_GERAL));
+        esperar();
+        ROBO.press(KeyCode.CONTROL, KeyCode.K).release(KeyCode.K, KeyCode.CONTROL);
+        esperar();
+        ROBO.write("ficha de bauru");
+        ROBO.type(KeyCode.ENTER);
+        esperar();
+        assertEquals(Pagina.MAPA, ctx.paginaProperty().get());
+        MapaController mapa = (MapaController) main.controllerDe(Pagina.MAPA);
+        assertTrue(mapa.ficha().aberta(), "a ficha deveria abrir");
+        long bauru = ctx.baseProperty().get().getFocos().stream().filter(f -> f.getMunicipio().equals("BAURU")).count();
+        assertEquals(bauru, mapa.ficha().perfil().total());
+        assertEquals(24, mapa.ficha().perfil().porMes().size());
+
+        ROBO.clickOn("#btnFecharFicha");
+        esperar();
+        assertFalse(mapa.ficha().aberta());
+
+        ROBO.interact(() -> mapa.abrirFicha("Cidade Inexistente"));
+        esperar();
+        assertFalse(mapa.ficha().aberta(), "nome desconhecido não abre a ficha");
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("o mapa é exportado em PNG com o dobro da resolução e sem os controles")
+    void exportarPng(@TempDir Path pasta) throws Exception {
+        ROBO.interact(() -> ctx.navegar(Pagina.MAPA));
+        esperar();
+        MapaController mapa = (MapaController) main.controllerDe(Pagina.MAPA);
+        Path destino = pasta.resolve("sub").resolve("mapa.png");
+        Exception[] erro = new Exception[1];
+        ROBO.interact(() -> {
+            try {
+                mapa.exportarPng(destino);
+            } catch (java.io.IOException e) {
+                erro[0] = e;
+            }
+        });
+        esperar();
+        assertNull(erro[0]);
+        assertTrue(java.nio.file.Files.size(destino) > 0);
+        java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(destino.toFile());
+        double largura = ROBO.lookup("#moldura").query().getLayoutBounds().getWidth();
+        assertEquals(Math.round(largura * MapaController.ESCALA_PNG), img.getWidth(), 2);
+        assertTrue(ROBO.lookup("#linhaDoTempo").query().isVisible(), "os controles voltam depois da exportação");
     }
 }

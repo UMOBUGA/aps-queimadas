@@ -678,3 +678,35 @@
 }
 .mapa-base-nome { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
 .mapa-base-descricao { -fx-font-size: 11.5px; -fx-text-fill: -aps-text-3; }
+
+.linha-tempo {
+    -fx-background-color: -aps-surface;
+    -fx-background-radius: 6;
+    -fx-border-color: -aps-border-strong;
+    -fx-border-radius: 6;
+    -fx-padding: 10 14 6 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 18, 0, 0, 6);
+}
+.linha-tempo-tocar { -fx-graphic-text-gap: 7; }
+.linha-tempo-periodo { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 22px; -fx-text-fill: -aps-text-1; }
+
+.ficha-painel {
+    -fx-background-color: -aps-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -aps-border-strong;
+    -fx-border-radius: 8;
+    -fx-padding: 18 8 14 20;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 28, 0.1, 0, 10);
+}
+.ficha-rolagem, .ficha-rolagem > .viewport { -fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0; }
+.ficha-conteudo { -fx-padding: 0 12 4 0; }
+.ficha-nome { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 30px; -fx-text-fill: -aps-text-1; }
+.ficha-numero { -fx-font-family: "Big Shoulders Display Black"; -fx-font-size: 56px; -fx-text-fill: -aps-accent-text; -fx-padding: -8 0 -8 0; }
+.ficha-numero-texto { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13px; -fx-text-fill: -aps-text-2; }
+.ficha-texto { -fx-font-size: 13px; -fx-text-fill: -aps-text-1; }
+.ficha-numeros { -fx-border-color: -aps-border transparent transparent transparent; -fx-padding: 12 0 0 0; }
+.ficha-valor { -fx-font-family: "Big Shoulders Display ExtraBold"; -fx-font-size: 22px; -fx-text-fill: -aps-text-1; }
+.ficha-rotulo { -fx-font-size: 11.5px; -fx-text-fill: -aps-text-3; }
+.ficha-secao-cabecalho { -fx-border-color: -aps-border transparent transparent transparent; -fx-padding: 12 0 0 0; }
+.ficha-secao { -fx-font-family: "Inter SemiBold"; -fx-font-size: 13.5px; -fx-text-fill: -aps-text-1; }
+.ficha-faixa .faixa-legenda { -fx-font-size: 10.5px; }

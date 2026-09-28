@@ -59,9 +59,25 @@ Mede os algoritmos com tamanhos crescentes e três cenários. Os gráficos usam 
 
 Mostra os focos como pontos, agrupados, em mapa de calor ou por município (coroplético por densidade, com quebras de Jenks ou quantis). O botão **Hotspots do ML** sobrepõe os agrupamentos encontrados pelo DBSCAN.
 
-O botão **Mapa-base** abre miniaturas dos estilos de fundo: Neutro (acompanha o tema), Ruas e cidades, Relevo, Terreno, Satélite, Satélite com nomes e Atlas. A escolha fica salva. Nos fundos coloridos, os focos ganham contorno branco para continuar visíveis. Sem internet, só o Neutro fica disponível e o programa usa a malha dos municípios.
+O botão **Mapa-base** abre miniaturas dos estilos de fundo: Neutro (acompanha o tema), Ruas e cidades, Relevo, Terreno, Satélite, Satélite com nomes e Atlas. A escolha fica salva. Nos fundos coloridos, os focos ganham contorno branco para continuar visíveis. Sem internet, só o Neutro fica disponível e o programa desenha os países (Natural Earth) e os municípios de SP (IBGE).
 
 ![Mapa-base](prints/25-mapa-base-seletor.png)
+
+### Linha do tempo
+
+A barra no canto inferior esquerdo mostra os focos de cada mês numa faixa de calor. **Tocar** passa pelos meses em sequência, do primeiro ao último, e o mapa, a contagem e a legenda acompanham. Clique num mês para vê-lo sozinho; Shift+clique escolhe um intervalo. **Todos os meses** volta ao período inteiro. O pico de agosto de 2024 aparece logo na faixa.
+
+![Agosto de 2024](prints/28-mapa-agosto-2024.png)
+
+### Ficha do município
+
+Clique num foco e depois em **Ficha do município**, ou clique num município no modo Municípios. A ficha mostra o total de focos, a posição no ranking do estado, os anos lado a lado, o bioma principal, a densidade, os focos por mês e os vizinhos que também tiveram focos. **Ver no mapa** enquadra o município. Pela paleta (Ctrl+K), digite "ficha de" e o nome da cidade.
+
+![Ficha do município](prints/29-mapa-ficha-municipio.png)
+
+### Exportar o mapa
+
+O botão **PNG** salva o mapa como imagem com o dobro dos pixels da tela, sem os controles, pronta para o relatório ou a dissertação.
 
 ## Machine Learning
 

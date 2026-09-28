@@ -79,7 +79,7 @@ public final class SeletorMapaBase {
             cartoes.add(c);
             grade.add(c, i % 4, i / 4);
         }
-        Label fonte = new Label("Mapas da Esri; sem internet, o programa usa a malha dos municípios do IBGE.");
+        Label fonte = new Label("Mapas da Esri; sem internet, o programa desenha os países (Natural Earth) e os municípios (IBGE).");
         fonte.getStyleClass().add("mapa-base-rodape");
         fonte.setWrapText(true);
         painel.getChildren().addAll(new VBox(2, titulo, sub), grade, fonte);

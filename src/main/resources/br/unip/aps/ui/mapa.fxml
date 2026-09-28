@@ -13,7 +13,7 @@
     <WebView fx:id="webView"/>
     <VBox styleClass="mapa-titulo" pickOnBounds="false" StackPane.alignment="BOTTOM_LEFT" maxWidth="-Infinity" maxHeight="-Infinity">
         <StackPane.margin>
-            <Insets bottom="44" left="20"/>
+            <Insets bottom="112" left="20"/>
         </StackPane.margin>
         <Label fx:id="lblContagem" styleClass="mapa-titulo-numero" text="—"/>
         <Label fx:id="lblContagemTexto" styleClass="mapa-titulo-texto" text="focos no mapa"/>

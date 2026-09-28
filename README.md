@@ -69,7 +69,7 @@ cd aps-queimadas
 | Menu no terminal | `mvnw.cmd -q exec:java -Dexec.args="cli"` | `./mvnw -q exec:java -Dexec.args="cli"` |
 | Gerar o JAR executável | `mvnw.cmd -DskipTests package` | `./mvnw -DskipTests package` |
 
-O programa funciona **sem internet**: os CSVs do INPE, a malha municipal do IBGE, o mapa (Leaflet) e os resultados do benchmark vêm dentro do JAR. No IntelliJ, as configurações de execução já estão na pasta `.run/`.
+O programa funciona **sem internet**: os CSVs do INPE, a malha municipal do IBGE, o contorno dos países (Natural Earth), o mapa (Leaflet) e os resultados do benchmark vêm dentro do JAR. No IntelliJ, as configurações de execução já estão na pasta `.run/`.
 
 ---
 
@@ -92,7 +92,7 @@ O programa funciona **sem internet**: os CSVs do INPE, a malha municipal do IBGE
 
 ## Interface
 
-Visual de reportagem de dados ("Boletim de Fogo"): manchete com os números da temporada, faixa térmica clicável com os 24 meses, placar de operações, mapa em tela cheia e escala de calor "inferno". Em Configurações há modo daltônico (paleta Okabe-Ito, também no mapa), alto contraste e texto ampliado.
+Visual de reportagem de dados ("Boletim de Fogo"): manchete com os números da temporada, faixa térmica clicável com os 24 meses, placar de operações, mapa em tela cheia (com linha do tempo que toca os meses, ficha de cada município e exportação em PNG) e escala de calor "inferno". Em Configurações há modo daltônico (paleta Okabe-Ito, também no mapa), alto contraste e texto ampliado.
 
 | | |
 |---|---|
@@ -160,7 +160,7 @@ Detalhes, modelo de custo e como adicionar um algoritmo: [ALGORITMOS.md](docs/AL
 
 - **Padrões:** Strategy e Factory (algoritmos), Decorator e Observer (`InstrumentedArray`), MVC (JavaFX), Facade e Adapter (ML), Builder, Command (paleta) e Memento (visões salvas).
 - **Regras garantidas pelo build:** nenhuma ordenação pronta em produção (`ArquiteturaTest` e Checkstyle), estruturas de busca sem coleções prontas, cobertura mínima.
-- **Cada `./mvnw verify` roda:** 307 testes, Checkstyle, PMD, SpotBugs e JaCoCo (≥ 65% no total, ≥ 85% nos pacotes centrais). Teste de mutação com PIT no perfil `mutacao`.
+- **Cada `./mvnw verify` roda:** 315 testes, Checkstyle, PMD, SpotBugs e JaCoCo (≥ 65% no total, ≥ 85% nos pacotes centrais). Teste de mutação com PIT no perfil `mutacao`.
 - **CI/CD:** GitHub Actions para build a cada push, instaladores a cada tag `v*` e o site com o Javadoc no GitHub Pages.
 
 UML, camadas e fluxos: [ARQUITETURA.md](docs/ARQUITETURA.md). Decisões: [docs/adr](docs/adr/). Qualidade e revisão de segurança: [QUALIDADE.md](docs/QUALIDADE.md).
@@ -194,7 +194,7 @@ UML, camadas e fluxos: [ARQUITETURA.md](docs/ARQUITETURA.md). Decisões: [docs/a
 |---|---|
 | Plataforma | Java 21, Maven (+ Wrapper), Shade, jpackage + jlink |
 | Interface | JavaFX 21, [AtlantaFX](https://github.com/mkpaz/atlantafx), [Ikonli](https://kordamp.org/ikonli/), fontes [Inter](https://rsms.me/inter/) e [Big Shoulders Display](https://github.com/xotypeco/big_shoulders) (OFL) |
-| Mapa | Leaflet 1.9 + markercluster, malha municipal do IBGE, mapas-base Esri e © colaboradores do OpenStreetMap |
+| Mapa | Leaflet 1.9 + markercluster, malha municipal do IBGE, países do Natural Earth, mapas-base Esri e © colaboradores do OpenStreetMap |
 | ML | [Smile](https://haifengl.github.io/) 4.4 |
 | Relatórios | Apache POI, OpenPDF |
 | Qualidade | JUnit 5, TestFX + Monocle, JaCoCo, Checkstyle, PMD, SpotBugs, PIT, JMH |

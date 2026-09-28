@@ -26,10 +26,10 @@ jobs:
             tipo: dmg
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: JDK 21 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: cp "target/aps-queimadas-${{ steps.versao.outputs.v }}-all.jar" pacotes/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: pacote-${{ matrix.nome }}
           path: pacotes/*
@@ -87,8 +87,8 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           path: pacotes
           merge-multiple: true
@@ -98,7 +98,7 @@ jobs:
           tag="${GITHUB_REF_NAME#v}"
           awk -v t="$tag" '$0 ~ "^## \\[" t "\\]" {p=1; next} /^## \[/ {p=0} p' CHANGELOG.md > notas.md
           cat notas.md
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           name: APS Queimadas ${{ github.ref_name }}
           body_path: notas.md

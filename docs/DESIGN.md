@@ -95,7 +95,9 @@ Todas as combinações de texto passam no **WCAG AA** (≥ 4,5:1), com contraste
 - **Mapa:**
   - ocupa toda a área de conteúdo, com mapas-base Esri claro/escuro que acompanham o tema;
   - o total de focos e os modos (Pontos, Agrupado, Calor) flutuam sobre o mapa;
-  - o zoom fica à direita.
+  - a linha do tempo fica no canto inferior esquerdo: faixa térmica dos meses, botão Tocar e o período em Big Shoulders;
+  - a ficha do município entra pela direita (260 ms, desaceleração forte) e não cobre a linha do tempo;
+  - o zoom fica à direita, a escala no canto superior esquerdo e o selo "Modo offline" logo abaixo dela.
 
 ## 5. Componentes (`br.unip.aps.ui.componentes`)
 
@@ -250,5 +252,9 @@ O ano recente recebe a cor mais quente e o anterior, uma cor fria. Isso reforça
 | `completa/13-benchmark-escuro.png` | Benchmark em escala log-log |
 | `14-mapa-escuro.png` · `22-mapa-calor.png` · `23-mapa-agrupado.png` | Mapa em tela cheia: pontos por bioma, densidade e agrupamento com hotspots |
 | `24-mapa-municipios.png` | Mapa coroplético por densidade de focos (quebras de Jenks) |
+| `25-mapa-base-seletor.png` · `26-mapa-satelite.png` · `27-mapa-relevo.png` | Seletor de mapa-base e dois estilos |
+| `28-mapa-agosto-2024.png` | Linha do tempo parada em agosto de 2024, o pico da série |
+| `29-mapa-ficha-municipio.png` | Ficha do município com mais focos |
+| `30-mapa-offline-mundo.png` | Modo offline: países do Natural Earth sob a malha do IBGE |
 | `completa/15-ml-escuro.png` | Machine Learning: validação em janelas, ablação, permutação e estudo de agosto/2024 |
 | `completa/16-qualidade-escuro.png` | Qualidade dos dados |

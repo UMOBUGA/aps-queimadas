@@ -2,6 +2,17 @@
 
 Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Não publicado]
+
+### Adicionado
+- **Linha do tempo no mapa:** faixa térmica dos meses com botão Tocar, que mostra os focos mês a mês; clique escolhe um mês e Shift+clique, um intervalo. A contagem, a legenda e o mapa por município acompanham o período.
+- **Ficha do município:** total, posição no ranking do estado, comparação entre os anos, bioma principal, densidade, focos por mês e vizinhos com focos (malha do IBGE). Abre pelo balão do foco, pelo clique no município ou pela paleta ("ficha de…").
+- **Mapa-múndi offline:** países do Natural Earth (domínio público) embarcados; sem internet, o mundo aparece sob a malha dos municípios.
+- **Exportar o mapa em PNG** com o dobro da resolução da tela e sem os controles.
+
+### Alterado
+- GitHub Actions atualizadas para as versões com Node 24.
+
 ## [2.1.0] - 2026-09-28
 
 ### Adicionado

@@ -5,6 +5,7 @@ import br.unip.aps.ui.tema.GerenciadorTema;
 import br.unip.aps.util.Formatos;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
@@ -111,6 +112,13 @@ public class FaixaTermica extends HBox {
         l.setPadding(new javafx.geometry.Insets(10, 0, 0, 0));
         Tooltip.install(l, new Tooltip("Clique em um mês para filtrar o período; Shift+clique estende a seleção; clique de novo para limpar."));
         return l;
+    }
+
+    /** Esconde a legenda "menos / mais focos" quando falta espaco. */
+    public void semLegenda() {
+        Node legenda = getChildren().get(1);
+        legenda.setVisible(false);
+        legenda.setManaged(false);
     }
 
     /** Recebe a serie mensal completa da base (em ordem cronologica). */

@@ -549,9 +549,17 @@ public class MainController {
             for (String m : b.municipios()) {
                 r.add(new br.unip.aps.ui.componentes.PaletaComandos.Comando(VisaoGeralController.capitalizar(m), "Filtrar os focos deste município",
                         "Município", Icones.MUNICIPIO, () -> filterBar.municipio(m)));
+                r.add(new br.unip.aps.ui.componentes.PaletaComandos.Comando("Ficha de " + VisaoGeralController.capitalizar(m),
+                        "Focos por mês, ranking e vizinhos, no mapa", "Ficha", Icones.MAPA, () -> abrirFicha(m)));
             }
         }
         return r;
+    }
+
+    /** Vai para o mapa e abre a ficha do municipio. */
+    void abrirFicha(String municipio) {
+        ctx.navegar(Pagina.MAPA);
+        if (controllerDe(Pagina.MAPA) instanceof MapaController mc) mc.abrirFicha(municipio);
     }
 
     private static void acao(List<br.unip.aps.ui.componentes.PaletaComandos.Comando> r, String t, String d, String icone, Runnable a) {

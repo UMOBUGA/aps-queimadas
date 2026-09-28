@@ -115,7 +115,7 @@ public class PaletaComandos extends StackPane {
         String q = Textos.semAcentos(texto == null ? "" : texto.strip());
         List<Pontuado> r = new ArrayList<>();
         for (Comando c : todos) {
-            int p = q.isEmpty() ? (c.categoria().equals("Município") ? -1 : 0) : pontuar(q, Textos.semAcentos(c.titulo() + " " + c.categoria()));
+            int p = q.isEmpty() ? (c.categoria().equals("Município") || c.categoria().equals("Ficha") ? -1 : 0) : pontuar(q, Textos.semAcentos(c.titulo() + " " + c.categoria()));
             if (p >= 0) r.add(new Pontuado(c, p));
         }
         Ordenacoes.ordenar(r, (a, b) -> Integer.compare(b.pontos(), a.pontos()));

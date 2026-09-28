@@ -9,20 +9,21 @@
 <script>window.L_DISABLE_3D = true;</script>
 <script src="web/leaflet.js"></script>
 <script src="web/leaflet.markercluster.js"></script>
+<script src="web/mundo.js"></script>
 <style>
   :root {
     --surface: #FFFFFF; --text-1: #15100D; --text-2: #4A413B; --text-3: #6E635B; --border: #E2DFDB;
     --accent: #D9480F; --accent-subtle: #FFF1E8; --shadow: 0 10px 28px rgba(21,16,13,.18);
-    --terra: #ECEAE7; --terra-borda: #CFCAC4; --fora: #F7F6F4;
+    --terra: #E9E4DF; --terra-borda: #CFC7BF; --fora: #DCE3E7; --pais: #F6F4F1; --pais-borda: #C9C2BA;
   }
   body.escuro {
     --surface: #15100E; --text-1: #F6EEE7; --text-2: #CDBDB1; --text-3: #A08D80; --border: #3F332D;
     --accent: #FF6B1A; --accent-subtle: #2B150A; --shadow: 0 10px 28px rgba(0,0,0,.6);
-    --terra: #1E1714; --terra-borda: #3F332D; --fora: #0D0A09;
+    --terra: #241B17; --terra-borda: #46392F; --fora: #0A0D0F; --pais: #18120F; --pais-borda: #3A2F28;
   }
   html, body, #mapa { height: 100%; margin: 0; padding: 0; font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--surface); }
   .leaflet-container { background: var(--surface); font-family: inherit; }
-  body.offline .leaflet-container { background: var(--fora); }
+  body.offline #mapa { background: var(--fora); }
   .legenda {
     background: var(--surface); color: var(--text-2); padding: 12px 14px; border-radius: 5px; line-height: 1.7;
     box-shadow: var(--shadow); border: 1px solid var(--border); font-size: 12px; min-width: 150px;
@@ -32,7 +33,7 @@
   .legenda .sep { display: block; height: 6px; }
   .selo-offline {
     background: var(--surface); color: var(--text-2); border: 1px solid var(--border); border-radius: 4px;
-    padding: 4px 9px; font-size: 11.5px; box-shadow: var(--shadow); display: none;
+    padding: 5px 9px; font-size: 11.5px; line-height: 1.5; box-shadow: var(--shadow); display: none;
   }
   body.offline .selo-offline { display: block; }
   .selo-offline b { color: var(--text-1); }
@@ -42,6 +43,12 @@
   .pop-titulo { font-weight: 600; font-size: 13.5px; color: var(--text-1); margin-bottom: 2px; }
   .pop-linha { color: var(--text-2); }
   .pop-bioma { display: inline-block; padding: 1px 8px; border-radius: 3px; background: var(--accent-subtle); color: var(--text-1); font-size: 11.5px; margin-top: 4px; }
+  .pop-acao { display: block; margin-top: 10px; padding: 6px 10px; width: 100%; border: 1px solid var(--accent); border-radius: 4px;
+              background: var(--accent-subtle); color: var(--text-1); font: 600 12px inherit; font-family: inherit; cursor: pointer; text-align: left;
+              transition: transform 140ms ease-out; }
+  .pop-acao:hover { background: var(--accent); color: #1A0B02; }
+  .pop-acao:active { transform: scale(0.97); }
+  .legenda .periodo { display: block; color: var(--accent); font-weight: 600; }
   .leaflet-control-zoom a, .leaflet-control-layers { background: var(--surface) !important; color: var(--text-1) !important; border-color: var(--border) !important; }
   .leaflet-control-attribution { background: rgba(255,255,255,.7) !important; }
   body.escuro .leaflet-control-attribution { background: rgba(21,16,14,.78) !important; color: var(--text-3); }
@@ -77,12 +84,13 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     document.getElementById('aviso').style.display = 'flex';
     window.APS = { pronto: false, setFocos: function () {}, setHotspots: function () {}, setTema: function () {}, setModo: function () {},
                    setCorPor: function () {}, setMalha: function () {}, forcarOffline: function () {}, setCoropletico: function () {},
-                   setCirculo: function () {}, setDaltonico: function () {}, setBase: function () {}, base: function () { return 'neutro'; } };
+                   setCirculo: function () {}, setDaltonico: function () {}, setBase: function () {}, base: function () { return 'neutro'; },
+                   setPeriodo: function () {}, destacar: function () {}, visiveis: function () { return 0; } };
     return;
   }
   var SP = L.latLngBounds([-25.35, -53.15], [-19.75, -44.15]);
   var estado = { tema: 'claro', modo: 'pontos', corPor: 'bioma', dados: { biomas: [], focos: [], anoRecente: 0 },
-                 hotspots: [], offline: false, malha: null, coro: null, base: 'neutro' };
+                 hotspots: [], offline: false, malha: null, coro: null, base: 'neutro', periodo: null };
   var mapa = L.map('mapa', { preferCanvas: true, zoomControl: false, attributionControl: true, maxZoom: 18, worldCopyJump: true });
   mapa.fitBounds(SP, { paddingTopLeft: [20, 80], paddingBottomRight: [20, 20] });
   L.control.zoom({ position: 'topright' }).addTo(mapa);
@@ -143,16 +151,24 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
   aplicarBase();
   setTimeout(function () { if (tilesCarregados === 0) entrarOffline('mapa-base sem resposta'); }, 6000);
 
+  // Em telas com zoom de 200% o canvas passa de 4.096 px e o WebView não consegue recortá-lo; redesenhar tudo evita o recorte.
+  var redesenharOriginal = L.Canvas.prototype._redraw;
+  L.Canvas.include({
+    _redraw: function () {
+      this._redrawBounds = null;
+      return redesenharOriginal.call(this);
+    }
+  });
   var renderer = L.canvas({ padding: 0.5 });
   var camadaBase = L.layerGroup().addTo(mapa);
   var camadaCoro = L.layerGroup().addTo(mapa);
   var camada = L.layerGroup().addTo(mapa);
   var camadaHot = L.layerGroup().addTo(mapa);
-  L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(mapa);
-  var selo = L.control({ position: 'bottomleft' });
+  L.control.scale({ imperial: false, position: 'topleft' }).addTo(mapa);
+  var selo = L.control({ position: 'topleft' });
   selo.onAdd = function () {
     var d = L.DomUtil.create('div', 'selo-offline');
-    d.innerHTML = '<b>Modo offline</b> · malha municipal do IBGE';
+    d.innerHTML = '<b>Modo offline</b><br>países: Natural Earth<br>municípios: IBGE';
     return d;
   };
   selo.addTo(mapa);
@@ -182,7 +198,29 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
   function popup(f) {
     return '<div class="pop-titulo">' + esc(f[3]) + '</div><div class="pop-linha">' + esc(f[4]) + ' (GMT)</div>'
          + '<div class="pop-linha">' + f[0].toFixed(5) + ', ' + f[1].toFixed(5) + '</div>'
-         + '<span class="pop-bioma">' + esc(estado.dados.biomas[f[2]]) + '</span>';
+         + '<span class="pop-bioma">' + esc(estado.dados.biomas[f[2]]) + '</span>' + botaoFicha(f[3]);
+  }
+  function botaoFicha(municipio) {
+    return municipio ? '<button class="pop-acao" data-ficha="' + esc(municipio) + '">Ficha do município →</button>' : '';
+  }
+  mapa.on('popupopen', function (e) {
+    var el = e.popup.getElement();
+    if (!el) return;
+    Array.prototype.forEach.call(el.querySelectorAll('[data-ficha]'), function (b) {
+      b.addEventListener('click', function () { abrirFicha(b.getAttribute('data-ficha')); });
+    });
+  });
+  function abrirFicha(nome) {
+    try { alert('FICHA:' + nome); } catch (e) {}
+  }
+  var cacheVisiveis = null;
+  function visiveis() {
+    if (!estado.periodo) return estado.dados.focos;
+    if (!cacheVisiveis) {
+      var de = estado.periodo.de, ate = estado.periodo.ate;
+      cacheVisiveis = estado.dados.focos.filter(function (f) { return f[6] >= de && f[6] <= ate; });
+    }
+    return cacheVisiveis;
   }
 
   function entrarOffline(motivo) {
@@ -191,12 +229,21 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     removerBase();
     document.body.classList.add('offline');
     desenharBase();
+    desenhar();
     try { alert('OFFLINE: ' + motivo); } catch (e) {}
   }
 
   function desenharBase() {
     camadaBase.clearLayers();
-    if (!estado.malha || !estado.offline) return;
+    if (!estado.offline) return;
+    if (window.MUNDO) {
+      L.geoJSON(window.MUNDO, {
+        renderer: renderer,
+        style: function () { return { color: css('--pais-borda'), weight: 0.7, fillColor: css('--pais'), fillOpacity: 1 }; },
+        interactive: false
+      }).addTo(camadaBase);
+    }
+    if (!estado.malha) return;
     L.geoJSON(estado.malha, {
       renderer: renderer,
       style: function () { return { color: css('--terra-borda'), weight: 0.6, fillColor: css('--terra'), fillOpacity: 1 }; },
@@ -219,7 +266,8 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
       onEachFeature: function (f, l) {
         var v = c.valores[f.properties.chave];
         l.bindTooltip('<b>' + esc(f.properties.nome) + '</b><br>' + (v === undefined ? 'sem focos' : c.formatar[f.properties.chave])
-          + '<br>' + fmt(Math.round(f.properties.areaKm2)) + ' km²', { sticky: true });
+          + '<br>' + fmt(Math.round(f.properties.areaKm2)) + ' km²<br><span style="color:var(--text-3)">clique para abrir a ficha</span>', { sticky: true });
+        l.on('click', function () { abrirFicha(f.properties.nome); });
       }
     }).addTo(camadaCoro);
   }
@@ -229,7 +277,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
 
   function desenhar() {
     camada.clearLayers();
-    var focos = estado.dados.focos, p = pal(), rica = estado.base !== 'neutro';
+    var focos = visiveis(), p = pal(), rica = estado.base !== 'neutro';
     if (estado.modo === 'coropletico') {
       desenharCoropletico();
     } else {
@@ -268,7 +316,9 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
   }
 
   function desenharLegenda() {
-    var p = pal(), html = '<b>' + fmt(estado.dados.focos.length) + ' focos</b><br>';
+    var n = visiveis().length, p = pal();
+    var html = (estado.periodo ? '<span class="periodo">' + esc(estado.periodo.rotulo) + '</span>' : '')
+             + '<b>' + fmt(n) + (n === 1 ? ' foco' : ' focos') + '</b><br>';
     if (estado.modo === 'coropletico' && estado.coro) {
       html += esc(estado.coro.titulo) + '<br>';
       estado.coro.cores.forEach(function (c, i) { html += '<i style="background:' + c + ';border-radius:2px"></i>' + esc(estado.coro.rotulos[i]) + '<br>'; });
@@ -294,13 +344,14 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
       L.circle([h[0], h[1]], { radius: Math.max(1500, h[3] * 1000), color: p.hotspot, weight: 2, dashArray: '5 4', fillColor: p.hotspot, fillOpacity: 0.08 })
         .bindTooltip('Hotspot #' + h[4] + ' — ' + fmt(h[2]) + ' focos', { sticky: true })
         .bindPopup('<div class="pop-titulo">Hotspot #' + h[4] + '</div><div class="pop-linha">' + fmt(h[2]) + ' focos · raio ~' + h[3].toFixed(1)
-          + ' km</div><div class="pop-linha">' + esc(h[5]) + '</div><span class="pop-bioma">' + esc(h[6]) + '</span>')
+          + ' km</div><div class="pop-linha">' + esc(h[5]) + '</div><span class="pop-bioma">' + esc(h[6]) + '</span>' + botaoFicha(h[5]))
         .addTo(camadaHot);
     });
     desenharLegenda();
   }
 
   var camadaCirculo = L.layerGroup().addTo(mapa);
+  var camadaDestaque = L.layerGroup().addTo(mapa);
 
   window.APS = {
     pronto: true,
@@ -314,6 +365,7 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
     },
     setFocos: function (dados) {
       estado.dados = dados;
+      cacheVisiveis = null;
       desenhar();
       if (dados.focos.length) {
         mapa.fitBounds(dados.focos.map(function (f) { return [f[0], f[1]]; }), { paddingTopLeft: [24, 80], paddingBottomRight: [24, 24], maxZoom: 11 });
@@ -331,6 +383,24 @@ window.onerror = function (m, s, l) { try { alert('ERRO JS: ' + m + ' @' + s + '
       desenharHotspots();
     },
     base: function () { return estado.base; },
+    setPeriodo: function (de, ate, rotulo) {
+      estado.periodo = de ? { de: de, ate: ate || de, rotulo: rotulo || '' } : null;
+      cacheVisiveis = null;
+      mapa.closePopup();
+      desenhar();
+    },
+    visiveis: function () { return visiveis().length; },
+    destacar: function (chave, enquadrar) {
+      camadaDestaque.clearLayers();
+      if (!chave || !estado.malha) return false;
+      var alvo = estado.malha.features.filter(function (f) { return f.properties.chave === chave; });
+      if (!alvo.length) return false;
+      var cor = css('--accent');
+      var g = L.geoJSON(alvo, { style: function () { return { color: cor, weight: 3, fillColor: cor, fillOpacity: 0.08 }; }, interactive: false })
+        .addTo(camadaDestaque);
+      if (enquadrar) mapa.fitBounds(g.getBounds(), { paddingTopLeft: [40, 90], paddingBottomRight: [440, 40], maxZoom: 11 });
+      return true;
+    },
     setCorPor: function (c) { estado.corPor = c; desenhar(); },
     setMalha: function (geo) { estado.malha = geo; desenharBase(); desenhar(); },
     setCoropletico: function (c) { estado.coro = c; if (estado.modo === 'coropletico') desenhar(); },

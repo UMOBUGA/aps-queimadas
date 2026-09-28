@@ -132,7 +132,21 @@ final class CapturaTelas {
                                     esperar(5000, () -> {
                                         salvar(String.format("%02d-mapa-relevo.png", n[0]++));
                                         mc.seletorBase().escolher(baseOriginal);
-                                        proximo();
+                                        mc.linhaDoTempo().setPeriodo(java.time.YearMonth.of(2024, 8), java.time.YearMonth.of(2024, 8));
+                                        esperar(4000, () -> {
+                                            salvar(String.format("%02d-mapa-agosto-2024.png", n[0]++));
+                                            mc.linhaDoTempo().setPeriodo(null, null);
+                                            mc.abrirFicha(municipioComMaisFocos());
+                                            esperar(3000, () -> {
+                                                salvar(String.format("%02d-mapa-ficha-municipio.png", n[0]++));
+                                                mc.ficha().fechar();
+                                                mc.forcarOffline();
+                                                esperar(4000, () -> {
+                                                    salvar(String.format("%02d-mapa-offline-mundo.png", n[0]++));
+                                                    proximo();
+                                                });
+                                            });
+                                        });
                                     });
                                 });
                             });
@@ -153,6 +167,16 @@ final class CapturaTelas {
         }
         salvarNo(no, String.format("gif/quadro-%02d.png", i));
         esperar(110, () -> quadrosGif(no, i + 1, depois));
+    }
+
+    private String municipioComMaisFocos() {
+        java.util.Map<String, Integer> n = new java.util.HashMap<>();
+        String melhor = "";
+        for (br.unip.aps.model.FocoIncendio f : ctx.baseProperty().get().getFocos()) {
+            int c = n.merge(f.getMunicipio(), 1, Integer::sum);
+            if (c > n.getOrDefault(melhor, 0)) melhor = f.getMunicipio();
+        }
+        return melhor;
     }
 
     private void proximo() {

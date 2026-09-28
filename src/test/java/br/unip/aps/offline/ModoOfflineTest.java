@@ -44,7 +44,8 @@ class ModoOfflineTest {
             assertNotNull(getClass().getResource("/br/unip/aps/ui/" + url), "recurso ausente no JAR: " + url);
             recursos++;
         }
-        assertEquals(4, recursos, "leaflet.css, MarkerCluster.css, leaflet.js e leaflet.markercluster.js");
+        assertEquals(5, recursos, "leaflet.css, MarkerCluster.css, leaflet.js, leaflet.markercluster.js e mundo.js");
+        assertTrue(ler("/br/unip/aps/ui/web/mundo.js").contains("\"n\":\"Brasil\""), "o mapa-múndi offline precisa incluir o Brasil");
         assertTrue(html.contains("entrarOffline"), "o mapa precisa trocar para a malha do IBGE quando os tiles falham");
     }
 
