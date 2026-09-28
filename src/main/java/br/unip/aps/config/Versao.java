@@ -2,7 +2,7 @@ package br.unip.aps.config;
 
 /** Versao do sistema, lida do manifesto do JAR (Implementation-Version). */
 public final class Versao {
-    public static final String PADRAO = "2.3.0";
+    public static final String PADRAO = "2.3.1";
 
     private Versao() { }
 

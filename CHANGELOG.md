@@ -2,7 +2,7 @@
 
 Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem [SemVer](https://semver.org/lang/pt-BR/).
 
-## [Não publicado]
+## [2.3.1] - 2026-09-28
 
 ### Corrigido
 - Legenda do benchmark sem cor para Quick Sort 2 pivôs, Intro Sort e Counting Sort; agora as variantes do Quick Sort aparecem na mesma cor, tracejada e pontilhada.
@@ -77,6 +77,7 @@ Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](
 - Random Forest, classificação do nível de atividade, K-Means e DBSCAN.
 - Dashboard JavaFX, menu de console e relatório com as linhas de código.
 
+[2.3.1]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.3.1
 [2.3.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.3.0
 [2.2.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.2.0
 [2.1.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.1.0

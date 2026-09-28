@@ -5,7 +5,7 @@ Este documento registra a direção visual do dashboard, o design system e as de
 Os prints ficam em [`prints/`](prints/). Para regenerá-los:
 
 ```bash
-java -jar target/aps-queimadas-2.3.0-all.jar capturas
+java -jar target/aps-queimadas-2.3.1-all.jar capturas
 ```
 
 ---

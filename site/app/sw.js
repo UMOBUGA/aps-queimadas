@@ -1,4 +1,4 @@
-const VERSAO = 'queimadas-2.3.0-b';
+const VERSAO = 'queimadas-2.3.1';
 const ESSENCIAIS = [
   './', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest',
   'vendor/leaflet.js', 'vendor/leaflet.css', 'vendor/mundo.js',
