@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APS Queimadas · algoritmos de ordenação sobre os focos do INPE</title>
+<meta name="description" content="Treze algoritmos de ordenação feitos à mão, estruturas de dados e Machine Learning aplicados aos 10.378 focos de incêndio detectados pelo INPE em São Paulo (2023–2024). Projeto da APS de Estrutura de Dados da UNIP.">
+<meta name="theme-color" content="#0A0807">
+<meta property="og:title" content="APS Queimadas">
+<meta property="og:description" content="Algoritmos de ordenação, estruturas de dados e ML sobre os focos de incêndio do INPE em São Paulo.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="img/visao-geral.webp">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/BigShouldersDisplay-Black.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Big Shoulders";src:url(fonts/BigShouldersDisplay-Black.woff2) format("woff2");font-weight:900;font-display:swap}
+@font-face{font-family:"Big Shoulders";src:url(fonts/BigShouldersDisplay-ExtraBold.woff2) format("woff2");font-weight:800;font-display:swap}
+@font-face{font-family:"Inter";src:url(fonts/Inter-Regular.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Inter";src:url(fonts/Inter-SemiBold.woff2) format("woff2");font-weight:600;font-display:swap}
+:root{
+  --carvao:#0A0807;--tinta:#141010;--superficie:#1A1411;--fio:#3A2E28;--fio-forte:#F6EEE7;
+  --texto:#F6EEE7;--texto-2:#CDBDB1;--texto-3:#A99587;
+  --fogo:#FF6B1A;--brasa:#FF8C4A;--ambar:#FCA50A;--frio:#8FA6C8;
+  --display:"Big Shoulders",Impact,sans-serif;--corpo:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --largura:1180px;--gutter:clamp(16px,4vw,40px);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--carvao);color:var(--texto);font:400 17px/1.6 var(--corpo);font-variant-numeric:lining-nums;overflow-x:hidden}
+::selection{background:var(--fogo);color:#0A0807}
+:focus-visible{outline:2px solid var(--ambar);outline-offset:3px;border-radius:2px}
+a{color:var(--brasa);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{color:var(--ambar)}
+img{max-width:100%;height:auto;display:block}
+.pular{position:absolute;left:-999px;top:8px;background:var(--fogo);color:#0A0807;padding:8px 14px;font-weight:600;z-index:10}
+.pular:focus{left:8px}
+.moldura{max-width:var(--largura);margin:0 auto;padding:0 var(--gutter)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+header.topo{border-bottom:1px solid var(--fio)}
+.topo .moldura{display:flex;align-items:center;gap:20px;min-height:64px}
+.marca{display:flex;align-items:center;gap:10px;color:var(--texto);text-decoration:none;font:900 22px/1 var(--display);letter-spacing:.01em;text-transform:uppercase}
+.marca svg{width:26px;height:26px;flex:none}
+nav.menu{margin-left:auto;display:flex;gap:22px;font-size:15px}
+nav.menu a{color:var(--texto-2);text-decoration:none}
+nav.menu a:hover{color:var(--texto)}
+.botao{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:10px 18px;border-radius:4px;font:600 15px/1.2 var(--corpo);text-decoration:none;border:1px solid transparent;transition:background .2s,color .2s,border-color .2s}
+.botao.primario{background:var(--fogo);color:#140A04}
+.botao.primario:hover{background:var(--ambar);color:#140A04}
+.botao.secundario{border-color:var(--fio);color:var(--texto)}
+.botao.secundario:hover{border-color:var(--texto-2);color:var(--texto)}
+.botao svg{width:18px;height:18px}
+
+.abertura{padding:clamp(48px,9vw,112px) 0 40px}
+.abertura h1{font:900 clamp(44px,7.4vw,96px)/.92 var(--display);letter-spacing:-.005em;text-transform:uppercase;margin:0;max-width:15ch;text-wrap:balance}
+.manchete{margin:clamp(28px,4vw,44px) 0 0;max-width:40ch;font-size:clamp(19px,2.1vw,24px);line-height:1.45;color:var(--texto-2)}
+.manchete strong{color:var(--texto);font-weight:600}
+.numero{display:block;font:900 clamp(96px,17vw,210px)/.82 var(--display);color:var(--fogo);letter-spacing:-.01em;margin:.12em 0 .06em;font-variant-numeric:tabular-nums}
+.acoes{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+
+.faixa{margin-top:48px}
+.faixa-celulas{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;height:56px}
+.faixa-celulas span{border-radius:2px;transform-origin:bottom}
+.faixa-rotulos{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:6px;font-size:12px;color:var(--texto-3)}
+.faixa-rotulos b{color:var(--texto-2);font-weight:600}
+.faixa-legenda{display:flex;justify-content:space-between;font-size:13px;color:var(--texto-3);margin-bottom:8px}
+@media (prefers-reduced-motion:no-preference){
+  .faixa-celulas span{animation:subir .5s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i) * 28ms + 150ms)}
+  @keyframes subir{from{transform:scaleY(.15);opacity:0}to{transform:none;opacity:1}}
+}
+
+.vitrine{margin:56px 0 0}
+.vitrine img{border:1px solid var(--fio);border-radius:6px;box-shadow:0 30px 80px -30px rgba(255,107,26,.25),0 12px 30px rgba(0,0,0,.5)}
+figcaption{font-size:14px;color:var(--texto-3);margin-top:12px}
+
+section.secao{padding:clamp(56px,8vw,96px) 0 0}
+.secao-cabeca{border-top:3px solid var(--fio-forte);padding-top:14px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:32px}
+.secao-cabeca h2{font:800 clamp(34px,4.6vw,56px)/1 var(--display);margin:0;text-transform:none;letter-spacing:0;text-wrap:balance}
+.secao-cabeca p{margin:0;color:var(--texto-2);max-width:68ch}
+
+.capacidades{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));column-gap:48px}
+.capacidade{border-top:1px solid var(--fio);padding:20px 0 26px}
+.capacidade h3{font:800 26px/1.1 var(--display);margin:0 0 8px}
+.capacidade p{margin:0;color:var(--texto-2);max-width:60ch}
+
+.tabela-rol{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+caption{text-align:left;color:var(--texto-3);font-size:14px;padding-bottom:12px;caption-side:top}
+th,td{padding:10px 12px;border-bottom:1px solid var(--fio);text-align:left;vertical-align:middle}
+thead th{border-bottom:2px solid var(--texto);font-weight:600;font-size:13px;color:var(--texto-2);white-space:nowrap}
+td.num,th.num{text-align:right;white-space:nowrap}
+td.barra{width:38%;min-width:140px}
+.barra i{display:block;height:10px;border-radius:0 2px 2px 0;background:var(--brasa)}
+tr.quad .barra i{background:var(--frio)}
+tr.quad td:first-child{color:var(--texto-2)}
+.nota{font-size:14px;color:var(--texto-3);margin-top:12px;max-width:80ch}
+
+.dupla{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:48px;margin-top:56px}
+.dupla h3{font:800 28px/1.1 var(--display);margin:0 0 6px}
+.dupla > div > p{color:var(--texto-2);margin:0 0 16px}
+
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:28px}
+.galeria figure{margin:0}
+.galeria img{border:1px solid var(--fio);border-radius:4px}
+
+.engenharia{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));column-gap:40px}
+.medida{border-top:1px solid var(--fio);padding:18px 0 22px}
+.medida strong{display:block;font:900 52px/1 var(--display);color:var(--texto);font-variant-numeric:tabular-nums}
+.medida span{color:var(--texto-2);font-size:15px}
+
+.downloads{list-style:none;padding:0;margin:0}
+.downloads li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;border-top:1px solid var(--fio);padding:16px 0}
+.downloads li:last-child{border-bottom:1px solid var(--fio)}
+.downloads b{font:800 24px/1.1 var(--display);display:block}
+.downloads small{color:var(--texto-3);font-size:14px}
+pre{background:var(--tinta);border:1px solid var(--fio);border-radius:4px;padding:16px 18px;overflow-x:auto;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--texto)}
+
+footer.rodape{margin-top:clamp(64px,9vw,120px);border-top:1px solid var(--fio);padding:32px 0 48px;color:var(--texto-3);font-size:14px}
+.rodape .moldura{display:grid;gap:10px}
+.rodape a{color:var(--texto-2)}
+
+@media (max-width:760px){
+  nav.menu{display:none}
+  .faixa-rotulos span{font-size:0}
+  .faixa-rotulos span b{font-size:12px}
+  .downloads li{grid-template-columns:1fr}
+  td.barra,thead th:nth-child(3){display:none}
+  th,td{padding:9px 8px}
+}
+</style>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <div class="moldura">
+    <a class="marca" href="./" aria-label="APS Queimadas, início">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="chama" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#932667"/><stop offset=".4" stop-color="#EB6A26"/><stop offset=".75" stop-color="#FCA50A"/><stop offset="1" stop-color="#FCFFA4"/></linearGradient></defs><path fill="url(#chama)" d="M12 1.5C12.6 4.8 15.5 6.6 17.2 9.4C19.4 13 18.6 17.8 15 19.9C11.6 21.9 6.9 20.8 5.3 17.2C4.2 14.7 4.9 11.9 6.6 9.9C6.9 11.6 7.8 12.8 9.2 13.3C8.2 9.7 10.2 5.6 12 1.5Z"/><g fill="#0A0807" fill-opacity=".88"><rect x="9.1" y="16" width="1.6" height="2.6"/><rect x="11.2" y="14.2" width="1.6" height="4.4"/><rect x="13.3" y="15.3" width="1.6" height="3.3"/></g></svg>
+      Queimadas
+    </a>
+    <nav class="menu" aria-label="Seções">
+      <a href="#resultados">Resultados</a>
+      <a href="#telas">Telas</a>
+      <a href="#engenharia">Engenharia</a>
+      <a href="#baixar">Baixar</a>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo">
+  <div class="moldura">
+    <section class="abertura" aria-labelledby="titulo">
+      <h1 id="titulo">Treze algoritmos de ordenação contra o fogo em São Paulo</h1>
+      <p class="manchete">
+        Em 2024, os satélites do INPE registraram no estado
+        <span class="numero">8.712</span>
+        <strong>focos de incêndio, 5,2 vezes o total de 2023.</strong>
+        Este sistema ordena, busca, mapeia e tenta prever esses focos com estruturas de dados escritas à mão, contando cada comparação.
+      </p>
+      <div class="acoes">
+        <a class="botao primario" href="https://github.com/gustavoblopes79/aps-queimadas/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Baixar a versão 2.0.0
+        </a>
+        <a class="botao secundario" href="https://github.com/gustavoblopes79/aps-queimadas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6"/><path d="m16 6 6 6-6 6"/></svg>
+          Ver o código
+        </a>
+      </div>
+
+      <div class="faixa" role="img" aria-label="Focos por mês de janeiro de 2023 a dezembro de 2024. O pico foi agosto de 2024, com 3.612 focos, seguido de setembro de 2024, com 2.522.">
+        <div class="faixa-legenda" aria-hidden="true"><span>menos focos</span><span>mais focos</span></div>
+        <div class="faixa-celulas" id="faixa" aria-hidden="true"></div>
+        <div class="faixa-rotulos" id="rotulos" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <figure class="vitrine">
+      <img src="img/visao-geral.webp" srcset="img/visao-geral-800.webp 800w, img/visao-geral.webp 1426w" sizes="(max-width: 1180px) 100vw, 1100px" width="1426" height="910" alt="Tela Visão geral do painel: manchete com 8.712 focos em 2024, faixa térmica dos 24 meses e gráfico da temporada mês a mês." fetchpriority="high">
+      <figcaption>Visão geral no tema escuro. O painel roda sem internet: dados, malha do IBGE e mapa vêm dentro do programa.</figcaption>
+    </figure>
+
+    <section class="secao" aria-labelledby="h-faz">
+      <div class="secao-cabeca">
+        <h2 id="h-faz">O que o sistema faz</h2>
+        <p>Um só programa em Java 21 com painel JavaFX, menu de console e relatórios. Cada parte usa código próprio, sem a ordenação pronta da biblioteca.</p>
+      </div>
+      <div class="capacidades">
+        <article class="capacidade"><h3>Ordena e conta</h3><p>Bubble, Selection, Insertion, Shell, Merge, Quick, Quick 3-Way, Quick com dois pivôs, Intro, Heap, Tim, Radix e Counting. Todos acessam os dados por um vetor instrumentado que conta comparações, trocas, atribuições e acessos, e a ordenação pode ser seguida passo a passo, com o pseudocódigo ao lado.</p></article>
+        <article class="capacidade"><h3>Busca e indexa</h3><p>Busca binária, árvore AVL, tabela hash, heap Top-K, Trie para autocompletar, árvore k-d para focos num raio e grafo de municípios vizinhos, tudo feito à mão. Para bases que não cabem na memória, External Merge Sort.</p></article>
+        <article class="capacidade"><h3>Mede de verdade</h3><p>Benchmark com aquecimento do JIT, repetições e expoente empírico por regressão log-log, conferido com o JMH.</p></article>
+        <article class="capacidade"><h3>Mapeia</h3><p>Pontos, agrupamento, calor e coroplético por densidade (focos por 1.000 km²) com quebras naturais de Jenks, sobre a malha municipal do IBGE.</p></article>
+        <article class="capacidade"><h3>Tenta prever</h3><p>Random Forest com histórico de 2019 a 2024, validação no tempo e comparação honesta com previsões ingênuas.</p></article>
+        <article class="capacidade"><h3>É acessível</h3><p>Modo daltônico com a paleta Okabe-Ito, alto contraste, texto ampliado e uso completo pelo teclado. Um teste automático simula três tipos de daltonismo a cada build.</p></article>
+        <article class="capacidade"><h3>Relata</h3><p>PDF com capa, sumário, resumo executivo e gráficos vetoriais; Excel com gráficos nativos e aba explicando os dados.</p></article>
+      </div>
+    </section>
+
+    <section class="secao" id="resultados" aria-labelledby="h-resultados">
+      <div class="secao-cabeca">
+        <h2 id="h-resultados">Resultados reais</h2>
+        <p>Os números abaixo vêm das execuções gravadas em <a href="https://github.com/gustavoblopes79/aps-queimadas/tree/main/docs/resultados">docs/resultados</a>. Nenhum foi digitado à mão.</p>
+      </div>
+      <div class="tabela-rol">
+        <table>
+          <caption>Os 11 algoritmos que comparam, sobre a mesma base: 10.378 focos na ordem do arquivo, critério bioma → município → data. Barras em escala logarítmica; em azul, os algoritmos quadráticos.</caption>
+          <thead><tr><th scope="col">Algoritmo</th><th scope="col" class="num">Comparações</th><th scope="col"><span class="sr">Comparações em escala log</span></th><th scope="col" class="num">Tempo</th></tr></thead>
+          <tbody id="tabela-algoritmos">
+<tr class="quad"><td>Bubble Sort</td><td class="num">53.786.078</td><td class="barra"><i style="width:100.0%"></i></td><td class="num">3,973&nbsp;s</td></tr>
+<tr class="quad"><td>Selection Sort</td><td class="num">53.846.253</td><td class="barra"><i style="width:100.0%"></i></td><td class="num">1,900&nbsp;s</td></tr>
+<tr class="quad"><td>Insertion Sort</td><td class="num">26.762.938</td><td class="barra"><i style="width:96.1%"></i></td><td class="num">764,391&nbsp;ms</td></tr>
+<tr><td>Shell Sort</td><td class="num">187.238</td><td class="barra"><i style="width:68.2%"></i></td><td class="num">25,571&nbsp;ms</td></tr>
+<tr><td>Merge Sort</td><td class="num">122.682</td><td class="barra"><i style="width:65.8%"></i></td><td class="num">13,276&nbsp;ms</td></tr>
+<tr><td>Quick Sort</td><td class="num">169.101</td><td class="barra"><i style="width:67.6%"></i></td><td class="num">14,122&nbsp;ms</td></tr>
+<tr><td>Quick Sort 3-Way</td><td class="num">126.280</td><td class="barra"><i style="width:66.0%"></i></td><td class="num">15,156&nbsp;ms</td></tr>
+<tr><td>Quick Sort 2 pivôs</td><td class="num">154.948</td><td class="barra"><i style="width:67.1%"></i></td><td class="num">13,112&nbsp;ms</td></tr>
+<tr><td>Intro Sort</td><td class="num">151.432</td><td class="barra"><i style="width:67.0%"></i></td><td class="num">16,335&nbsp;ms</td></tr>
+<tr><td>Heap Sort</td><td class="num">244.054</td><td class="barra"><i style="width:69.7%"></i></td><td class="num">22,250&nbsp;ms</td></tr>
+<tr><td>Tim Sort (simplificado)</td><td class="num">127.019</td><td class="barra"><i style="width:66.0%"></i></td><td class="num">29,545&nbsp;ms</td></tr>
+</tbody>
+        </table>
+      </div>
+      <p class="nota" id="nota-algoritmos">O que menos comparou foi o Merge Sort (122.682 comparações); o Bubble Sort fez 53.786.078. Os tempos são de uma execução, sem aquecimento; as medições com rigor estão no <a href="https://github.com/gustavoblopes79/aps-queimadas/blob/main/docs/BENCHMARK.md">benchmark</a>. Radix e Counting não aparecem porque não comparam: exigem um critério numérico.</p>
+
+      <div class="dupla">
+        <div>
+          <h3>Encontrar um município</h3>
+          <p>Comparações por consulta em 1.000 buscas por nome. O índice custa uma vez para montar e depois responde quase de graça.</p>
+          <div class="tabela-rol">
+            <table>
+              <thead><tr><th scope="col">Método</th><th scope="col" class="num">Por consulta</th><th scope="col" class="num">Preparo</th></tr></thead>
+              <tbody>
+                <tr><td>Busca sequencial</td><td class="num">10.378,0</td><td class="num">0</td></tr>
+                <tr><td>Ordenar + busca binária</td><td class="num">26,8</td><td class="num">123.132</td></tr>
+                <tr><td>Árvore AVL</td><td class="num">7,9</td><td class="num">88.973</td></tr>
+                <tr><td>Tabela hash</td><td class="num">1,0</td><td class="num">10.798</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h3>Prever o próximo mês</h3>
+          <p>Erro médio absoluto (focos por município e mês) em 2024, treinando com 2020–2023. Agosto de 2024 fugiu de todo o histórico, e o modelo não bateu a previsão sazonal ingênua.</p>
+          <div class="tabela-rol">
+            <table>
+              <thead><tr><th scope="col">Modelo</th><th scope="col" class="num">Erro médio</th></tr></thead>
+              <tbody>
+                <tr><td>Sazonal ingênuo (mesmo mês do ano anterior)</td><td class="num">1,196</td></tr>
+                <tr><td>Média histórica</td><td class="num">1,352</td></tr>
+                <tr><td>Random Forest</td><td class="num">1,355</td></tr>
+                <tr><td>Persistência (mês anterior)</td><td class="num">1,729</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secao" id="telas" aria-labelledby="h-telas">
+      <div class="secao-cabeca">
+        <h2 id="h-telas">As telas</h2>
+        <p>Paleta de comandos (Ctrl+K), modo apresentação (F5), tema claro e escuro, e navegação completa pelo teclado.</p>
+      </div>
+      <div class="galeria">
+        <figure><img src="img/demo.webp" width="760" height="287" loading="lazy" decoding="async" alt="Animação do Insertion Sort: as barras se movem e a linha do pseudocódigo correspondente a cada comparação e escrita fica destacada."><figcaption>Passo a passo: a linha do pseudocódigo acende a cada operação.</figcaption></figure>
+        <figure><img src="img/ordenacao.webp" width="1426" height="910" loading="lazy" decoding="async" alt="Tela Ordenação com placar de comparações, trocas e tempo e a tabela de dados ordenados."><figcaption>Ordenação: placar de operações e verificação do resultado.</figcaption></figure>
+        <figure><img src="img/visualizacao.webp" width="1426" height="963" loading="lazy" decoding="async" alt="Animação da ordenação em barras sobre fundo térmico."><figcaption>Cada comparação e troca vira animação.</figcaption></figure>
+        <figure><img src="img/estruturas.webp" width="1426" height="864" loading="lazy" decoding="async" alt="Tela Estruturas e Busca com a árvore AVL desenhada e a comparação de métodos de busca."><figcaption>Estruturas e busca, com a AVL girando ao vivo.</figcaption></figure>
+        <figure><img src="img/benchmark.webp" width="1426" height="864" loading="lazy" decoding="async" alt="Tela Benchmark com curvas de tempo por tamanho de entrada em escala log-log."><figcaption>Benchmark em escala log-log: a inclinação é o expoente.</figcaption></figure>
+        <figure><img src="img/mapa-municipios.webp" width="1426" height="963" loading="lazy" decoding="async" alt="Mapa coroplético dos municípios de São Paulo por densidade de focos."><figcaption>Mapa coroplético por densidade, com quebras de Jenks.</figcaption></figure>
+        <figure><img src="img/ml.webp" width="1426" height="864" loading="lazy" decoding="async" alt="Tela Machine Learning com validação em janelas, ablação e importância por permutação."><figcaption>ML com validação no tempo e baselines.</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="secao" id="engenharia" aria-labelledby="h-eng">
+      <div class="secao-cabeca">
+        <h2 id="h-eng">Engenharia</h2>
+        <p>Cada commit passa por testes, estilo, análise estática e cobertura mínima. As decisões de arquitetura estão registradas em <a href="https://github.com/gustavoblopes79/aps-queimadas/tree/main/docs/adr">ADRs</a>, e a API em <a href="javadoc/">Javadoc</a>.</p>
+      </div>
+      <div class="engenharia">
+        <div class="medida"><strong>307</strong><span>testes automatizados, incluindo a interface em modo headless</span></div>
+        <div class="medida"><strong>73%</strong><span>das linhas cobertas por testes (JaCoCo)</span></div>
+        <div class="medida"><strong>82%</strong><span>dos mutantes mortos nos algoritmos de ordenação (PIT)</span></div>
+        <div class="medida"><strong>0</strong><span>achados de Checkstyle, PMD e SpotBugs</span></div>
+      </div>
+    </section>
+
+    <section class="secao" id="baixar" aria-labelledby="h-baixar">
+      <div class="secao-cabeca">
+        <h2 id="h-baixar">Baixar</h2>
+        <p>Os pacotes trazem o próprio Java: não é preciso instalar nada antes.</p>
+      </div>
+      <ul class="downloads">
+        <li><div><b>Windows</b><small>Versão portátil (.zip): descompacte e abra "APS Queimadas.exe"</small></div><a class="botao secundario" href="https://github.com/gustavoblopes79/aps-queimadas/releases/latest">Baixar para Windows</a></li>
+        <li><div><b>Linux</b><small>Pacote .deb para Ubuntu e Debian</small></div><a class="botao secundario" href="https://github.com/gustavoblopes79/aps-queimadas/releases/latest">Baixar para Linux</a></li>
+        <li><div><b>macOS</b><small>Imagem .dmg</small></div><a class="botao secundario" href="https://github.com/gustavoblopes79/aps-queimadas/releases/latest">Baixar para macOS</a></li>
+        <li><div><b>JAR</b><small>Qualquer sistema com Java 21</small></div><a class="botao secundario" href="https://github.com/gustavoblopes79/aps-queimadas/releases/latest">Baixar o JAR</a></li>
+      </ul>
+      <p class="nota">Ou rode a partir do código:</p>
+      <pre><code>git clone https://github.com/gustavoblopes79/aps-queimadas
+cd aps-queimadas
+./mvnw javafx:run</code></pre>
+    </section>
+  </div>
+</main>
+
+<footer class="rodape">
+  <div class="moldura">
+    <p>Dados: <a href="https://terrabrasilis.dpi.inpe.br/queimadas/portal/">Programa Queimadas, INPE</a> (satélite de referência). Malha municipal: IBGE. Mapas-base: Esri e colaboradores do OpenStreetMap.</p>
+    <p>APS de Estrutura de Dados · Ciência da Computação · UNIP. Código sob licença MIT. <a href="javadoc/">Javadoc</a> · <a href="https://github.com/gustavoblopes79/aps-queimadas/blob/main/CHANGELOG.md">Novidades da versão</a></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var focos=[62,36,109,22,145,134,253,352,375,58,54,66,75,93,138,63,398,532,499,3612,2522,714,25,41];
+  var meses=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  var escala=[[0,0,4],[66,10,104],[147,38,103],[221,81,58],[252,165,10],[252,255,164]];
+  function cor(t){var x=Math.max(0,Math.min(1,t))*(escala.length-1),i=Math.min(escala.length-2,Math.floor(x)),f=x-i,a=escala[i],b=escala[i+1];
+    return "rgb("+Math.round(a[0]+f*(b[0]-a[0]))+","+Math.round(a[1]+f*(b[1]-a[1]))+","+Math.round(a[2]+f*(b[2]-a[2]))+")";}
+  var max=Math.max.apply(null,focos),faixa=document.getElementById("faixa"),rot=document.getElementById("rotulos");
+  focos.forEach(function(v,i){
+    var s=document.createElement("span");s.style.background=cor(.12+.88*Math.sqrt(v/max));s.style.setProperty("--i",i);
+    s.title=meses[i%12]+"/"+(2023+Math.floor(i/12))+": "+v.toLocaleString("pt-BR")+" focos";faixa.appendChild(s);
+    var r=document.createElement("span");r.innerHTML=i%12===0?"<b>"+(2023+i/12)+"</b>":meses[i%12];rot.appendChild(r);
+  });
+})();
+</script>
+</body>
+</html>

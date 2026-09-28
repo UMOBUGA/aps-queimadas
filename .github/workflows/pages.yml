@@ -1,0 +1,53 @@
+name: Site e Javadoc
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ "site/**", "src/main/java/**", ".github/workflows/pages.yml" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  montar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Javadoc
+        run: ./mvnw -B -ntp -DskipTests javadoc:javadoc
+
+      - name: Site + Javadoc
+        run: |
+          mkdir -p publicar
+          cp -r site/. publicar/
+          cp -r target/reports/apidocs publicar/javadoc
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: publicar
+
+  publicar:
+    needs: montar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
