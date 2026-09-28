@@ -2,10 +2,10 @@
 
 Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem [SemVer](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [2.1.0] - 2026-09-28
 
 ### Adicionado
-- **Mapa-base à escolha** com miniaturas: Neutro, Ruas e cidades, Relevo, Terreno, Satélite, Satélite com nomes e Atlas (Esri), com escolha salva e contorno branco nos focos em fundos coloridos.
+- **Mapa-base à escolha** com miniaturas: Neutro, Ruas e cidades, Relevo, Terreno, Satélite, Satélite com nomes e Atlas (Esri), com escolha salva e contorno branco nos focos em fundos coloridos. Os estilos extras são carregados da internet; sem conexão, o mapa usa o Neutro com a malha dos municípios do IBGE.
 
 ### Alterado
 - Menu lateral no tema claro com a mesma cor da página e texto escuro.
@@ -48,5 +48,6 @@ Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](
 - Random Forest, classificação do nível de atividade, K-Means e DBSCAN.
 - Dashboard JavaFX, menu de console e relatório com as linhas de código.
 
+[2.1.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.1.0
 [2.0.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.0.0
 [1.0.0]: https://github.com/gustavoblopes79/aps-queimadas/commits/a154b66

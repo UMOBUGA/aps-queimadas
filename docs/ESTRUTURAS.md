@@ -11,7 +11,7 @@ As operações são contadas pelo **mesmo `OperationCounter`** dos algoritmos de
 - **Números completos:**
 
 ```bash
-java -jar target/aps-queimadas-2.0.0-all.jar estruturas --brasil 2019-2024
+java -jar target/aps-queimadas-2.1.0-all.jar estruturas --brasil 2019-2024
 ```
 
   Os resultados vão para [`resultados/estruturas.md`](resultados/estruturas.md).

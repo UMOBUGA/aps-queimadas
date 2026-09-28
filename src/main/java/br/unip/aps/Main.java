@@ -344,7 +344,7 @@ public final class Main {
 
     private static void ajuda(PrintStream out) {
         out.println("""
-                APS Queimadas - uso: java -jar aps-queimadas-2.0.0-all.jar [modo] [opcoes]
+                APS Queimadas - uso: java -jar aps-queimadas-2.1.0-all.jar [modo] [opcoes]
 
                   (sem modo)            abre o dashboard (JavaFX)
                   cli                   menu interativo no terminal
