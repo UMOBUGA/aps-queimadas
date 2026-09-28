@@ -150,7 +150,11 @@ Todas as animações podem ser desligadas em Configurações. Nada anima em atal
 | F1 | Sobre |
 
 - **Faixa térmica pelo teclado:** setas movem o cursor entre os meses, Enter seleciona e o leitor de tela anuncia mês e contagem.
-- **Preferências:** tema, animações, menu recolhido, densidade compacta, visões salvas e o tour já visto são persistidos com `java.util.prefs.Preferences`.
+- **Cores para daltonismo** (Configurações): troca verde, amarelo e vermelho pela paleta Okabe-Ito (azul, laranja, verde-azulado, rosa), na interface e no mapa. As cores foram validadas simulando protanopia, deuteranopia e tritanopia.
+- **Alto contraste:** fundo puro, textos secundários com a força do principal e bordas visíveis.
+- **Tamanho do texto:** Normal, Grande (115%) ou Maior (130%). O programa gera cópias das folhas de estilo com todas as fontes ampliadas, então nenhuma tela fica de fora.
+- **Teste automático de cores (`CoresAcessiveisTest`):** em cada combinação de tema, modo daltônico e alto contraste, confere o contraste WCAG AA do texto (≥ 4,5:1), o contraste das cores de dados com o fundo (≥ 3:1) e a separação perceptual (ΔE em OKLab) entre anos, biomas, estados e séries nas três simulações de daltonismo. O teste encontrou um problema real: no tema claro, o verde da Mata Atlântica e o dourado do Cerrado eram quase iguais para quem tem protanopia; o dourado foi escurecido para `#A67C00`.
+- **Preferências:** tema, animações, menu recolhido, densidade compacta, acessibilidade, visões salvas e o tour já visto são persistidos com `java.util.prefs.Preferences`.
 
 ## 7.1 Experiências de produto
 
@@ -162,6 +166,9 @@ Todas as animações podem ser desligadas em Configurações. Nada anima em atal
 - **Pequenos múltiplos por bioma:** um gráfico por bioma com o mesmo eixo vertical, para comparar picos sem distorção.
 - **Escala linear ou log** no gráfico mensal: em log os meses calmos e o pico ficam legíveis juntos.
 - **Densidade compacta** (Configurações): reduz espaçamentos para telas pequenas.
+- **Passo a passo com pseudocódigo:** na visualização da ordenação, o pseudocódigo do algoritmo fica ao lado das barras e a linha da operação atual (comparação, troca ou escrita) é destacada; botões avançam e voltam um passo, e uma frase descreve a operação ("Compara a[3] = 17 com a[4] = 9").
+- **Seis temporadas e São Paulo no Brasil:** a Visão geral mostra a série mensal de 2019 a 2024 e o ranking dos estados no ano escolhido (ordenado pelo Merge Sort do projeto), com a participação de SP no total nacional.
+- **Estruturas aplicadas:** autocompletar com Trie, focos num raio com árvore k-d (com botão que desenha o círculo no mapa) e vizinhança por grafo com busca em largura.
 
 ---
 
@@ -209,6 +216,17 @@ O ano recente recebe a cor mais quente e o anterior, uma cor fria. Isso reforça
 - **Estilos:** ficam em folhas CSS organizadas em camadas (tokens → tema → base → componentes → gráficos). Trocar o tema é substituir uma única folha.
 - **Tarefas longas:** rodam em *threads* separadas (`javafx.concurrent.Task`), com progresso e cancelamento.
 
+**8.8 Experiência de uso.** Para a apresentação e para o uso diário, a interface ganhou recursos de produtos profissionais:
+
+- **Paleta de comandos (Ctrl+K):** qualquer tela, ação, algoritmo ou município é encontrado digitando parte do nome, com busca aproximada.
+- **Modo apresentação (F5):** as telas viram slides em tela cheia com texto maior, na ordem do roteiro da banca.
+- **Tour guiado:** cinco passos na primeira abertura explicam menu, faixa térmica, filtros, exportação e atalhos.
+- **Visões salvas e comparação de períodos:** combinações de filtros ganham nome, e dois meses podem ser comparados lado a lado com a variação.
+- **Pequenos múltiplos por bioma** com o mesmo eixo vertical (TUFTE, 2001) e alternância entre escala linear e logarítmica.
+- **Movimento com propósito:** só a primeira visita a cada tela anima a entrada dos cartões e a contagem dos números; nada anima em ações repetidas.
+
+**8.9 Relatórios.** O PDF segue a mesma identidade: capa com o número principal e a faixa térmica, sumário com as páginas reais, resumo executivo escrito a partir dos dados e gráficos desenhados em vetor (nítidos na impressão). O Excel traz cabeçalho congelado, filtros, formatação condicional, gráficos nativos editáveis e uma aba "Sobre os dados".
+
 **Referências sugeridas:**
 
 - CLEVELAND, W. S.; McGILL, R. Graphical perception: theory, experimentation, and application to the development of graphical methods. *Journal of the American Statistical Association*, v. 79, n. 387, p. 531–554, 1984.
@@ -221,12 +239,14 @@ O ano recente recebe a cor mais quente e o anterior, uma cor fria. Isso reforça
 
 | Arquivo (`docs/prints/`) | Legenda sugerida |
 |---|---|
-| `completa/09-visao-geral-escuro.png` | Visão geral: manchete de dados, destaques, temporada mês a mês, municípios, biomas, calendário e horário |
+| `completa/10-visao-geral-escuro.png` | Visão geral: manchete de dados, destaques, temporada mês a mês, municípios, biomas, pequenos múltiplos, comparação de períodos, calendário e horário |
 | `01-visao-geral-claro.png` | A mesma tela no tema claro |
-| `17-visao-geral-filtro-cerrado-2024.png` | A manchete se reescreve com o filtro (Cerrado, 2024) |
-| `10-ordenacao-escuro.png` | Ordenação multicritério com o placar de operações |
-| `18-ordenacao-comparativo.png` · `19-ordenacao-visualizacao.png` | Comparativo dos algoritmos e visualização animada |
-| `completa/11-benchmark-escuro.png` | Benchmark: custo × n com curvas teóricas |
-| `12-mapa-escuro.png` · `20-mapa-calor.png` · `21-mapa-agrupado.png` | Mapa em tela cheia: pontos por bioma, densidade e agrupamento com hotspots |
-| `completa/13-ml-escuro.png` | Machine Learning |
-| `completa/14-qualidade-escuro.png` | Qualidade dos dados |
+| `19-visao-geral-filtro-cerrado-2024.png` | A manchete se reescreve com o filtro (Cerrado, 2024) |
+| `11-ordenacao-escuro.png` | Ordenação multicritério com o placar de operações |
+| `20-ordenacao-comparativo.png` · `21-ordenacao-visualizacao.png` | Comparativo dos algoritmos e visualização animada |
+| `completa/12-estruturas-escuro.png` | Estruturas e busca: árvore AVL animada e custo das consultas |
+| `completa/13-benchmark-escuro.png` | Benchmark em escala log-log |
+| `14-mapa-escuro.png` · `22-mapa-calor.png` · `23-mapa-agrupado.png` | Mapa em tela cheia: pontos por bioma, densidade e agrupamento com hotspots |
+| `24-mapa-municipios.png` | Mapa coroplético por densidade de focos (quebras de Jenks) |
+| `completa/15-ml-escuro.png` | Machine Learning: validação em janelas, ablação, permutação e estudo de agosto/2024 |
+| `completa/16-qualidade-escuro.png` | Qualidade dos dados |

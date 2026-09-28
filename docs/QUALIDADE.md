@@ -4,7 +4,9 @@ Tudo abaixo roda no `./mvnw verify` (local e CI). Se qualquer item falhar, o bui
 
 | Verificação | Ferramenta | Regra |
 |---|---|---|
-| Testes | JUnit 5 | todos passando (unidade, arquitetura, relatórios, interface em modo headless) |
+| Testes | JUnit 5 | todos passando (unidade, arquitetura, relatórios e interface) |
+| Interação com a interface | TestFX + Monocle | teclado e mouse simulados numa tela virtual, em JVM separada: Ctrl+K, atalhos, F5/Esc, filtro por município e controles de acessibilidade. Rodam também no CI, que não tem tela |
+| Cores | `CoresAcessiveisTest` | contraste WCAG AA do texto e separação das cores de dados em protanopia, deuteranopia e tritanopia, em cada combinação de tema, modo daltônico e alto contraste |
 | Arquitetura | `ArquiteturaTest` | sem ordenação pronta em `src/main`; sem `HashMap`/`TreeMap` como índice em `estruturas` e `busca` |
 | Estilo | Checkstyle 10 (`config/checkstyle.xml`) | sem tabs, sem imports inúteis, sem comentários de linha, sem `Collections.sort`/`Arrays.sort`/`TreeMap`/`TreeSet`/`PriorityQueue` em produção |
 | Análise estática | PMD 7 (`config/pmd.xml`) | regras de defeito real: recurso não fechado, variável/método não usado, comparação de strings com `==`, `null` mal verificado |
@@ -19,16 +21,20 @@ O PIT altera o código (troca `<` por `<=`, remove chamadas, inverte condições
 ./mvnw -Pmutacao test-compile org.pitest:pitest-maven:mutationCoverage
 ```
 
-Execução de 27/09/2026 (PIT 1.17.4, 4 threads, 5 min 34 s):
+Execução de 27/09/2026 (PIT 1.17.4, 4 threads, 13 algoritmos e as estruturas novas):
 
 | Pacote | Mutantes | Mortos | Pontuação | Força (só código coberto) |
 |---|---:|---:|---:|---:|
-| `sorting.algorithms` | 301 | 248 | 82,4% | 85,5% |
-| `estruturas` | 426 | 272 | 63,8% | 73,7% |
-| `busca` | 106 | 56 | 52,8% | 58,3% |
-| **Total** | **833** | **576** | **69,1%** | **76,3%** |
+| `sorting.algorithms` | 489 | 400 | 81,8% | 84,0% |
+| `estruturas` | 578 | 381 | 65,9% | 74,1% |
+| `busca` | 191 | 98 | 51,3% | 58,7% |
+| **Total** | **1.258** | **879** | **69,9%** | **76,0%** |
 
-O perfil falha abaixo de 65%. Os sobreviventes se concentram na medição de speedup e na intercalação do Merge Sort paralelo (21 + 9), em condições de limite do Quick Sort 3-Way (15), no cálculo de custo e tempo das consultas (`ServicoConsultas`, 12 + 9) e nos avisos de progresso do External Merge Sort (11). São os próximos alvos de teste.
+O perfil falha abaixo de 65%.
+
+**O que o PIT ensinou.** Com os três algoritmos novos, a pontuação dos algoritmos caiu para 75,1%. O motivo: o Intro Sort termina com um Insertion Sort que conserta qualquer erro das fases anteriores, e o recurso ao Heap Sort nunca era exercitado. Os testes só conferiam se o resultado estava ordenado, então mutações que estragavam o Quick Sort ou o Heap Sort internos passavam despercebidas (o algoritmo ficava lento, mas correto). O `HibridosTest` passou a conferir também o custo (comparações e trocas em torno de n·log₂n) e força o caminho do Heap Sort; a pontuação voltou a 81,8%.
+
+Os sobreviventes restantes se concentram na medição de speedup do Merge Sort paralelo (21), no mapeamento de caracteres da Trie (15: acentos e símbolos raros nos testes), em condições de limite do Quick Sort 3-Way (15), na análise de propagação e nas camadas do grafo (`ServicoGeografico`, 23) e no custo das consultas (`ServicoConsultas`, 12). São os próximos alvos de teste.
 
 ## Revisão de segurança
 

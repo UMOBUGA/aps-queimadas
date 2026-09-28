@@ -15,16 +15,19 @@ Até a ordenação por clique no cabeçalho das tabelas do JavaFX foi desativada
 | Merge Sort | O(n)* | O(n log n) | O(n log n) | O(n) | ✔ | ✘ | Divide ao meio e intercala |
 | Quick Sort | O(n log n) | O(n log n) | O(n²) | O(log n) | ✘ | ✔ | Particiona em torno do pivô (mediana de três) |
 | Quick Sort 3-Way | O(n) | O(n log n) | O(n²) | O(log n) | ✘ | ✔ | Partição <, =, > (Dijkstra) |
+| Quick Sort 2 pivôs | O(n log n) | O(n log n) | O(n²) | O(log n) | ✘ | ✔ | Dois pivôs, três partes (Yaroslavskiy); base do `Arrays.sort` do Java para números |
+| Intro Sort | O(n log n) | O(n log n) | O(n log n) | O(log n) | ✘ | ✔ | Quick Sort que vira Heap Sort passando de 2·log₂(n) de profundidade (Musser) |
 | Heap Sort | O(n log n) | O(n log n) | O(n log n) | O(1) | ✘ | ✔ | Max-heap e extração repetida do máximo |
 | Tim Sort (simplificado) | O(n) | O(n log n) | O(n log n) | O(n) | ✔ | ✘ | Insertion binário em blocos de 32 + merge |
 | Radix Sort LSD | O(d·n) | O(d·n) | O(d·n) | O(n+b) | ✔ | ✘ | Counting sort por byte da chave, **0 comparações** |
+| Counting Sort | O(n+k) | O(n+k) | O(n+k) | O(n+k) | ✔ | ✘ | Conta cada chave num vetor do tamanho do intervalo k, **0 comparações**; só para intervalos pequenos |
 
 \* Com a otimização "pula a intercalação se as metades já estão em ordem".
 
 ## 2. Critérios de ordenação
 
 - **Exigidos pelo enunciado:** **Data/hora**, **Bioma**, **Município**.
-- **Extras:** Latitude, Longitude e ID. Satélite, FRP, Risco de fogo, Dias sem chuva e Precipitação só ficam habilitados se o CSV tiver essas colunas.
+- **Extras:** Hora local (0 a 23, em UTC−3), Latitude, Longitude e ID. Satélite, FRP, Risco de fogo, Dias sem chuva e Precipitação só ficam habilitados se o CSV tiver essas colunas.
 - **Direção:** crescente ou decrescente. A inversão é feita com `reversed()` apenas sobre o valor, para que os ausentes (`null`) fiquem sempre no final.
 - **Multicritério:** até 3 níveis com `thenComparing`. Exemplo: *Bioma ↑ → Município ↑ → Data ↓* agrupa por bioma; dentro de cada bioma, ordena os municípios alfabeticamente; dentro de cada município, mostra o foco mais recente primeiro.
 - **Texto com acentos:** usa `java.text.Collator` pt-BR.
@@ -32,6 +35,7 @@ Até a ordenação por clique no cabeçalho das tabelas do JavaFX foi desativada
   - Para não pagar o custo do `Collator` a cada comparação, a **`CollationKey`** de município e bioma é calculada uma única vez, na criação do registro. Comparar duas chaves é uma comparação de bytes.
 - **Radix:** cada critério numérico fornece também uma chave `long` equivalente.
   - Data: segundos desde 1970.
+  - Hora local: 0 a 23. É o critério em que o Counting Sort brilha: k = 24.
   - Latitude e longitude: bits do `double` ajustados para manter a ordem de negativos.
   - Ordem decrescente: `~chave`.
 
@@ -72,7 +76,9 @@ A contagem é centralizada no **`InstrumentedArray`** (padrão *Decorator*): os 
    - Com n acima de `aps.ordenacao.limiteQuadratico` (20.000 por padrão), o sistema avisa e estima as comparações (n²/2) antes de executar.
    - A amostra tem tamanho configurável (primeiros n ou sorteio com semente fixa).
    - Toda execução pode ser **cancelada** (botão Cancelar): o contador verifica a interrupção da thread.
-7. **Verificação independente.** Depois de cada ordenação, o sistema confere se o resultado está ordenado e exibe "✔ ordenado" ou "FALHOU".
+7. **Counting Sort só onde cabe.** Ele precisa de um vetor de contagem do tamanho do intervalo de chaves. Na data em segundos (cerca de 63 milhões de valores em dois anos) seriam 250 MB; por isso o algoritmo declara o intervalo que aceita (até 4 milhões de valores), o sistema o esconde nos critérios em que não serve e explica o motivo se for escolhido. Na hora local, com 24 valores, ele ordena os 10.378 focos com zero comparações.
+8. **Intro Sort e Quick Sort com dois pivôs** fecham o quadro com as escolhas das bibliotecas reais: o `std::sort` do C++ usa Intro Sort (garantia de O(n log n) no pior caso) e o `Arrays.sort` do Java para tipos primitivos usa dois pivôs. O perfil JMH compara os nossos com o `Arrays.sort` de objetos do Java, só como referência (a regra do enunciado vale para o programa, não para o benchmark separado).
+9. **Verificação independente.** Depois de cada ordenação, o sistema confere se o resultado está ordenado e exibe "✔ ordenado" ou "FALHOU".
 
 ## 5. Estabilidade: por que importa aqui
 

@@ -1,21 +1,26 @@
 Criterio: Bioma ↑ → Município ↑ → Data/hora ↑ | cenario: Original (arquivo) | n = 10378
-Algoritmo                Comparacoes  Trocas      Atribuicoes  Acessos      Tempo      Verif.
------------------------  -----------  ----------  -----------  -----------  ---------  ------
-Bubble Sort               53.786.078  26.752.567   53.505.134  214.582.424    9,415 s  OK
-Selection Sort            53.846.253      10.368       20.736  107.733.978    5,249 s  OK
-Insertion Sort            26.762.938           0   26.762.931   53.536.246    2,057 s  OK
-Shell Sort                   187.238           0      141.574      428.633  67,847 ms  OK
-Merge Sort                   122.682           0      246.796      626.651  31,931 ms  OK
-Quick Sort                   169.101      43.266       86.532      366.985  35,773 ms  OK
-Quick Sort 3-Way             126.280     116.499      232.998      603.728  36,461 ms  OK
-Heap Sort                    244.054     128.192      256.384    1.000.876  38,544 ms  OK
-Tim Sort (simplificado)      127.019           0      260.075      649.782  38,670 ms  OK
-Benchmark: 450 casos, 2 aquecimentos + 5 repeticoes por caso...
-Concluido em 19 min 31 s
-Preparo:        580 municipios; ordenacao municipio -> data (Merge Sort): comparacoes=123.337, trocas=0, atribuicoes=247.120, acessos=627.954, tempo=10,494 ms
+Algoritmo                Comparacoes  Trocas      Atribuicoes  Acessos      Tempo       Verif.
+-----------------------  -----------  ----------  -----------  -----------  ----------  ------
+Bubble Sort               53.786.078  26.752.567   53.505.134  214.582.424     3,973 s  OK
+Selection Sort            53.846.253      10.368       20.736  107.733.978     1,900 s  OK
+Insertion Sort            26.762.938           0   26.762.931   53.536.246  764,391 ms  OK
+Shell Sort                   187.238           0      141.574      428.633   25,571 ms  OK
+Merge Sort                   122.682           0      246.796      626.651   13,276 ms  OK
+Quick Sort                   169.101      43.266       86.532      366.985   14,122 ms  OK
+Quick Sort 3-Way             126.280     116.499      232.998      603.728   15,156 ms  OK
+Quick Sort 2 pivôs           154.948      54.077      108.154      526.204   13,112 ms  OK
+Intro Sort                   151.432      43.331       86.662      476.188   16,335 ms  OK
+Heap Sort                    244.054     128.192      256.384    1.000.876   22,250 ms  OK
+Tim Sort (simplificado)      127.019           0      260.075      649.782   29,545 ms  OK
+Benchmark: 585 casos, aquecimento de 2 execucoes e no minimo 500 ms + 5 repeticoes por caso...
+Concluido em 8 min 51 s
+Preparo:        580 municipios; ordenacao municipio -> data (Merge Sort): comparacoes=123.337, trocas=0, atribuicoes=247.120, acessos=627.954, tempo=5,706 ms
 Regressao RF:   MAE=1,313 RMSE=4,919 R2=-0,001
 RF janela exp.: MAE=1,671 RMSE=4,851 R2=0,027
 Persistencia:   MAE=1,860 RMSE=6,165 R2=-0,572
 Media hist.:    MAE=1,418 RMSE=4,942 R2=-0,010
 Classificacao:  acuracia=0,607 (baseline 0,757)  F1 macro=0,450 (baseline 0,287)
 Hotspots:       DBSCAN (eps=10.0 km, minPts=30) -> 51 grupos, 3451 focos isolados; K-Means (k=8)
+Benchmark CSV: C:\Users\Gustavo\IdeaProjects\aps-queimadas\relatorios\benchmark-20260927-221711.csv
+Excel:         C:\Users\Gustavo\IdeaProjects\aps-queimadas\relatorios\resultados-20260927-221711.xlsx
+PDF:           C:\Users\Gustavo\IdeaProjects\aps-queimadas\relatorios\resultados-20260927-221713.pdf

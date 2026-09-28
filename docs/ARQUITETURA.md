@@ -12,23 +12,26 @@ flowchart TB
         APP["app.Sessao — estado compartilhado, últimos resultados"]
     end
     subgraph Dominio["Domínio / Serviços"]
-        SORT["sorting — 10 algoritmos (Strategy), Factory, critérios, contador"]
-        BENCH["benchmark — medição, repetições, expoente empírico"]
+        SORT["sorting — 13 algoritmos (Strategy), Factory, critérios, contador"]
+        EST["estruturas + busca — AVL, hash, heap, External/Parallel Merge Sort, consultas"]
+        BENCH["benchmark — medição, aquecimento por tempo, expoente empírico"]
         ANA["analysis — estatísticas, filtros"]
-        ML["ml — base mensal, Random Forest, DBSCAN/K-Means (Smile)"]
+        ML["ml — base mensal, Random Forest, DBSCAN/K-Means, estudo com validação temporal"]
+        GEO["geo — malha municipal do IBGE, vizinhança"]
     end
     subgraph Infra["Infraestrutura"]
         IO["io — CSV (leitura, validação, limpeza), download INPE"]
-        REP["report — CSV, Excel (POI), PDF (OpenPDF), código-fonte"]
-        CFG["config — properties, logging"]
+        REP["report — CSV, Excel com gráficos nativos, PDF com capa e gráficos vetoriais, código-fonte"]
+        CFG["config — properties, logging, grupo, versão"]
     end
     MODEL["model — FocoIncendio, BaseDeFocos"]
 
     UI --> APP
     CLI --> APP
-    APP --> SORT & BENCH & ANA & ML & IO & REP
+    APP --> SORT & EST & BENCH & ANA & ML & IO & REP
     BENCH --> SORT
-    ML --> SORT
+    EST --> SORT
+    ML --> SORT & GEO
     ANA --> SORT
     IO --> MODEL
     SORT --> MODEL
@@ -38,41 +41,54 @@ flowchart TB
 
 ```
 aps-queimadas/
-├── pom.xml                         Java 21, JavaFX 21, Smile 4.4, POI, OpenPDF, JUnit 5, JaCoCo, Shade
+├── pom.xml                         Java 21, JavaFX 21, Smile 4.4, POI, OpenPDF, JUnit 5, JaCoCo, Checkstyle, PMD,
+│                                   SpotBugs, Shade; perfis jmh (JMH) e mutacao (PIT)
 ├── mvnw / mvnw.cmd / .mvn/         Maven Wrapper (não precisa instalar Maven)
+├── config/                         regras do Checkstyle, PMD e exclusões justificadas do SpotBugs
 ├── data/raw/                       CSVs do INPE (SP 2023 e 2024)
-├── docs/                           documentação técnica e resultados reais (docs/resultados)
-├── .github/workflows/ci.yml        integração contínua (build + testes a cada push)
+├── docs/                           documentação técnica, ADRs (docs/adr) e resultados reais (docs/resultados)
+├── site/                           página do projeto (GitHub Pages) + Javadoc publicado em /javadoc
+├── .github/workflows/              ci.yml (build + verificações), release.yml (instaladores), pages.yml (site)
 ├── .run/                           configurações de execução do IntelliJ
 └── src/
     ├── main/java/br/unip/aps/
-    │   ├── Main.java               ponto de entrada (dashboard, cli, benchmark, ml, resultados…)
+    │   ├── Main.java               ponto de entrada (dashboard, cli, benchmark, ml, resultados, estruturas…)
     │   ├── ApsException.java       exceção base (mensagens amigáveis)
-    │   ├── app/Sessao.java
+    │   ├── app/                    Sessao, ExperimentosEstruturas, RelatorioEstudoMl, Agregados
     │   ├── model/                  FocoIncendio (registro imutável + Builder), BaseDeFocos
-    │   ├── io/                     CsvLoader, CsvParser, RelatorioCarga, RepositorioDados,
+    │   ├── io/                     CsvLoader, CsvParser, RelatorioCarga, RepositorioDados (dados embarcados),
     │   │                           DownloaderInpe, DataValidationException
     │   ├── sorting/                SortAlgorithm, InstrumentedArray, OperationCounter, OperationMetrics,
     │   │   │                       AlgoritmoTipo, SortAlgorithmFactory, CriterioOrdenacao, Criterios,
     │   │   │                       Ordem, CenarioEntrada, ServicoOrdenacao, ResultadoOrdenacao, Ordenacoes
-    │   │   └── algorithms/         Bubble, Selection, Insertion, Shell, Merge, Quick, Quick3Way,
-    │   │                           Heap, TimSortSimplificado, Radix (+ Intercalacao)
+    │   │   └── algorithms/         Bubble, Selection, Insertion, Shell, Merge, Quick, Quick3Way, DualPivotQuick,
+    │   │                           Intro, Heap, TimSortSimplificado, Radix, Counting (+ Intercalacao)
+    │   ├── estruturas/             Vetor, ArvoreAVL, TabelaHash, HeapBinario, Trie, ArvoreKD, Grafo,
+    │   │                           ExternalMergeSort, MergeSortParalelo, MedidorMemoria
+    │   ├── busca/                  Buscas (lower/upper bound), ServicoConsultas, ServicoGeografico
     │   ├── benchmark/              BenchmarkConfig, BenchmarkRunner, BenchmarkResult, AnaliseComplexidade
-    │   ├── analysis/               Estatisticas, FiltroFocos, Contagem, EstatisticaDescritiva
-    │   ├── ml/                     BaseMensal, PrevisaoFocos, ClassificadorNivel, ClusterizacaoHotspots,
-    │   │                           Metricas, NivelAtividade, SmileAdapter, Preditor (fachada)
-    │   ├── report/                 ReportExporter, ContextoRelatorio, CodigoFonteReport
+    │   ├── analysis/               Estatisticas, FiltroFocos, Contagem, EstatisticaDescritiva, Classificacao (Jenks)
+    │   ├── geo/                    MalhaMunicipal, Vizinhanca
+    │   ├── ml/                     BaseMensal, PrevisaoFocos, ClassificadorNivel, ClusterizacaoHotspots, Metricas,
+    │   │                           NivelAtividade, SmileAdapter, Preditor (fachada), EstudoPrevisao, MeteoMensal
+    │   ├── report/                 ReportExporter, RelatorioPdf, GraficosPdf, Identidade, ContextoRelatorio,
+    │   │                           CodigoFonteReport, ManualPdf
     │   ├── cli/                    MenuConsole, ConsoleIO, TabelaConsole
-    │   ├── ui/                     DashboardApp, UiContexto, MainController, Pagina, FiltroGlobal,
-    │   │                           VisaoGeral-, Ordenacao-, Benchmark-, Mapa-, Ml-, Qualidade-,
-    │   │                           Configuracoes-, SobreController, Tabelas, CapturaTelas
-    │   │   ├── componentes/        KpiCard, ChartCard, FilterBar, DonutChart, SortVisualizer, Toast… (ver DESIGN.md)
-    │   │   └── tema/               GerenciadorTema (claro/escuro, preferências)
-    │   ├── config/                 AppConfig, LogConfig
-    │   └── util/                   Textos (Collator pt-BR), Formatos, Json
-    ├── main/resources/             application.properties, logging.properties,
-    │   └── br/unip/aps/ui/         main.fxml + 8 telas FXML, css/ (tokens, temas, componentes, gráficos), mapa.html
-    └── test/java/br/unip/aps/      199 testes JUnit 5
+    │   ├── ui/                     DashboardApp, UiContexto, MainController, Pagina, FiltroGlobal, controllers
+    │   │   │                       das 9 telas, ModoApresentacao, TourGuiado, EstudoMlPainel, EstruturasEspaciaisPainel,
+    │   │   │                       CapturaTelas
+    │   │   ├── componentes/        KpiCard, ChartCard, FaixaTermica, FilterBar, PaletaComandos, Movimento, Logo,
+    │   │   │                       ArvoreVisual, SortVisualizer, Pseudocodigo, DonutChart, Toast… (ver DESIGN.md)
+    │   │   └── tema/               GerenciadorTema (claro/escuro, densidade, daltonismo, alto contraste, tamanho do texto)
+    │   ├── config/                 AppConfig, LogConfig, Grupo, Versao
+    │   └── util/                   Textos (Collator pt-BR, nomes próprios), Formatos, Json
+    ├── main/resources/             application.properties, logging.properties, grupo.properties, fontes,
+    │   │                           dados/ (CSVs embarcados, histórico de SP e estados do Brasil), geo/ (malha do IBGE),
+    │   │                           resultados/ (benchmark e ML)
+    │   └── br/unip/aps/ui/         main.fxml + 9 telas FXML, css/ (tokens, temas, componentes, gráficos, acessibilidade/),
+    │                               mapa.html e web/ (Leaflet local)
+    ├── jmh/java/                   benchmarks JMH (perfil jmh)
+    └── test/java/br/unip/aps/      testes JUnit 5 (ver QUALIDADE.md)
 ```
 
 ## 3. Diagrama de classes — núcleo de ordenação
@@ -237,6 +253,89 @@ classDiagram
     Sessao --> BaseDeFocos
 ```
 
+## 4.1 Diagrama de classes — estruturas de dados e busca
+
+```mermaid
+classDiagram
+    class Vetor~T~ {
+      +obter(i) T
+      +adicionar(T)
+      +tamanho() int
+    }
+    class ArvoreAVL~K,V~ {
+      +inserir(K, V)
+      +buscar(K) List~V~
+      +intervalo(K, K, Consumer)
+      +remover(K) boolean
+      +altura() int
+      +valida() boolean
+    }
+    class TabelaHash~K,V~ {
+      +colocar(K, V)
+      +buscar(K) List~V~
+      +remover(K) boolean
+      +distribuicaoCadeias() int[]
+    }
+    class HeapBinario~T~ {
+      +inserir(T)
+      +removerTopo() T
+      +substituirTopo(T)
+      +topK(itens, k, cmp)$ List~T~
+    }
+    class Buscas {
+      +lowerBound()$ int
+      +upperBound()$ int
+    }
+    class ServicoConsultas {
+      +porMunicipio(focos, municipios) List~Custo~
+      +porIntervalo(focos, intervalos) List~Custo~
+      +topK(k) TopK
+    }
+    class ExternalMergeSort {
+      +ordenar(csvs, saida, registrosPorRun) Resultado
+    }
+    class MergeSortParalelo {
+      +ordenar(a, cmp, pool)$ OperationMetrics
+      +speedup(base, cmp, threads)$ List~Medicao~
+    }
+    class Trie~V~ {
+      +inserir(nome, V)
+      +comPrefixo(prefixo, limite) List
+      +contarPrefixo(prefixo) int
+    }
+    class ArvoreKD~T~ {
+      +noRaio(lat, lon, raioKm, destino) long
+      +altura() int
+    }
+    class Grafo {
+      +ligar(a, b)
+      +distancias(origem) int[]
+      +vizinhosDe(nome) List
+    }
+    class ServicoGeografico {
+      +prefixo(focos, prefixo, limite) Prefixo
+      +raio(focos, municipio, km) Raio
+      +camadas(focos, municipio, max) List~Camada~
+      +propagacao(focos) Propagacao
+    }
+    class OperationCounter
+    ServicoGeografico --> Trie
+    ServicoGeografico --> ArvoreKD
+    ServicoGeografico --> Grafo
+    Grafo --> TabelaHash : índice dos vértices
+    ServicoConsultas --> Buscas
+    ServicoConsultas --> ArvoreAVL
+    ServicoConsultas --> TabelaHash
+    ServicoConsultas --> HeapBinario
+    ExternalMergeSort --> HeapBinario : intercalação k-way
+    ArvoreAVL --> OperationCounter
+    TabelaHash --> OperationCounter
+    HeapBinario --> OperationCounter
+    Buscas --> OperationCounter
+```
+
+As estruturas contam comparações no mesmo `OperationCounter` dos algoritmos de ordenação, o que permite comparar busca linear, binária, AVL e hash pelo número de operações. Detalhes e resultados em [ESTRUTURAS.md](ESTRUTURAS.md); a decisão está no [ADR 0005](adr/0005-estruturas-a-mao.md).
+
 ## 5. Fluxo de uma "solicitação de exibição ordenada"
 
 ```mermaid
@@ -280,6 +379,8 @@ sequenceDiagram
 | **Adapter** | `SmileAdapter` | Isola a API do Smile; o domínio não depende da biblioteca. |
 | **Observer** | `ObjectProperty` do JavaFX (`baseProperty`, `mlProperty`) | As abas reagem quando a base ou o resultado de ML mudam. |
 | **Template/Record** | `record` Java 21 para resultados | Objetos de valor imutáveis, com `equals`/`hashCode` automáticos. |
+| **Command** | `PaletaComandos.Comando` | Cada tela, ação, visão e município vira um comando pesquisável (Ctrl+K). |
+| **Memento** | Visões salvas (`FilterBar`) | O estado dos filtros é serializado nas preferências e restaurado depois. |
 
 ## 7. Tratamento de erros
 
@@ -291,7 +392,7 @@ sequenceDiagram
   - amostra negativa, filtro com data final antes da inicial;
   - Radix com critério de texto, anos de treino e teste invertidos;
   - UF inválida no download.
-- **Arquivos** são abertos com `try-with-resources`. O download protege contra *zip slip*.
+- **Arquivos** são abertos com `try-with-resources`. O download exige HTTPS e grava com nomes fixos (sem *zip slip*); a leitura do estudo de ML usa filtro de desserialização. Revisão completa em [QUALIDADE.md](QUALIDADE.md).
 - **Cancelamento cooperativo:**
   - o `OperationCounter` checa a interrupção da thread a cada 65.536 comparações;
   - o benchmark checa a cada execução.

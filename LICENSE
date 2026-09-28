@@ -22,6 +22,11 @@ SOFTWARE.
 
 ---
 
+Distribuição binária: o JAR executável e os instaladores incluem a biblioteca
+Smile, licenciada sob a GNU GPL v3. Por isso, esses pacotes completos são
+distribuídos nos termos da GPL v3; o código-fonte correspondente é este
+repositório. O código escrito neste projeto continua sob a licença MIT acima.
+
 Terceiros incluídos no pacote:
 - Dados de focos de queimadas: INPE, Programa Queimadas (uso livre com citação da fonte).
 - Malha municipal: IBGE (dados públicos).

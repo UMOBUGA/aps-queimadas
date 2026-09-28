@@ -4,7 +4,7 @@
 |---|---|---|
 | 1. Obtenção e entendimento dos dados | ✔ concluída | [DADOS.md](DADOS.md), `data/raw/` |
 | 2. Arquitetura | ✔ concluída | [ARQUITETURA.md](ARQUITETURA.md) |
-| 3. Algoritmos de ordenação | ✔ concluída (10 algoritmos) | `sorting/`, [ALGORITMOS.md](ALGORITMOS.md) |
+| 3. Algoritmos de ordenação | ✔ concluída (13 algoritmos) | `sorting/`, [ALGORITMOS.md](ALGORITMOS.md) |
 | 4. Benchmark e análise de performance | ✔ concluída | `benchmark/`, [BENCHMARK.md](BENCHMARK.md), [resultados/](resultados/) |
 | 5. Machine Learning | ✔ concluída (3 análises) | `ml/`, [ML.md](ML.md) |
 | 6. Dashboard | ✔ concluído (6 abas) | `ui/`, `src/main/resources/br/unip/aps/ui/` |

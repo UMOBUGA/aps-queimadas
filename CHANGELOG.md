@@ -12,6 +12,14 @@ Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](
 - **Experiência:** paleta de comandos (Ctrl+K), modo apresentação (F5), tour guiado, visões salvas, comparação de dois períodos, pequenos múltiplos por bioma, escala log, densidade compacta, movimento com propósito e logo vetorial.
 - **Relatórios corporativos:** PDF com capa, sumário com páginas reais, resumo executivo gerado dos dados, gráficos vetoriais e notas metodológicas; Excel com cabeçalho congelado, filtros, formatação condicional, gráficos nativos e aba "Sobre os dados".
 - **Qualidade:** Checkstyle, PMD, SpotBugs e cobertura mínima (JaCoCo) no `verify`; teste de mutação (PIT) no perfil `mutacao`; ADRs em `docs/adr`.
+- **Mais algoritmos:** Intro Sort, Quick Sort com dois pivôs e Counting Sort (com o novo critério Hora local), totalizando 13.
+- **Passo a passo com pseudocódigo** na visualização da ordenação, com avanço e retorno de um passo.
+- **Estruturas aplicadas:** Trie (sugestões da busca de municípios e tela Estruturas), árvore k-d (focos num raio, com círculo no mapa) e grafo de municípios vizinhos com busca em largura (análise de propagação).
+- **Referência do Java no JMH:** `Arrays.sort` comparado aos nossos algoritmos em tempo e em número de comparações.
+- **Histórico e Brasil:** série de 2019 a 2024 e ranking dos estados na Visão geral (modo `agregados`).
+- **Acessibilidade:** modo daltônico (Okabe-Ito), alto contraste, tamanho do texto e teste automático de cores.
+- **Testes de interação** com TestFX numa tela virtual (Monocle).
+- **Manual do usuário** em Markdown e PDF (modo `manual`) e GIF de demonstração.
 - **Distribuição:** workflow de release que gera instalador `.deb` (Linux), `.dmg` (macOS) e versão portátil para Windows com runtime próprio (jpackage + jlink), além do JAR executável.
 
 ### Alterado
@@ -20,6 +28,8 @@ Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](
 
 ### Corrigido
 - Legendas e títulos sobrepostos no mapa, rótulos truncados no ML, capturas de tela com fundo transparente e contraste de cores no tema claro.
+- Dourado do Cerrado no tema claro, que se confundia com o verde da Mata Atlântica para pessoas com protanopia.
+- Aquecimento do benchmark por tempo mínimo (500 ms): os tempos ficaram muito mais próximos dos medidos pelo JMH.
 
 ## [1.0.0] - 2026-09-26
 
