@@ -169,6 +169,8 @@
                     <workingDirectory>${project.basedir}</workingDirectory>
                     <excludes>
                         <exclude>**/*InteracaoTest.java</exclude>
+                        <exclude>**/DashboardSmokeTest.java</exclude>
+                        <exclude>**/MapaOfflineTest.java</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -179,6 +181,8 @@
                             <excludes combine.self="override"/>
                             <includes>
                                 <include>**/*InteracaoTest.java</include>
+                                <include>**/DashboardSmokeTest.java</include>
+                                <include>**/MapaOfflineTest.java</include>
                             </includes>
                             <argLine>@{argLine} -Xss8m -Dfile.encoding=UTF-8 -Daps.semTour=true -Dtestfx.robot=glass -Dtestfx.headless=true
                                 -Dprism.order=sw -Dprism.text=t2k -Dglass.platform=Monocle -Dmonocle.platform=Headless -Djava.awt.headless=true</argLine>

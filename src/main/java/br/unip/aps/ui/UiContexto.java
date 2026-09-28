@@ -112,6 +112,10 @@ public final class UiContexto {
 
     /** Variante em que o trabalho recebe um reportador de progresso (0 a 1, mensagem). */
     public <T> Task<T> executar(String descricao, TrabalhoComProgresso<T> trabalho, Consumer<T> aoConcluir) {
+        if (executor.isShutdown()) {
+            LOG.fine(() -> descricao + " ignorado: a janela já foi encerrada");
+            return null;
+        }
         if (ocupado.get()) {
             Feedback.alerta("Aguarde a operação atual", status.get());
             return null;
@@ -172,6 +176,10 @@ public final class UiContexto {
         };
         task.setOnSucceeded(e -> aoConcluir.accept(task.getValue()));
         task.setOnFailed(e -> LOG.log(Level.WARNING, descricao + " (segundo plano) falhou", task.getException()));
+        if (fundo.isShutdown()) {
+            LOG.fine(() -> descricao + " ignorado: a janela já foi encerrada");
+            return;
+        }
         fundo.submit(task);
     }
 

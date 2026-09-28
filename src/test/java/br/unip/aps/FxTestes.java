@@ -2,25 +2,16 @@ package br.unip.aps;
 
 import javafx.application.Platform;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-/** Inicia o toolkit JavaFX uma unica vez por JVM de teste; nao e encerrado, pois o JavaFX nao pode ser reiniciado. */
+/** Inicia o toolkit JavaFX (pelo TestFX, compartilhado com os testes de interacao) uma unica vez por JVM de teste. */
 public final class FxTestes {
     private static boolean iniciado;
 
     private FxTestes() {
     }
 
-    public static synchronized void iniciar() throws InterruptedException {
+    public static synchronized void iniciar() throws Exception {
         if (iniciado) return;
-        CountDownLatch pronto = new CountDownLatch(1);
-        try {
-            Platform.startup(pronto::countDown);
-        } catch (IllegalStateException jaIniciado) {
-            pronto.countDown();
-        }
-        if (!pronto.await(20, TimeUnit.SECONDS)) throw new IllegalStateException("JavaFX nao iniciou");
+        org.testfx.api.FxToolkit.registerPrimaryStage();
         Platform.setImplicitExit(false);
         iniciado = true;
     }

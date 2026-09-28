@@ -24,14 +24,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /** Teste de fumaca da interface. */
 @DisplayName("Dashboard (smoke test)")
 class DashboardSmokeTest {
     @Test
     void navegaPorTodasAsTelasNosDoisTemas() throws Exception {
-        assumeFalse(System.getenv("CI") != null || java.awt.GraphicsEnvironment.isHeadless(), "sem ambiente grafico");
         br.unip.aps.FxTestes.iniciar();
 
         AtomicReference<Throwable> erro = new AtomicReference<>();

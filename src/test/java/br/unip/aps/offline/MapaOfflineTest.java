@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /** Abre o mapa no WebView e simula a queda da rede: Leaflet vem do JAR e a malha do IBGE substitui os tiles. */
 @DisplayName("Mapa sem internet")
@@ -23,7 +22,6 @@ class MapaOfflineTest {
 
     @Test
     void leafletCarregaDoJarEMalhaSubstituiOsTiles() throws Exception {
-        assumeFalse(System.getenv("CI") != null || java.awt.GraphicsEnvironment.isHeadless(), "sem ambiente grafico");
         br.unip.aps.FxTestes.iniciar();
 
         AtomicReference<String> resultado = new AtomicReference<>();
