@@ -4,10 +4,10 @@ O APS Queimadas mostra os focos de incêndio que o INPE detectou em São Paulo e
 
 ## Instalar e abrir
 
-- **Windows:** baixe o arquivo `APS-Queimadas-2.1.0-windows-portatil.zip` na página de versões do projeto, descompacte e abra `APS Queimadas.exe`. Não é preciso instalar o Java nem ter permissão de administrador.
-- **Linux:** instale o pacote `.deb` com um duplo clique ou com `sudo apt install ./aps-queimadas_2.1.0_amd64.deb`.
+- **Windows:** baixe o arquivo `APS-Queimadas-2.2.0-windows-portatil.zip` na página de versões do projeto, descompacte e abra `APS Queimadas.exe`. Não é preciso instalar o Java nem ter permissão de administrador.
+- **Linux:** instale o pacote `.deb` com um duplo clique ou com `sudo apt install ./aps-queimadas_2.2.0_amd64.deb`.
 - **macOS:** abra o `.dmg` e arraste o aplicativo para a pasta Aplicativos.
-- **Qualquer sistema com Java 21:** `java -jar aps-queimadas-2.1.0-all.jar`.
+- **Qualquer sistema com Java 21:** `java -jar aps-queimadas-2.2.0-all.jar`.
 
 O programa funciona sem internet: os dados do INPE, a malha dos municípios do IBGE e o mapa vêm junto. Com internet, o mapa usa um fundo mais detalhado.
 
@@ -112,7 +112,7 @@ F5 abre as telas em tela cheia, com texto maior e o roteiro de cada etapa. Os no
 
 ## Linha de comando
 
-`java -jar aps-queimadas-2.1.0-all.jar ajuda` lista os modos. Os mais usados são `cli` (menu no terminal), `ordenar`, `comparar`, `benchmark`, `resultados` (gera os números da dissertação) e `estruturas`.
+`java -jar aps-queimadas-2.2.0-all.jar ajuda` lista os modos. Os mais usados são `cli` (menu no terminal), `ordenar`, `comparar`, `benchmark`, `resultados` (gera os números da dissertação) e `estruturas`.
 
 ## Problemas comuns
 

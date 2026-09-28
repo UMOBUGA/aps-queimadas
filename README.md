@@ -49,10 +49,10 @@ Todos os valores vêm de execuções reais gravadas em [`docs/resultados`](docs/
 
 | Sistema | Pacote |
 |---|---|
-| Windows | `APS-Queimadas-2.1.0-windows-portatil.zip`: descompacte e abra `APS Queimadas.exe` |
+| Windows | `APS-Queimadas-2.2.0-windows-portatil.zip`: descompacte e abra `APS Queimadas.exe` |
 | Linux | `.deb` (Ubuntu, Debian) |
 | macOS | `.dmg` |
-| Qualquer um com Java 21 | `aps-queimadas-2.1.0-all.jar`: `java -jar aps-queimadas-2.1.0-all.jar` |
+| Qualquer um com Java 21 | `aps-queimadas-2.2.0-all.jar`: `java -jar aps-queimadas-2.2.0-all.jar` |
 
 **A partir do código** (JDK 21; o Maven vem junto pelo wrapper):
 
@@ -113,7 +113,7 @@ Todos os prints estão em [`docs/prints/`](docs/prints/) (páginas inteiras em `
 
 ## Modos de linha de comando
 
-`java -jar aps-queimadas-2.1.0-all.jar <modo> [opções]`
+`java -jar aps-queimadas-2.2.0-all.jar <modo> [opções]`
 
 | Modo | O que faz |
 |---|---|

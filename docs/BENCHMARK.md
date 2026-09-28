@@ -20,7 +20,7 @@
 **Como reproduzir:**
 
 ```bash
-java -Xss8m -Xmx2g -jar target/aps-queimadas-2.1.0-all.jar resultados
+java -Xss8m -Xmx2g -jar target/aps-queimadas-2.2.0-all.jar resultados
 ```
 
 Ou use a aba Benchmark do dashboard. Os arquivos gerados estão em [`resultados/`](resultados/).

@@ -6,7 +6,7 @@
 
     <groupId>br.unip.aps</groupId>
     <artifactId>aps-queimadas</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <packaging>jar</packaging>
 
     <name>APS Queimadas - Analise de Performance de Algoritmos de Ordenacao</name>
@@ -285,7 +285,7 @@
                 </configuration>
             </plugin>
 
-            <!-- JAR executavel unico (fat jar): target/aps-queimadas-2.1.0-all.jar -->
+            <!-- JAR executavel unico (fat jar): target/aps-queimadas-2.2.0-all.jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

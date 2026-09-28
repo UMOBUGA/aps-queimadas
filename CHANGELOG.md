@@ -2,7 +2,7 @@
 
 Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem [SemVer](https://semver.org/lang/pt-BR/).
 
-## [Não publicado]
+## [2.2.0] - 2026-09-28
 
 ### Adicionado
 - **Linha do tempo no mapa:** faixa térmica dos meses com botão Tocar, que mostra os focos mês a mês; clique escolhe um mês e Shift+clique, um intervalo. A contagem, a legenda e o mapa por município acompanham o período.
@@ -59,6 +59,7 @@ Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](
 - Random Forest, classificação do nível de atividade, K-Means e DBSCAN.
 - Dashboard JavaFX, menu de console e relatório com as linhas de código.
 
+[2.2.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.2.0
 [2.1.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.1.0
 [2.0.0]: https://github.com/gustavoblopes79/aps-queimadas/releases/tag/v2.0.0
 [1.0.0]: https://github.com/gustavoblopes79/aps-queimadas/commits/a154b66
