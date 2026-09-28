@@ -196,7 +196,8 @@ public final class Main {
         }
         Path destino = Path.of(op.getOrDefault("saida", "site/app"));
         try {
-            br.unip.aps.report.ExportadorWeb.Resultado r = br.unip.aps.report.ExportadorWeb.gerar(s.base(), rs, destino);
+            ml(s, out, false);
+            br.unip.aps.report.ExportadorWeb.Resultado r = br.unip.aps.report.ExportadorWeb.gerar(s.base(), rs, s.ultimoMl(), destino);
             out.println("Versao web: " + Formatos.inteiro(r.focos()) + " focos, " + Formatos.inteiro(r.municipios()) + " municipios, "
                     + r.algoritmos() + " algoritmos, " + Formatos.inteiro(r.bytes() / 1024) + " KB em " + r.pasta().toAbsolutePath());
         } catch (java.io.IOException e) {

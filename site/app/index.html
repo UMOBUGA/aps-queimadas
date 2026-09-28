@@ -20,22 +20,40 @@
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
-  <a class="marca" href="#mapa" aria-label="Queimadas SP, início">
+  <a class="marca" href="#inicio" aria-label="Queimadas SP, início">
     <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-marca"/></svg>
     <span>Queimadas <small>SP · 2023–2024</small></span>
   </a>
   <nav class="abas" aria-label="Seções">
+    <a href="#inicio" data-aba="inicio"><svg aria-hidden="true"><use href="#i-inicio"/></svg><span>Início</span></a>
     <a href="#mapa" data-aba="mapa"><svg aria-hidden="true"><use href="#i-mapa"/></svg><span>Mapa</span></a>
     <a href="#municipios" data-aba="municipios"><svg aria-hidden="true"><use href="#i-lista"/></svg><span>Municípios</span></a>
-    <a href="#algoritmos" data-aba="algoritmos"><svg aria-hidden="true"><use href="#i-ordenar"/></svg><span>Algoritmos</span></a>
+    <a href="#ordenacao" data-aba="ordenacao"><svg aria-hidden="true"><use href="#i-ordenar"/></svg><span>Ordenação</span></a>
     <a href="#sobre" data-aba="sobre"><svg aria-hidden="true"><use href="#i-info"/></svg><span>Sobre</span></a>
   </nav>
 </header>
 
 <main id="conteudo">
+  <section id="aba-inicio" class="aba" aria-labelledby="t-inicio" hidden>
+    <div class="pagina historia" id="historia">
+      <p class="sobretitulo">Focos de incêndio em São Paulo · INPE</p>
+      <h1 id="t-inicio" class="sr">Início</h1>
+    </div>
+  </section>
+
   <section id="aba-mapa" class="aba" aria-labelledby="t-mapa">
     <h1 id="t-mapa" class="sr">Mapa dos focos</h1>
     <div id="mapa" class="mapa" role="application" aria-label="Mapa dos focos de incêndio em São Paulo"></div>
+    <div class="mapa-barra" role="toolbar" aria-label="Modo do mapa">
+      <div class="chips compactos" role="radiogroup" aria-label="Como mostrar os focos" id="modos">
+        <button type="button" role="radio" data-modo="pontos" aria-checked="true">Pontos</button>
+        <button type="button" role="radio" data-modo="calor" aria-checked="false">Calor</button>
+        <button type="button" role="radio" data-modo="municipios" aria-checked="false">Municípios</button>
+        <button type="button" role="radio" data-modo="grupos" aria-checked="false">Grupos</button>
+      </div>
+      <button type="button" class="chip-base" id="base" aria-pressed="false" aria-label="Imagem de satélite" title="Imagem de satélite"><svg aria-hidden="true"><use href="#i-satelite"/></svg></button>
+    </div>
+    <div class="legenda-mapa" id="legenda-mapa" aria-live="polite"></div>
     <div class="placar" aria-live="polite">
       <strong id="placar-numero">—</strong>
       <span id="placar-texto">focos no mapa</span>
@@ -65,10 +83,31 @@
     </div>
   </section>
 
-  <section id="aba-algoritmos" class="aba" aria-labelledby="t-algoritmos" hidden>
+  <section id="aba-ordenacao" class="aba" aria-labelledby="t-ordenacao" hidden>
     <div class="pagina">
-      <p class="sobretitulo">Custo real, medido pelo programa em Java</p>
-      <h1 id="t-algoritmos" class="titulo">Algoritmos</h1>
+      <p class="sobretitulo">O coração do trabalho</p>
+      <h1 id="t-ordenacao" class="titulo">Ordenação</h1>
+      <p class="texto">Ordenar é colocar em ordem: por data, por município, do maior para o menor. O trabalho implementa 13 jeitos diferentes de fazer isso e conta cada passo de cada um. Escolha um algoritmo e veja ele trabalhando em 32 barras.</p>
+      <section class="visualizador" aria-labelledby="t-vis">
+        <h2 id="t-vis" class="sr">Animação da ordenação</h2>
+        <label class="seletor">Algoritmo <select id="vis-algoritmo"></select></label>
+        <p class="apoio pequeno" id="vis-descricao"></p>
+        <div class="vis-barras" id="vis-barras" role="img" aria-label="Barras sendo ordenadas"></div>
+        <div class="vis-placar" aria-live="off">
+          <div><b id="vis-comparacoes">0</b><span>comparações</span></div>
+          <div><b id="vis-movimentos">0</b><span>trocas e escritas</span></div>
+          <div><b id="vis-passo">0</b><span id="vis-total">passos</span></div>
+        </div>
+        <p class="vis-agora" id="vis-agora" aria-live="polite">Toque em Reproduzir.</p>
+        <div class="vis-controles">
+          <button class="botao primario" type="button" id="vis-play"><svg aria-hidden="true"><use href="#i-play"/></svg><span>Reproduzir</span></button>
+          <button class="botao secundario" type="button" id="vis-passo-btn">Um passo</button>
+          <button class="botao fantasma" type="button" id="vis-reiniciar">Recomeçar</button>
+        </div>
+        <label class="seletor velocidade">Velocidade <input type="range" id="vis-velocidade" min="1" max="10" value="6"></label>
+        <p class="nota">Amarelo: comparando. Laranja: trocando ou escrevendo. Verde: tudo em ordem. Os passos foram gravados pelo programa em Java, com os mesmos algoritmos da APS.</p>
+      </section>
+      <h2 id="t-algoritmos">E com os 10.378 focos de verdade?</h2>
       <p class="apoio" id="algoritmos-apoio"></p>
       <div class="chips" role="radiogroup" aria-label="Critério de ordenação" id="criterios"></div>
       <div class="chips" role="radiogroup" aria-label="Ordenar a lista por" id="ordem">
@@ -98,6 +137,8 @@
       <h1 id="t-sobre" class="titulo">Sobre esta versão</h1>
       <p class="texto">Esta é a versão de bolso do <b>APS Queimadas</b>. Todo o cálculo foi feito pelo programa em Java: a ordenação com os 13 algoritmos implementados à mão, a contagem de operações, o ranking, as fichas dos municípios e os vizinhos pela malha do IBGE. Aqui você vê esses resultados, sem instalar nada.</p>
       <dl class="numeros" id="sobre-numeros"></dl>
+      <h2>Os dados</h2>
+      <p class="texto" id="sobre-carga"></p>
       <h2>Fontes</h2>
       <ul class="fontes">
         <li><b>Focos:</b> INPE, BDQueimadas, satélite de referência (horários em GMT).</li>
@@ -134,6 +175,8 @@
   <defs>
     <linearGradient id="g-marca" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#932667"/><stop offset=".4" stop-color="#EB6A26"/><stop offset=".75" stop-color="#FCA50A"/><stop offset="1" stop-color="#FCFFA4"/></linearGradient>
     <symbol id="i-marca" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0A0807"/><path fill="url(#g-marca)" d="M12 1.5C12.6 4.8 15.5 6.6 17.2 9.4C19.4 13 18.6 17.8 15 19.9C11.6 21.9 6.9 20.8 5.3 17.2C4.2 14.7 4.9 11.9 6.6 9.9C6.9 11.6 7.8 12.8 9.2 13.3C8.2 9.7 10.2 5.6 12 1.5Z"/></symbol>
+ <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4v-9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+<symbol id="i-satelite" viewBox="0 0 24 24"><path d="m13 7 4-4 4 4-4 4M7 13l-4 4 4 4 4-4M8.5 8.5l7 7M10 6.5 6.5 10l7.5 7.5 3.5-3.5L10 6.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M17 20a3 3 0 0 0 3-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
     <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
     <symbol id="i-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
     <symbol id="i-ordenar" viewBox="0 0 24 24"><path d="M4 20V14M9 20V9M14 20V12M19 20V4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>

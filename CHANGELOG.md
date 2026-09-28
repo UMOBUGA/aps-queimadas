@@ -7,7 +7,10 @@ Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](
 ### Adicionado
 - **Comparação de municípios:** na ficha, "Comparar" coloca dois municípios lado a lado (focos, ranking, anos, variação, bioma, densidade, pico e focos mês a mês na mesma escala) e destaca os dois no mapa, em laranja e azul.
 - **Gravar a linha do tempo em GIF:** o botão GIF passa pelos 24 meses e grava a animação do mapa, pronta para a apresentação.
-- **Versão web para celular** (`site/app`): mapa com linha do tempo, ranking com busca, ficha e comparação de municípios e o custo real dos 13 algoritmos, instalável como app e funcionando sem internet. Os dados vêm do novo modo `web`, que roda os algoritmos no programa em Java e exporta os resultados.
+- **Versão web para celular** (`site/app`), para mostrar a quem não roda Java: início com a história dos dados em linguagem simples, mapa com pontos, calor, municípios por densidade, grupos do ML e satélite, ranking, ficha e comparação de municípios, animação passo a passo dos 13 algoritmos e o custo real de cada um. Instalável como app e funcionando sem internet. Os dados vêm do novo modo `web`, que roda os algoritmos e o ML no programa em Java e exporta os resultados.
+
+### Alterado
+- A gravação dos passos da ordenação saiu do visualizador para `sorting.GravadorPassos`, usada pelo programa e pela versão web.
 
 ## [2.2.0] - 2026-09-28
 

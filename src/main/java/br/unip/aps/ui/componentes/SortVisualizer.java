@@ -1,8 +1,7 @@
 package br.unip.aps.ui.componentes;
 
 import br.unip.aps.sorting.AlgoritmoTipo;
-import br.unip.aps.sorting.InstrumentedArray;
-import br.unip.aps.sorting.OperationCounter;
+import br.unip.aps.sorting.GravadorPassos;
 import br.unip.aps.util.Formatos;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -19,17 +18,12 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
 /** Visualizacao animada de um algoritmo de ordenacao em uma amostra pequena (barras). */
 public class SortVisualizer extends VBox {
     private static final int N = 32;
-
-    private record Evento(int tipo, int i, int j, int valor) {
-        static final int COMPARA = 0, TROCA = 1, ATRIBUI = 2;
-    }
 
     private final Pane palco = new Pane();
     private final List<Region> barras = new ArrayList<>();
@@ -44,7 +38,7 @@ public class SortVisualizer extends VBox {
     private final Timeline timeline = new Timeline();
     private int[] inicial = new int[N];
     private int[] atual = new int[N];
-    private List<Evento> eventos = List.of();
+    private List<GravadorPassos.Passo> eventos = List.of();
     private int passo;
     private long comparacoes;
     private long movimentos;
@@ -207,7 +201,7 @@ public class SortVisualizer extends VBox {
         lblOperacao.setText("Início: vetor embaralhado com " + N + " valores. Use os botões de passo para seguir linha a linha.");
         if (novaAmostra) embaralharInicial();
         atual = inicial.clone();
-        eventos = gravar(algoritmo, inicial);
+        eventos = GravadorPassos.gravar(algoritmo, inicial);
         passo = 0;
         comparacoes = 0;
         movimentos = 0;
@@ -216,37 +210,6 @@ public class SortVisualizer extends VBox {
         play.setGraphic(Icones.de(Icones.EXECUTAR, 16));
         atualizarRotulos();
         desenhar();
-    }
-
-    private static List<Evento> gravar(AlgoritmoTipo tipo, int[] valores) {
-        Integer[] arr = new Integer[valores.length];
-        for (int i = 0; i < arr.length; i++) arr[i] = valores[i];
-        List<Evento> ev = new ArrayList<>();
-        InstrumentedArray.Ouvinte ouvinte = new InstrumentedArray.Ouvinte() {
-            @Override
-            public void comparacao(int i, int j) {
-                ev.add(new Evento(Evento.COMPARA, i, j, 0));
-            }
-
-            @Override
-            public void comparacaoDeValores() {
-                ev.add(new Evento(Evento.COMPARA, -1, -1, 0));
-            }
-
-            @Override
-            public void troca(int i, int j) {
-                ev.add(new Evento(Evento.TROCA, i, j, 0));
-            }
-
-            @Override
-            public void atribuicao(int i, Object valor) {
-                ev.add(new Evento(Evento.ATRIBUI, i, -1, (Integer) valor));
-            }
-        };
-        InstrumentedArray<Integer> a = new InstrumentedArray<>(arr, Comparator.naturalOrder(), Integer::longValue,
-                new OperationCounter(), ouvinte);
-        tipo.criar().ordenar(a);
-        return ev;
     }
 
     private void alternar() {
@@ -290,9 +253,9 @@ public class SortVisualizer extends VBox {
         desenhar();
     }
 
-    private void aplicar(Evento e, boolean visual) {
+    private void aplicar(GravadorPassos.Passo e, boolean visual) {
         switch (e.tipo()) {
-            case Evento.COMPARA -> {
+            case GravadorPassos.COMPARA -> {
                 comparacoes++;
                 if (visual) {
                     marcar(e.i(), "comparando");
@@ -302,7 +265,7 @@ public class SortVisualizer extends VBox {
                             : "Compara a[" + e.i() + "] = " + atual[e.i()] + " com a[" + e.j() + "] = " + atual[e.j()]);
                 }
             }
-            case Evento.TROCA -> {
+            case GravadorPassos.TROCA -> {
                 movimentos++;
                 int t = atual[e.i()];
                 atual[e.i()] = atual[e.j()];

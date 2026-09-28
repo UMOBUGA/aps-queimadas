@@ -67,7 +67,7 @@ public enum CriterioOrdenacao {
     }
 
     /** Hora do dia em Sao Paulo (UTC-3): data_pas vem em GMT. */
-    static int horaLocal(FocoIncendio f) {
+    public static int horaLocal(FocoIncendio f) {
         return (f.getDataHora().getHour() + 21) % 24;
     }
 

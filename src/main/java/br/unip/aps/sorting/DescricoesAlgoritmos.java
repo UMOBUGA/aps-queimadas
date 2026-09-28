@@ -1,12 +1,11 @@
-package br.unip.aps.ui;
-
-import br.unip.aps.sorting.AlgoritmoTipo;
+package br.unip.aps.sorting;
 
 /** Textos de interface (pt-BR com acentuacao) que explicam cada algoritmo na tela de Ordenacao. */
-final class DescricoesAlgoritmos {
+public final class DescricoesAlgoritmos {
     private DescricoesAlgoritmos() { }
 
-    static String de(AlgoritmoTipo t) {
+    /** Explicacao curta do algoritmo, em portugues, para a interface. */
+    public static String de(AlgoritmoTipo t) {
         return switch (t) {
             case BUBBLE -> "Compara pares vizinhos e troca os que estão fora de ordem; o maior elemento “flutua” para o fim a cada "
                     + "passada. Para cedo se uma passada não fizer trocas.";

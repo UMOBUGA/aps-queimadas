@@ -43,6 +43,12 @@ public final class ExportadorWeb {
 
     /** Grava em {@code destino} as pastas dados/ e vendor/ que o app web le. */
     public static Resultado gerar(BaseDeFocos base, List<List<ResultadoOrdenacao<FocoIncendio>>> comparativos, Path destino) throws IOException {
+        return gerar(base, comparativos, null, destino);
+    }
+
+    /** Igual ao anterior, incluindo os resultados do ML (hotspots e previsao) quando {@code ml} nao e nulo. */
+    public static Resultado gerar(BaseDeFocos base, List<List<ResultadoOrdenacao<FocoIncendio>>> comparativos,
+                                  br.unip.aps.ml.Preditor.ResultadoML ml, Path destino) throws IOException {
         Path dados = Files.createDirectories(destino.resolve("dados"));
         Files.createDirectories(destino.resolve("vendor"));
         List<FocoIncendio> focos = base.getFocos();
@@ -52,6 +58,9 @@ public final class ExportadorWeb {
         bytes += gravar(dados.resolve("focos.json"), focos(base, perfis));
         bytes += gravar(dados.resolve("municipios.json"), municipios(perfis));
         bytes += gravar(dados.resolve("algoritmos.json"), algoritmos(comparativos));
+        bytes += gravar(dados.resolve("passos.json"), DadosWebExtras.passos());
+        bytes += gravar(dados.resolve("historia.json"), DadosWebExtras.historia(base, perfis));
+        if (ml != null) bytes += gravar(dados.resolve("ml.json"), DadosWebExtras.ml(ml));
         for (int i = 0; i < COPIAS.length; i += 2) {
             Path alvo = destino.resolve(COPIAS[i + 1]);
             try (InputStream in = ExportadorWeb.class.getResourceAsStream(COPIAS[i])) {

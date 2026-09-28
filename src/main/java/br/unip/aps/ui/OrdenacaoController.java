@@ -8,6 +8,7 @@ import br.unip.aps.sorting.CenarioEntrada;
 import br.unip.aps.sorting.Complexidade;
 import br.unip.aps.sorting.CriterioOrdenacao;
 import br.unip.aps.sorting.Criterios;
+import br.unip.aps.sorting.DescricoesAlgoritmos;
 import br.unip.aps.sorting.Ordem;
 import br.unip.aps.sorting.Ordenacoes;
 import br.unip.aps.sorting.ResultadoOrdenacao;

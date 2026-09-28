@@ -1,8 +1,9 @@
-const VERSAO = 'queimadas-2.3.0';
+const VERSAO = 'queimadas-2.3.0-b';
 const ESSENCIAIS = [
   './', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest',
   'vendor/leaflet.js', 'vendor/leaflet.css', 'vendor/mundo.js',
   'dados/resumo.json', 'dados/focos.json', 'dados/municipios.json', 'dados/algoritmos.json', 'dados/malha.geojson',
+  'dados/historia.json', 'dados/ml.json', 'dados/passos.json',
   'icones/icone-192.png', '../favicon.svg',
   '../fonts/BigShouldersDisplay-Black.woff2', '../fonts/BigShouldersDisplay-ExtraBold.woff2',
   '../fonts/Inter-Regular.woff2', '../fonts/Inter-SemiBold.woff2'

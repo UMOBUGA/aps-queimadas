@@ -91,7 +91,15 @@ O botão **GIF**, na linha do tempo, passa pelos 24 meses, fotografa o mapa em c
 
 ## Versão web (celular)
 
-Em <https://gustavoblopes79.github.io/aps-queimadas/app/> há uma versão para o celular: mapa com a linha do tempo, ranking dos municípios com busca, ficha, comparação e o custo real dos 13 algoritmos. No menu do navegador, "Instalar app" ou "Adicionar à tela inicial" a deixa como um aplicativo, que abre até sem internet.
+Em <https://gustavoblopes79.github.io/aps-queimadas/app/> há uma versão para mostrar a quem não vai instalar o programa. Ela tem cinco partes:
+
+- **Início:** a história dos dados em linguagem simples: o total de 2024 comparado a 2023, o pior dia, mês a mês, de 2019 a 2024, os municípios que mais queimaram, os biomas, a posição de São Paulo entre os estados, o horário do satélite e o que o Machine Learning conseguiu (e não conseguiu) prever.
+- **Mapa:** pontos, calor, municípios por densidade e os grupos de focos do ML, com a linha do tempo e a opção de imagem de satélite.
+- **Municípios:** ranking com busca, ficha e comparação.
+- **Ordenação:** qualquer um dos 13 algoritmos ordenando 32 barras, passo a passo, com a contagem de comparações e trocas; depois, o custo real de cada um com os 10.378 focos.
+- **Sobre:** números, fontes e a qualidade da leitura dos arquivos.
+
+No menu do navegador, "Instalar app" ou "Adicionar à tela inicial" a deixa como um aplicativo, que abre até sem internet. A versão web é um extra: o trabalho continua sendo o programa em Java.
 
 Os números da versão web não são recalculados no celular: o programa em Java gera tudo com `java -jar aps-queimadas-2.2.0-all.jar web`, que ordena os focos com os 13 algoritmos, conta as operações e grava os resultados em `site/app/dados`.
 

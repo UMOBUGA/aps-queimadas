@@ -1,16 +1,21 @@
 (function () {
   'use strict';
 
+  var MESES_LONGOS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
   var MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   var INFERNO = [[0, '#2A0B4A'], [0.15, '#5C1370'], [0.3, '#932667'], [0.45, '#C73E4C'], [0.6, '#EB6A26'], [0.8, '#FBA40A'], [1, '#FCFFA4']];
   var SP = [[-25.35, -53.15], [-19.75, -44.15]];
-  var ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+  var ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+  var ABAS = ['inicio', 'mapa', 'municipios', 'ordenacao', 'sobre'];
+  var TAM_CELULA = 0.08, FAIXAS_CALOR = [1, 3, 10, 25, 60];
+  var COROPLETICO = { escuro: ['#420A68', '#932667', '#DD513A', '#FCA50A', '#FCFFA4'], claro: ['#F6C26B', '#E0691C', '#A8263B', '#6E1B5E', '#2E0A4F'] };
   var escuro = window.matchMedia('(prefers-color-scheme: dark)');
   var semMovimento = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  var d = { resumo: null, focos: null, municipios: [], algoritmos: null, malha: null };
+  var d = { resumo: null, focos: null, municipios: [], algoritmos: null, malha: null, historia: null, ml: null, passos: null };
   var porChave = {}, porNome = {};
-  var ui = { aba: null, de: -1, ate: -1, relogio: null, limite: 40, tabela: 0, ordem: 'ms', curva: 'Merge Sort', folha: null };
+  var ui = { aba: null, de: -1, ate: -1, relogio: null, limite: 40, tabela: 0, ordem: 'ms', curva: 'Merge Sort', folha: null,
+             modo: 'pontos', satelite: false };
   var mapa = null, camadaPontos = null, camadaFundo = null, camadaDestaque = null, base = null, offline = false;
 
   function $(s, r) { return (r || document).querySelector(s); }
@@ -54,14 +59,20 @@
   }
 
   function iniciar() {
-    Promise.all([json('dados/resumo.json'), json('dados/focos.json'), json('dados/municipios.json'), json('dados/algoritmos.json')])
+    function opcional(url) { return json(url).catch(function () { return null; }); }
+    Promise.all([json('dados/resumo.json'), json('dados/focos.json'), json('dados/municipios.json'), json('dados/algoritmos.json'),
+                 opcional('dados/historia.json'), opcional('dados/ml.json'), opcional('dados/passos.json')])
       .then(function (r) {
         d.resumo = r[0]; d.focos = r[1]; d.municipios = r[2]; d.algoritmos = r[3];
+        d.historia = r[4]; d.ml = r[5]; d.passos = r[6];
         d.municipios.forEach(function (m) { porChave[m.chave] = m; porNome[m.nome] = m; });
         montarFaixa();
         montarMunicipios();
         montarAlgoritmos();
         montarSobre();
+        montarInicio();
+        montarModos();
+        montarVisualizador();
         window.addEventListener('hashchange', rota);
         rota();
       })
@@ -72,14 +83,16 @@
   }
 
   function rota() {
-    var alvo = (location.hash || '#mapa').slice(1);
-    if (['mapa', 'municipios', 'algoritmos', 'sobre'].indexOf(alvo) < 0) alvo = 'mapa';
+    var alvo = (location.hash || '#inicio').slice(1);
+    if (alvo === 'algoritmos') alvo = 'ordenacao';
+    if (ABAS.indexOf(alvo) < 0) alvo = 'inicio';
     ui.aba = alvo;
     document.querySelectorAll('.aba').forEach(function (s) { s.hidden = s.id !== 'aba-' + alvo; });
     document.querySelectorAll('.abas a').forEach(function (a) {
       if (a.dataset.aba === alvo) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
-    if (alvo === 'algoritmos') desenharCurvas();
+    if (alvo === 'ordenacao') desenharCurvas();
+    if (alvo !== 'ordenacao') pararVisualizador();
     if (alvo === 'mapa') {
       if (!mapa) montarMapa(); else mapa.invalidateSize();
     } else {
@@ -96,7 +109,7 @@
     camadaPontos = L.layerGroup().addTo(mapa);
     camadaDestaque = L.layerGroup().addTo(mapa);
     aplicarBase();
-    escuro.addEventListener('change', function () { aplicarBase(); desenharPontos(); if (offline) desenharFundo(); });
+    escuro.addEventListener('change', function () { aplicarBase(); desenharPontos(); if (offline) desenharFundo(); montarInicio(); });
     setTimeout(function () { if (base && !base._carregou) entrarOffline(); }, 7000);
     desenharPontos();
   }
@@ -109,9 +122,10 @@
     if (base) mapa.removeLayer(base);
     if (offline) return;
     var carregou = base && base._carregou, erros = 0;
-    base = L.tileLayer(ESRI + (escuro.matches ? 'World_Dark_Gray_Base' : 'World_Light_Gray_Base') + '/MapServer/tile/{z}/{y}/{x}', {
-      maxNativeZoom: 16, maxZoom: 16,
-      attribution: 'Mapa-base &copy; Esri · focos: INPE · malha: IBGE'
+    var servico = ui.satelite ? 'World_Imagery' : 'Canvas/' + (escuro.matches ? 'World_Dark_Gray_Base' : 'World_Light_Gray_Base');
+    base = L.tileLayer(ESRI + servico + '/MapServer/tile/{z}/{y}/{x}', {
+      maxNativeZoom: ui.satelite ? 17 : 16, maxZoom: 16,
+      attribution: 'Mapa-base &copy; Esri' + (ui.satelite ? ', Maxar, Earthstar Geographics' : '') + ' · focos: INPE · malha: IBGE'
     });
     base._carregou = carregou;
     base.on('tileload', function () { base._carregou = true; });
@@ -173,6 +187,8 @@
   function desenharPontos() {
     if (!mapa) return;
     camadaPontos.clearLayers();
+    if (ui.modo === 'calor') { desenharCalor(); return; }
+    if (ui.modo === 'municipios') { desenharMunicipios(); return; }
     var borda = escuro.matches ? '#0A0807' : '#FFFFFF';
     var cores = d.focos.biomas.map(function (b, i) { return corBioma(i); });
     var focos = focosVisiveis();
@@ -182,7 +198,9 @@
         .on('click', function (e) { abrirPopup(f, e.latlng); })
         .addTo(camadaPontos);
     });
+    if (ui.modo === 'grupos') desenharGrupos();
     atualizarPlacar(focos.length);
+    legendaPontos();
   }
 
   function abrirPopup(f, latlng) {
@@ -600,6 +618,12 @@
       [ult.ano + ' em relação a ' + pri.ano, pri.total ? dec(ult.total / pri.total, 1) + '×' : '—']];
     $('#sobre-numeros').innerHTML = itens.map(function (i) { return '<div><dt>' + esc(i[0]) + '</dt><dd>' + esc(i[1]) + '</dd></div>'; }).join('');
     $('#sobre-versao').textContent = 'Dados gerados pelo APS Queimadas ' + r.versao + ' em ' + r.geradoEm.split('-').reverse().join('/') + '. ' + r.fontes;
+    if (d.historia && d.historia.carga) {
+      var c = d.historia.carga;
+      $('#sobre-carga').textContent = 'O programa leu ' + plural(c.lidas, 'linha', 'linhas') + ' de ' + plural(c.arquivos, 'arquivo', 'arquivos') + ' do INPE e aceitou '
+        + (c.aceitas === c.lidas ? 'todas' : fmt(c.aceitas)) + (c.rejeitadas || c.duplicadas ? ' (' + fmt(c.rejeitadas) + ' com erro e ' + fmt(c.duplicadas) + ' repetidas foram deixadas de fora).'
+        : ', sem nenhuma linha com erro ou repetida.') + ' Os horários do INPE vêm em GMT; o programa converte para o horário de Brasília quando precisa.';
+    }
     var dica = $('#instalar-dica');
     dica.textContent = /iphone|ipad/i.test(navigator.userAgent)
       ? 'No iPhone: toque em Compartilhar e depois em "Adicionar à Tela de Início" para abrir como app, até sem internet.'
@@ -638,6 +662,318 @@
       alvo.addEventListener('pointerup', fim);
       alvo.addEventListener('pointercancel', fim);
     });
+  }
+
+  function montarModos() {
+    var grupo = $('#modos');
+    if (!d.ml) { var g = grupo.querySelector('[data-modo="grupos"]'); if (g) g.remove(); }
+    grupo.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () { ui.modo = b.dataset.modo; marcar(grupo, b); mudouModo(); });
+    });
+    $('#base').addEventListener('click', function () {
+      if (offline) { aviso('Sem internet, só o mapa embutido está disponível'); return; }
+      ui.satelite = !ui.satelite;
+      $('#base').setAttribute('aria-pressed', String(ui.satelite));
+      if (mapa) aplicarBase();
+    });
+  }
+
+  function mudouModo() {
+    var muni = ui.modo === 'municipios';
+    $('.linha-tempo').hidden = muni;
+    $('#aba-mapa').classList.toggle('sem-linha', muni);
+    if (muni) pausar();
+    if (!mapa) return;
+    mapa.closePopup();
+    if (muni) carregarMalha().then(desenharPontos); else desenharPontos();
+  }
+
+  function legenda(titulo, itens, quadrado, nota) {
+    $('#legenda-mapa').innerHTML = '<b>' + esc(titulo) + '</b>' + itens.map(function (i) {
+      return '<span><i class="' + (quadrado ? 'q' : '') + '" style="background:' + i[0] + '"></i>' + esc(i[1]) + '</span>';
+    }).join('') + (nota ? '<small>' + esc(nota) + '</small>' : '');
+  }
+
+  function legendaPontos() {
+    var itens = d.focos.biomas.map(function (b, i) { return [corBioma(i), b]; });
+    legenda('Bioma de cada foco', itens, false, ui.modo === 'grupos'
+      ? 'Círculos tracejados: grupos de focos que o Machine Learning (DBSCAN) encontrou. Toque para ver.' : 'Toque num ponto para ver o município.');
+  }
+
+  function faixaCalor(n) {
+    var r = 0;
+    FAIXAS_CALOR.forEach(function (l, i) { if (n >= l) r = i; });
+    return r;
+  }
+
+  function desenharCalor() {
+    var grade = {}, focos = focosVisiveis();
+    focos.forEach(function (f) {
+      var k = Math.floor(f[0] / TAM_CELULA) + ':' + Math.floor(f[1] / TAM_CELULA);
+      grade[k] = (grade[k] || 0) + 1;
+    });
+    var cores = escuro.matches ? COROPLETICO.escuro : COROPLETICO.claro;
+    Object.keys(grade).forEach(function (k) {
+      var n = grade[k], q = k.split(':'), la = +q[0] * TAM_CELULA, lo = +q[1] * TAM_CELULA;
+      L.rectangle([[la, lo], [la + TAM_CELULA, lo + TAM_CELULA]], { stroke: false, fillColor: cores[faixaCalor(n)], fillOpacity: 0.85 })
+        .bindPopup('<div class="pop-titulo">' + plural(n, 'foco', 'focos') + '</div><div class="pop-linha">neste quadrado de uns 9 km</div>')
+        .addTo(camadaPontos);
+    });
+    atualizarPlacar(focos.length);
+    legenda('Focos por quadrado de ~9 km', cores.map(function (c, i) { return [c, ['1 ou 2', '3 a 9', '10 a 24', '25 a 59', '60 ou mais'][i]]; }), true);
+  }
+
+  function classeDe(v, lim) {
+    for (var i = 0; i < lim.length; i++) if (v <= lim[i]) return i;
+    return lim.length - 1;
+  }
+
+  function desenharMunicipios() {
+    var lim = d.historia && d.historia.classes ? d.historia.classes.densidade : null;
+    if (!d.malha || !lim) return;
+    var cores = escuro.matches ? COROPLETICO.escuro : COROPLETICO.claro, borda = css('--terra-borda');
+    L.geoJSON(d.malha, {
+      style: function (f) {
+        var m = porChave[f.properties.chave];
+        if (!m || m.densidade == null) return { color: borda, weight: 0.5, fillOpacity: 0 };
+        return { color: borda, weight: 0.5, fillColor: cores[classeDe(m.densidade, lim)], fillOpacity: 0.85 };
+      },
+      onEachFeature: function (f, l) {
+        l.on('click', function () {
+          var m = porChave[f.properties.chave];
+          if (m) abrirFicha(m); else aviso(f.properties.nome + ': nenhum foco em ' + d.resumo.anos[0].ano + '–' + d.resumo.anos[d.resumo.anos.length - 1].ano);
+        });
+      }
+    }).addTo(camadaPontos);
+    $('#placar-numero').textContent = fmt(d.resumo.municipiosComFocos);
+    $('#placar-texto').textContent = 'municípios com focos';
+    var anterior = null;
+    legenda('Focos por 1.000 km²', cores.map(function (c, i) {
+      var s = anterior == null ? 'até ' + dec(lim[i], 0) : dec(anterior, 0) + ' a ' + dec(lim[i], 0);
+      anterior = lim[i];
+      return [c, s];
+    }), true, 'Divide os focos pela área, para comparar cidades grandes e pequenas. Sem cor: nenhum foco. Toque para abrir a ficha.');
+  }
+
+  function nomeMunicipio(inpe) {
+    var q = semAcentos(inpe);
+    for (var i = 0; i < d.municipios.length; i++) if (d.municipios[i].busca === q) return d.municipios[i].nome;
+    return inpe.toLowerCase().replace(/(^|\s)\S/g, function (c) { return c.toUpperCase(); });
+  }
+
+  function desenharGrupos() {
+    if (!d.ml) return;
+    var cor = escuro.matches || ui.satelite ? '#FCFFA4' : '#15100D';
+    d.ml.hotspots.forEach(function (h) {
+      L.circle([h[0], h[1]], { radius: Math.max(1500, h[3] * 1000), color: cor, weight: 2, dashArray: '5 4', fillColor: cor, fillOpacity: 0.08 })
+        .bindPopup('<div class="pop-titulo">Grupo de ' + plural(h[2], 'foco', 'focos') + '</div><div class="pop-linha">Raio de uns '
+          + dec(h[3], 0) + ' km, perto de ' + esc(nomeMunicipio(h[4])) + '</div><div class="pop-linha">' + esc(h[5]) + '</div>')
+        .addTo(camadaPontos);
+    });
+  }
+
+  function barrasSimples(itens, destaque, formato) {
+    var max = Math.max.apply(null, itens.map(function (i) { return i[1]; }).concat([1]));
+    return '<ul class="barras-h">' + itens.map(function (i, k) {
+      return '<li class="' + (k === destaque ? 'destaque' : '') + '"><span>' + esc(i[0]) + '</span><i style="width:' + Math.max(1, 100 * i[1] / max)
+        + '%"></i><b>' + (formato ? formato(i[1]) : fmt(i[1])) + '</b></li>';
+    }).join('') + '</ul>';
+  }
+
+  function montarInicio() {
+    var r = d.resumo, h = d.historia, alvo = $('#historia');
+    if (!r || !alvo) return;
+    var anos = r.anos, pri = anos[0], ult = anos[anos.length - 1];
+    var picoMes = r.meses.indexOf(Math.max.apply(null, r.meses));
+    var html = '<p class="sobretitulo">Focos de incêndio em São Paulo · satélite do INPE</p><h1 id="t-inicio" class="sr">Início</h1>';
+    var recorde = '';
+    if (h && h.historico.length) {
+      var maior = h.historico.reduce(function (a, b) { return b.focos > a.focos ? b : a; });
+      if (maior.ano === ult.ano) recorde = ' É o maior número desde ' + h.historico[0].ano + ', o começo da série que o trabalho usa.';
+    }
+    html += '<section class="abertura"><span class="numero-grande">' + fmt(ult.total) + '</span><p class="manchete">focos de incêndio em São Paulo em '
+      + ult.ano + (pri.total ? ', <b>' + dec(ult.total / pri.total, 1) + ' vezes</b> os ' + fmt(pri.total) + ' de ' + pri.ano : '') + '.' + recorde + '</p>'
+      + '<div class="acoes"><a class="botao primario" href="#mapa"><svg aria-hidden="true"><use href="#i-mapa"/></svg>Ver no mapa</a>'
+      + '<a class="botao secundario" href="#ordenacao">Como o trabalho ordena</a></div></section>';
+
+    if (h && h.diaPico) {
+      html += '<section class="bloco-historia"><h2>O pior dia</h2><p class="destaque-numero">' + fmt(h.diaPico.focos) + '</p><p class="texto">focos em '
+        + h.diaPico.data + ', num único dia' + (h.diaPico.focos > pri.total ? ': mais do que em todo o ano de ' + pri.ano + '.' : '.') + '</p></section>';
+    }
+
+    html += '<section class="bloco-historia"><h2>Mês a mês</h2><p class="texto">' + MESES_LONGOS[picoMes % 12] + ' de ' + (r.anoInicial + Math.floor(picoMes / 12))
+      + ' sozinho teve ' + fmt(r.meses[picoMes]) + ' focos. Em laranja, ' + ult.ano + '; em azul, ' + pri.ano + '.</p>'
+      + '<div class="legenda-pares"><span>' + ult.ano + '</span><span class="b">' + pri.ano + '</span></div>' + mesAMes(r) + '</section>';
+
+    if (h && h.historico.length) {
+      html += '<section class="bloco-historia"><h2>De ' + h.historico[0].ano + ' a ' + h.historico[h.historico.length - 1].ano + '</h2><p class="texto">Focos por ano no estado, sempre com o mesmo satélite de referência.</p>'
+        + barrasSimples(h.historico.map(function (a) { return [String(a.ano), a.focos]; }), h.historico.length - 1) + '</section>';
+    }
+
+    html += '<section class="bloco-historia"><h2>Onde mais queimou</h2><p class="texto">Os cinco municípios com mais focos de ' + pri.ano + ' a ' + ult.ano
+      + '. Toque para abrir a ficha.</p><ol class="top5">' + d.municipios.slice(0, 5).map(function (m, i) {
+        return '<li><button type="button" data-top="' + i + '"><span class="pos">' + m.posicao + 'º</span><span class="nome">' + esc(m.nome)
+          + '</span><b>' + fmt(m.total) + '</b></button></li>';
+      }).join('') + '</ol><a class="botao secundario" href="#municipios">Ver os ' + fmt(r.municipiosComFocos) + ' municípios</a></section>';
+
+    var totalBiomas = r.biomas.reduce(function (a, b) { return a + b.total; }, 0) || 1;
+    html += '<section class="bloco-historia"><h2>Cerrado e Mata Atlântica</h2><p class="texto">Os dois biomas de São Paulo, pela classificação do INPE.</p>'
+      + barrasSimples(r.biomas.map(function (b) { return [b.nome, b.total]; }), -1, function (v) { return fmt(v) + ' · ' + dec(100 * v / totalBiomas, 0) + '%'; }) + '</section>';
+
+    if (h && h.estados.length) {
+      var pos = -1;
+      h.estados.forEach(function (e, i) { if (e.sp) pos = i; });
+      var lista = h.estados.slice(0, 5).map(function (e) { return [e.estado, e.focos]; });
+      var dest = pos >= 0 && pos < 5 ? pos : -1;
+      if (pos >= 5) { lista.push([h.estados[pos].estado, h.estados[pos].focos]); dest = 5; }
+      html += '<section class="bloco-historia"><h2>São Paulo no Brasil</h2><p class="texto">'
+        + (pos >= 0 ? 'Em ' + h.estadosAno + ', São Paulo foi o <b>' + (pos + 1) + 'º</b> estado com mais focos, entre ' + h.estados.length + '. ' : '')
+        + 'Os estados da Amazônia e do Cerrado lideram.</p>' + barrasSimples(lista, dest) + '</section>';
+    }
+
+    if (h) {
+      var totalHoras = h.horasLocais.reduce(function (a, b) { return a + b; }, 0) || 1;
+      var hora = h.horasLocais.indexOf(Math.max.apply(null, h.horasLocais));
+      html += '<section class="bloco-historia"><h2>A que horas?</h2><p class="texto"><b>' + dec(100 * h.horasLocais[hora] / totalHoras, 0) + '%</b> dos focos foram registrados perto das '
+        + hora + 'h (horário de Brasília). Não é que o fogo prefira a tarde: o satélite de referência do INPE passa por São Paulo sempre nesse horário. '
+        + 'Ele mostra uma parte das queimadas, sempre do mesmo jeito, e por isso serve para comparar um ano com outro.</p></section>';
+    }
+
+    if (d.ml && d.ml.meses.length) {
+      var picoMl = d.ml.meses.reduce(function (a, b) { return b[1] > a[1] ? b : a; });
+      var mesPico = picoMl[0] % 100 - 1;
+      html += '<section class="bloco-historia"><h2>Dava para prever?</h2><p class="texto">Um modelo de Machine Learning (Random Forest) aprendeu com '
+        + d.ml.anoTreino + ' e tentou prever ' + d.ml.anoTeste + ', município por município, mês a mês. Errou em média <b>' + dec(d.ml.erro.modelo, 1)
+        + ' foco</b> por município a cada mês, menos que simplesmente repetir o ano anterior (' + dec(d.ml.erro.repetirAnoAnterior, 1) + '). Mas ninguém previu '
+        + MESES_LONGOS[mesPico].toLowerCase() + ': o modelo esperava ' + fmt(Math.round(picoMl[2])) + ' focos no estado e vieram ' + fmt(picoMl[1]) + '.</p>'
+        + '<div class="legenda-pares"><span>Real</span><span class="b">Previsto</span></div>' + previsaoMl() + '</section>';
+    }
+
+    html += '<p class="nota">Dados: INPE (focos, satélite de referência) e IBGE (municípios). Todos os números foram calculados pelo programa em Java da APS.</p>';
+    alvo.innerHTML = html;
+    alvo.querySelectorAll('[data-top]').forEach(function (b) {
+      b.addEventListener('click', function () { abrirFicha(d.municipios[+b.dataset.top]); });
+    });
+  }
+
+  function mesAMes(r) {
+    var n = r.anos.length, max = 1, a = (n - 1) * 12, b = 0;
+    for (var i = 0; i < 12; i++) max = Math.max(max, r.meses[a + i], r.meses[b + i]);
+    var barras = '', rotulos = '';
+    for (var k = 0; k < 12; k++) {
+      var va = r.meses[a + k], vb = r.meses[b + k];
+      barras += '<span title="' + MESES[k] + ': ' + fmt(va) + ' × ' + fmt(vb) + '"><i class="a" style="height:' + (va ? Math.max(2, 100 * va / max) : 0)
+        + '%"></i><i class="b" style="height:' + (vb ? Math.max(2, 100 * vb / max) : 0) + '%"></i></span>';
+      rotulos += '<span>' + MESES[k] + '</span>';
+    }
+    return '<div class="barras pares doze">' + barras + '</div><div class="barras-rotulos doze">' + rotulos + '</div>';
+  }
+
+  function previsaoMl() {
+    var ms = d.ml.meses, max = 1;
+    ms.forEach(function (m) { max = Math.max(max, m[1], m[2] || 0); });
+    return '<div class="barras pares doze">' + ms.map(function (m) {
+      var p = m[2] || 0;
+      return '<span title="' + MESES[m[0] % 100 - 1] + ': real ' + fmt(m[1]) + ', previsto ' + fmt(Math.round(p)) + '"><i class="a" style="height:'
+        + (m[1] ? Math.max(2, 100 * m[1] / max) : 0) + '%"></i><i class="b" style="height:' + (p ? Math.max(2, 100 * p / max) : 0) + '%"></i></span>';
+    }).join('') + '</div><div class="barras-rotulos doze">' + ms.map(function (m) { return '<span>' + MESES[m[0] % 100 - 1] + '</span>'; }).join('') + '</div>';
+  }
+
+  var vis = { alg: null, passo: 0, vetor: [], comp: 0, mov: 0, timer: null };
+
+  function montarVisualizador() {
+    if (!d.passos) { $('.visualizador').hidden = true; return; }
+    var sel = $('#vis-algoritmo'), barras = $('#vis-barras');
+    d.passos.algoritmos.forEach(function (a, i) {
+      var o = el('option', '', esc(a.nome));
+      o.value = String(i);
+      if (a.nome === 'Bubble Sort') o.selected = true;
+      sel.appendChild(o);
+    });
+    d.passos.vetor.forEach(function () { barras.appendChild(el('i')); });
+    sel.addEventListener('change', reiniciarVis);
+    $('#vis-play').addEventListener('click', function () { if (vis.timer) pararVisualizador(); else tocarVis(); });
+    $('#vis-passo-btn').addEventListener('click', function () { pararVisualizador(); avancarVis(); });
+    $('#vis-reiniciar').addEventListener('click', reiniciarVis);
+    $('#vis-velocidade').addEventListener('input', function () { if (vis.timer) { pararVisualizador(); tocarVis(); } });
+    reiniciarVis();
+  }
+
+  function reiniciarVis() {
+    pararVisualizador();
+    vis.alg = d.passos.algoritmos[+$('#vis-algoritmo').value];
+    vis.passo = 0; vis.comp = 0; vis.mov = 0;
+    vis.vetor = d.passos.vetor.slice();
+    $('#vis-descricao').textContent = vis.alg.descricao + ' Custo: ' + vis.alg.complexidade + ' no caso médio.';
+    $('#vis-total').textContent = 'de ' + fmt(vis.alg.passos.length / 4) + ' passos';
+    $('#vis-agora').textContent = 'Toque em Reproduzir para ver o ' + vis.alg.nome + ' colocar as barras em ordem.';
+    botaoVis();
+    desenharVis(-1, -1, '');
+  }
+
+  function desenharVis(i, j, estado) {
+    var barras = $('#vis-barras').children, n = vis.vetor.length, fim = vis.passo * 4 >= vis.alg.passos.length;
+    for (var k = 0; k < n; k++) {
+      barras[k].style.height = (100 * vis.vetor[k] / n) + '%';
+      barras[k].className = fim ? 'ok' : (k === i || k === j) ? estado : '';
+    }
+    $('#vis-comparacoes').textContent = fmt(vis.comp);
+    $('#vis-movimentos').textContent = fmt(vis.mov);
+    $('#vis-passo').textContent = fmt(vis.passo);
+  }
+
+  function avancarVis() {
+    var p = vis.alg.passos, k = vis.passo * 4;
+    if (k >= p.length) {
+      pararVisualizador();
+      desenharVis(-1, -1, '');
+      $('#vis-agora').textContent = 'Pronto! ' + plural(vis.comp, 'comparação', 'comparações') + ' e ' + plural(vis.mov, 'troca ou escrita', 'trocas ou escritas') + '.';
+      return;
+    }
+    var tipo = p[k], i = p[k + 1], j = p[k + 2], v = p[k + 3], texto;
+    vis.passo++;
+    if (tipo === 0) {
+      vis.comp++;
+      texto = i < 0 ? 'Compara o valor guardado com o da vez' : 'Compara ' + vis.vetor[i] + ' com ' + vis.vetor[j];
+      desenharVis(i, j, 'compara');
+    } else if (tipo === 1) {
+      vis.mov++;
+      var x = vis.vetor[i];
+      vis.vetor[i] = vis.vetor[j];
+      vis.vetor[j] = x;
+      texto = 'Troca ' + vis.vetor[j] + ' e ' + vis.vetor[i] + ' de lugar';
+      desenharVis(i, j, 'move');
+    } else {
+      vis.mov++;
+      vis.vetor[i] = v;
+      texto = 'Escreve ' + v + ' na posição ' + (i + 1);
+      desenharVis(i, -1, 'move');
+    }
+    $('#vis-agora').textContent = texto;
+  }
+
+  function tocarVis() {
+    if (vis.passo * 4 >= vis.alg.passos.length) reiniciarVis();
+    var ms = Math.max(8, Math.round(700 / Math.pow(1.75, +$('#vis-velocidade').value - 1)));
+    $('#vis-agora').setAttribute('aria-live', 'off');
+    vis.timer = setInterval(avancarVis, ms);
+    botaoVis();
+  }
+
+  function pararVisualizador() {
+    if (vis.timer) clearInterval(vis.timer);
+    vis.timer = null;
+    var agora = $('#vis-agora');
+    if (agora) agora.setAttribute('aria-live', 'polite');
+    botaoVis();
+  }
+
+  function botaoVis() {
+    var b = $('#vis-play');
+    if (!b) return;
+    var tocando = !!vis.timer;
+    b.querySelector('use').setAttribute('href', tocando ? '#i-pausa' : '#i-play');
+    b.querySelector('span').textContent = tocando ? 'Pausar' : vis.passo > 0 && vis.alg && vis.passo * 4 < vis.alg.passos.length ? 'Continuar' : 'Reproduzir';
   }
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
