@@ -33,7 +33,7 @@
                 <Label text="INPE — Programa Queimadas. Focos detectados pelo satélite de referência (AQUA, passagem da tarde), que mantém a série histórica comparável entre os anos."
                        styleClass="t-small" wrapText="true"/>
                 <Hyperlink fx:id="linkInpe" text="dataserver-coids.inpe.br › queimadas › focos › EstadosBr_sat_ref"/>
-                <Label text="Mapas-base: Tiles © Esri — Esri, HERE, Garmin, © colaboradores do OpenStreetMap." styleClass="t-caption"/>
+                <Label text="Mapas-base: Tiles © Esri — Esri, HERE, Garmin, © colaboradores do OpenStreetMap. Sem internet: países do Natural Earth (domínio público) e malha municipal do IBGE." styleClass="t-caption" wrapText="true"/>
             </VBox>
             <VBox styleClass="panel-card" spacing="10">
                 <Label text="Tecnologias" styleClass="card-title"/>

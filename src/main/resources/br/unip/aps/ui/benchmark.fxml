@@ -57,7 +57,7 @@
 
         <GradeResponsiva larguraMinima="520" maxColunas="2" gap="32">
             <ChartCard fx:id="cQuadraticos" titulo="Algoritmos O(n²)" subtitulo="Bubble, Selection e Insertion" prefHeight="420"/>
-            <ChartCard fx:id="cLogLineares" titulo="Algoritmos O(n log n) e lineares" subtitulo="Shell, Merge, Quick, Quick 3-Way, Heap, Tim e Radix" prefHeight="420"/>
+            <ChartCard fx:id="cLogLineares" titulo="Algoritmos O(n log n) e lineares" subtitulo="Família Quick Sort em verde (2 pivôs tracejado, Intro pontilhado); Radix e Counting não comparam" prefHeight="420"/>
         </GradeResponsiva>
 
         <GradeResponsiva larguraMinima="520" maxColunas="2" gap="32">

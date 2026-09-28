@@ -70,7 +70,8 @@ public class ChartCard extends VBox {
         tabela.setDisable(true);
         this.itemTabela = tabela;
 
-        extras.setAlignment(Pos.CENTER_RIGHT);
+        extras.setAlignment(Pos.TOP_RIGHT);
+        extras.setFillHeight(false);
         extras.setMinWidth(Region.USE_PREF_SIZE);
         HBox header = new HBox(10, textos, extras, acoes);
         header.getStyleClass().add("chart-card-header");

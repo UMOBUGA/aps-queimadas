@@ -72,7 +72,7 @@ public class EstruturasController implements Pagina.Controlador {
     private final BarrasHorizontais barrasTotal = new BarrasHorizontais();
     private final BarrasHorizontais barrasTopK = new BarrasHorizontais();
     private final BarrasHorizontais barrasMemoria = new BarrasHorizontais();
-    private final ArvoreVisual<String> arvore = new ArvoreVisual<>(EstruturasController::abreviar);
+    private final ArvoreVisual<String> arvore = new ArvoreVisual<>(EstruturasController::nome);
     private final Label lblArvore = new Label();
     private final Label lblTopK = new Label();
     private final GridPane gradeExterno = new GridPane();
@@ -286,12 +286,12 @@ public class EstruturasController implements Pagina.Controlador {
         String pivo = null, descricao = "sem rotação";
         if (ultima[0] != null) {
             String[] p = ultima[0].split("\\|", 2);
-            descricao = "rotação " + p[0] + " em " + abreviar(p[1]);
+            descricao = "rotação " + p[0] + " em " + nome(p[1]);
             pivo = p[1];
         }
         arvore.mostrar(avlDemo.raiz(), chave, pivo);
         double log2 = Math.log(avlDemo.nos() + 1) / Math.log(2);
-        lblArvore.setText("Inserido " + chave + " (" + descricao + ") · " + avlDemo.nos() + " nós · altura " + avlDemo.altura()
+        lblArvore.setText("Inserido " + nome(chave) + " (" + descricao + ") · " + avlDemo.nos() + " nós · altura " + avlDemo.altura()
                 + " (mínimo possível " + (int) Math.ceil(log2) + ") · " + avlDemo.rotacoesSimples() + " rotações simples e "
                 + avlDemo.rotacoesDuplas() + " duplas · " + avlDemo.contador().getComparacoes() + " comparações");
     }
@@ -304,9 +304,8 @@ public class EstruturasController implements Pagina.Controlador {
         reproducao.play();
     }
 
-    private static String abreviar(String s) {
-        String t = s.replace("SANTO ", "S. ").replace("SANTA ", "S. ").replace("SÃO ", "S. ");
-        return t.length() <= 9 ? t : t.substring(0, 8) + "…";
+    private static String nome(String s) {
+        return br.unip.aps.util.Textos.nomeProprio(s);
     }
 
     private void montarTopK() {

@@ -48,6 +48,8 @@
 .chart-series-line.serie-6 { -fx-stroke: -aps-serie-6; }
 .chart-series-line.serie-7 { -fx-stroke: -aps-serie-7; }
 .chart-series-line.serie-neutra { -fx-stroke: -aps-serie-neutra; }
+.chart-series-line.variante-tracejada { -fx-stroke-dash-array: 9 5; }
+.chart-series-line.variante-pontilhada { -fx-stroke-dash-array: 2 5; -fx-stroke-line-cap: round; }
 .chart-series-line.serie-teorica { -fx-stroke: -aps-text-3; -fx-stroke-dash-array: 6 5; -fx-stroke-width: 1.5px; }
 .chart-line-symbol.serie-1:hover { -fx-background-color: -aps-surface, -aps-serie-1; -fx-background-insets: 0, 2; }
 .chart-line-symbol.serie-2:hover { -fx-background-color: -aps-surface, -aps-serie-2; -fx-background-insets: 0, 2; }
@@ -64,6 +66,11 @@
 .legenda-marca.serie-5 { -fx-background-color: -aps-serie-5; }
 .legenda-marca.serie-6 { -fx-background-color: -aps-serie-6; }
 .legenda-marca.serie-7 { -fx-background-color: -aps-serie-7; }
+.legenda-marca.linha.variante-tracejada, .legenda-marca.linha.variante-pontilhada { -fx-background-color: transparent; -fx-border-width: 3 0 0 0; -fx-min-height: 3; }
+.legenda-marca.linha.variante-tracejada { -fx-border-style: segments(5, 3); }
+.legenda-marca.linha.variante-pontilhada { -fx-border-style: segments(2, 3); }
+.legenda-marca.linha.serie-3.variante-tracejada, .legenda-marca.linha.serie-3.variante-pontilhada { -fx-border-color: -aps-serie-3; }
+.legenda-marca.linha.serie-7.variante-tracejada { -fx-border-color: -aps-serie-7; }
 .legenda-marca.serie-neutra { -fx-background-color: -aps-serie-neutra; }
 
 .chart-bar { -fx-background-color: -aps-accent; -fx-background-radius: 2 2 0 0; -fx-background-insets: 0 1 0 1; }

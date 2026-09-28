@@ -69,7 +69,7 @@
             </HBox>
             <Label fx:id="lblResumo" text="Escolha critério e algoritmo e clique em &quot;Ordenar e exibir&quot;." styleClass="card-subtitle" wrapText="true"/>
             <HBox fx:id="banner" styleClass="banner, banner-warning" visible="false" managed="false">
-                <Label fx:id="lblBanner" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label fx:id="lblBanner" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="0" minHeight="-Infinity"/>
             </HBox>
         </VBox>
 

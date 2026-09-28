@@ -47,11 +47,14 @@ import java.util.Map;
 
 /** Tela Benchmark. */
 public class BenchmarkController implements Pagina.Controlador {
-    private static final Map<AlgoritmoTipo, String> SERIE = new EnumMap<>(Map.of(
-            AlgoritmoTipo.BUBBLE, "serie-1", AlgoritmoTipo.SELECTION, "serie-2", AlgoritmoTipo.INSERTION, "serie-3",
-            AlgoritmoTipo.SHELL, "serie-1", AlgoritmoTipo.MERGE, "serie-2", AlgoritmoTipo.QUICK, "serie-3",
-            AlgoritmoTipo.QUICK_3WAY, "serie-4", AlgoritmoTipo.HEAP, "serie-5", AlgoritmoTipo.TIM, "serie-6",
-            AlgoritmoTipo.RADIX, "serie-7"));
+    private static final Map<AlgoritmoTipo, String> SERIE = new EnumMap<>(Map.ofEntries(
+            Map.entry(AlgoritmoTipo.BUBBLE, "serie-1"), Map.entry(AlgoritmoTipo.SELECTION, "serie-2"),
+            Map.entry(AlgoritmoTipo.INSERTION, "serie-3"), Map.entry(AlgoritmoTipo.SHELL, "serie-1"),
+            Map.entry(AlgoritmoTipo.MERGE, "serie-2"), Map.entry(AlgoritmoTipo.QUICK, "serie-3"),
+            Map.entry(AlgoritmoTipo.QUICK_2PIVOS, "serie-3 variante-tracejada"), Map.entry(AlgoritmoTipo.INTRO, "serie-3 variante-pontilhada"),
+            Map.entry(AlgoritmoTipo.QUICK_3WAY, "serie-4"), Map.entry(AlgoritmoTipo.HEAP, "serie-5"),
+            Map.entry(AlgoritmoTipo.TIM, "serie-6"), Map.entry(AlgoritmoTipo.RADIX, "serie-7"),
+            Map.entry(AlgoritmoTipo.COUNTING, "serie-7 variante-tracejada")));
 
     /** Linha da tabela de vencedores. */
     public record Vencedor(String criterio, String cenario, int n, String algoritmo, double mediaMs, String segundo, String ultimo) { }
@@ -392,8 +395,11 @@ public class BenchmarkController implements Pagina.Controlador {
         Ordenacoes.ordenar(ns, Comparator.naturalOrder());
         for (Map.Entry<String, XYChart.Series<Number, Number>> e : series.entrySet()) {
             g.getData().add(e.getValue());
-            Graficos.classe(e.getValue(), classes.get(e.getKey()));
-            card.adicionarLegenda(e.getKey(), classes.get(e.getKey()), "linha");
+            String[] estilo = classes.get(e.getKey()).split(" ");
+            for (String c : estilo) Graficos.classe(e.getValue(), c);
+            String[] marca = java.util.Arrays.copyOf(estilo, estilo.length + 1);
+            marca[estilo.length] = "linha";
+            card.adicionarLegenda(e.getKey(), marca);
             Graficos.tooltips(e.getValue(), d -> e.getKey() + "\nn = " + Formatos.inteiro(Math.round(log ? Math.pow(10, d.getXValue().doubleValue()) : d.getXValue().doubleValue())) + "\n"
                     + metrica + ": " + formatar(metrica, log ? Math.pow(10, d.getYValue().doubleValue()) : d.getYValue().doubleValue()));
         }
@@ -454,8 +460,8 @@ public class BenchmarkController implements Pagina.Controlador {
         Tabelas.preparar(tabVencedores, "Sem medições.");
         tabVencedores.getStyleClass().add("data-table");
         tabVencedores.getColumns().add(Tabelas.coluna("Critério", Vencedor::criterio, 90));
-        tabVencedores.getColumns().add(Tabelas.coluna("Cenário", Vencedor::cenario, 150));
-        tabVencedores.getColumns().add(Tabelas.coluna("★ Vencedor", v -> "★ " + v.algoritmo(), 170));
+        tabVencedores.getColumns().add(Tabelas.coluna("Cenário", Vencedor::cenario, 185));
+        tabVencedores.getColumns().add(Tabelas.coluna("★ Vencedor", v -> "★ " + v.algoritmo(), 160));
         tabVencedores.getColumns().add(Tabelas.numero("Tempo (ms)", Vencedor::mediaMs, v -> Formatos.decimal(v, 3), 90));
         tabVencedores.setRowFactory(tv -> new TableRow<>() {
             @Override

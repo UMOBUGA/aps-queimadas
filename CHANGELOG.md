@@ -2,6 +2,14 @@
 
 Todas as mudanças relevantes do projeto. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Não publicado]
+
+### Corrigido
+- Legenda do benchmark sem cor para Quick Sort 2 pivôs, Intro Sort e Counting Sort; agora as variantes do Quick Sort aparecem na mesma cor, tracejada e pontilhada.
+- Árvore AVL com nomes de municípios cortados dentro dos nós: os nomes ficam abaixo, completos.
+- Colunas cortadas na tabela de focos ordenados e na de vencedores do benchmark; aviso de desempenho, subtítulo da visualização e atalhos de teclado que não quebravam linha.
+- Legenda de cores da visualização animada (amarelo, laranja e magenta, como na tela) e crédito do Natural Earth na tela Sobre.
+
 ## [2.3.0] - 2026-09-28
 
 ### Adicionado

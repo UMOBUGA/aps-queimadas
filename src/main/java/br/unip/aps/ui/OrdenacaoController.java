@@ -505,14 +505,18 @@ public class OrdenacaoController implements Pagina.Controlador {
         Label t = new Label("Visualização animada");
         t.getStyleClass().add("card-title");
         Label s = new Label("32 valores aleatórios ordenados pelo algoritmo escolhido. Cada passo é uma operação registrada pelo "
-                + "InstrumentedArray: azul = comparação, brasa = troca/escrita, verde = concluído.");
+                + "InstrumentedArray: amarelo = comparação, laranja = troca ou escrita, magenta = concluído.");
         s.getStyleClass().add("card-subtitle");
         s.setWrapText(true);
+        s.setMinHeight(Region.USE_PREF_SIZE);
         lblVisualAlg.getStyleClass().addAll("chip", "chip-accent");
         lblVisualAlg.setText(cbAlgoritmo.getValue().nome());
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
-        HBox cab = new HBox(10, new VBox(2, t, s), esp, lblVisualAlg);
+        VBox textos = new VBox(2, t, s);
+        textos.setMinWidth(0);
+        HBox.setHgrow(textos, Priority.ALWAYS);
+        HBox cab = new HBox(10, textos, esp, lblVisualAlg);
         VBox.setVgrow(visualizador, Priority.ALWAYS);
         painelVisualizacao.getChildren().addAll(cab, visualizador);
         visualizador.setAlgoritmo(cbAlgoritmo.getValue());
@@ -565,15 +569,22 @@ public class OrdenacaoController implements Pagina.Controlador {
 
     private void configurarTabelas() {
         Tabelas.preparar(tabela, "Execute uma ordenação para ver os focos ordenados aqui.");
-        tabela.getColumns().add(Tabelas.indice());
-        var colData = Tabelas.coluna("Data/hora (GMT)", (FocoIncendio f) -> f.getDataHora().format(Formatos.DATA_HORA), 150);
-        colData.setMinWidth(150);
+        var indice = Tabelas.<FocoIncendio>indice();
+        indice.setPrefWidth(52);
+        tabela.getColumns().add(indice);
+        var colData = Tabelas.coluna("Data/hora (GMT)", (FocoIncendio f) -> f.getDataHora().format(Formatos.DATA_HORA), 145);
+        colData.setMinWidth(145);
         tabela.getColumns().add(colData);
-        tabela.getColumns().add(Tabelas.coluna("Município", FocoIncendio::getMunicipio, 200));
-        tabela.getColumns().add(Tabelas.bioma("Bioma", FocoIncendio::getBioma, 160));
-        tabela.getColumns().add(Tabelas.numero("Latitude", FocoIncendio::getLatitude, v -> Formatos.decimal(v, 5), 105));
-        tabela.getColumns().add(Tabelas.numero("Longitude", FocoIncendio::getLongitude, v -> Formatos.decimal(v, 5), 105));
-        tabela.getColumns().add(Tabelas.numero("id_bdq", FocoIncendio::getIdBdq, String::valueOf, 115));
+        var colMunicipio = Tabelas.coluna("Município", FocoIncendio::getMunicipio, 150);
+        colMunicipio.setMinWidth(90);
+        tabela.getColumns().add(colMunicipio);
+        tabela.getColumns().add(Tabelas.bioma("Bioma", FocoIncendio::getBioma, 118));
+        for (var c : List.of(Tabelas.numero("Latitude", FocoIncendio::getLatitude, v -> Formatos.decimal(v, 5), 104),
+                Tabelas.numero("Longitude", FocoIncendio::getLongitude, v -> Formatos.decimal(v, 5), 104),
+                Tabelas.numero("id_bdq", FocoIncendio::getIdBdq, String::valueOf, 112))) {
+            c.setMinWidth(c.getPrefWidth());
+            tabela.getColumns().add(c);
+        }
 
         Tabelas.preparar(tabelaComparativo, "Clique em \"Comparar todos os algoritmos\".");
         tabelaComparativo.getColumns().add(Tabelas.coluna("Algoritmo", (ResultadoOrdenacao<FocoIncendio> r) -> r.algoritmo(), 180));

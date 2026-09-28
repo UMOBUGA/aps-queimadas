@@ -20,8 +20,9 @@ import java.util.function.Function;
 
 /** Desenha uma arvore AVL em Canvas; apos cada insercao os nos deslizam da posicao antiga para a nova. */
 public class ArvoreVisual<K> extends Region {
-    private static final double RAIO = 22;
-    private static final double MARGEM = 44;
+    private static final double RAIO = 12;
+    private static final double MARGEM = 56;
+    private static final Font FONTE = Font.font("Inter SemiBold", FontWeight.NORMAL, 11);
     private static final double DURACAO_MS = 320;
 
     private record Posicao(double x, double y) { }
@@ -111,13 +112,24 @@ public class ArvoreVisual<K> extends Region {
         for (int p : profundidade.values()) niveis = Math.max(niveis, p + 1);
         double w = Math.max(1, getWidth()), h = Math.max(1, getHeight());
         double dx = (w - 2 * MARGEM) / Math.max(1, nos.size() - 1);
-        double dy = Math.min(78, (h - 2 * RAIO - 20) / Math.max(1, niveis - 1));
+        double dy = Math.min(80, (h - 2 * RAIO - 56) / Math.max(1, niveis - 1));
         for (int i = 0; i < nos.size(); i++) {
             Desenho<K> d = nos.get(i);
             double x = nos.size() == 1 ? w / 2 : MARGEM + i * dx;
             destinos.put(d.chave(), new Posicao(x, RAIO + 10 + profundidade.getOrDefault(d.chave(), 0) * dy));
         }
         desenhar();
+    }
+
+    private static String caber(String texto, double largura, javafx.scene.text.Text medidor) {
+        medidor.setText(texto);
+        if (medidor.getLayoutBounds().getWidth() <= largura) return texto;
+        for (int n = texto.length() - 1; n > 1; n--) {
+            String t = texto.substring(0, n).strip() + "…";
+            medidor.setText(t);
+            if (medidor.getLayoutBounds().getWidth() <= largura) return t;
+        }
+        return texto.substring(0, 1) + "…";
     }
 
     private Posicao posicao(K chave) {
@@ -150,7 +162,12 @@ public class ArvoreVisual<K> extends Region {
         }
         g.setTextAlign(TextAlignment.CENTER);
         g.setTextBaseline(VPos.CENTER);
-        for (Desenho<K> d : nos) {
+        g.setFont(FONTE);
+        double w = canvas.getWidth(), espaco = nos.size() <= 1 ? w : 2 * (w - 2 * MARGEM) / (nos.size() - 1) - 8;
+        javafx.scene.text.Text medidor = new javafx.scene.text.Text();
+        medidor.setFont(FONTE);
+        for (int i = 0; i < nos.size(); i++) {
+            Desenho<K> d = nos.get(i);
             Posicao p = posicao(d.chave());
             if (p == null) continue;
             boolean ehNovo = d.chave().equals(destacado);
@@ -160,9 +177,14 @@ public class ArvoreVisual<K> extends Region {
             g.setStroke(ehPivo ? rot : borda);
             g.setLineWidth(ehPivo ? 3 : 1.2);
             g.strokeOval(p.x() - RAIO, p.y() - RAIO, 2 * RAIO, 2 * RAIO);
-            g.setFill(ehNovo ? Color.web("#1A0B02") : texto);
-            g.setFont(Font.font("Inter SemiBold", FontWeight.NORMAL, 10.5));
-            g.fillText(d.rotulo(), p.x(), p.y());
+            String r = caber(d.rotulo(), espaco, medidor);
+            medidor.setText(r);
+            double lw = medidor.getLayoutBounds().getWidth() + 10, ly = p.y() + RAIO + (i % 2 == 0 ? 11 : 27);
+            double lx = Math.max(lw / 2 + 2, Math.min(w - lw / 2 - 2, p.x()));
+            g.setFill(fundo.deriveColor(0, 1, 1, 0.88));
+            g.fillRoundRect(lx - lw / 2, ly - 8, lw, 16, 8, 8);
+            g.setFill(ehNovo ? novo : texto);
+            g.fillText(r, lx, ly);
         }
     }
 }

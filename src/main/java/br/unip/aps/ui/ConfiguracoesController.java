@@ -75,6 +75,7 @@ public class ConfiguracoesController implements Pagina.Controlador {
             k.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
             Label d = new Label(atalhos[i][1]);
             d.getStyleClass().add("t-small");
+            d.setWrapText(true);
             gridAtalhos.add(new HBox(k), 0, i);
             gridAtalhos.add(d, 1, i);
         }
