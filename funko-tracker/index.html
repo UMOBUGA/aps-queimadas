@@ -1,0 +1,1857 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e84393">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Catálogo da sua coleção e da sua wishlist de Funko Pops, que funciona offline.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Funko">
+<meta name="format-detection" content="telephone=no">
+<title>Funko Tracker</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<style>
+/* =========================================================
+   TOKENS
+   ========================================================= */
+:root {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --card: #242424;
+  --accent: #e84393;
+  --text: #f0f0f0;
+  --muted: #888888;
+  --success: #4ade80;
+  --danger: #f87171;
+
+  /* #888 sobre #242424 fica abaixo do AA; dentro dos cards o texto secundário clareia um tom */
+  --muted-card: #9a9a9a;
+  --linha: #2e2e2e;
+  --on-accent: #0f0f0f;
+
+  --fonte: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --fonte-display: ui-rounded, "SF Pro Rounded", -apple-system, "SF Pro Text", system-ui, sans-serif;
+
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-right: env(safe-area-inset-right, 0px);
+  --sa-bottom: env(safe-area-inset-bottom, 0px);
+  --sa-left: env(safe-area-inset-left, 0px);
+  --gutter-l: calc(16px + var(--sa-left));
+  --gutter-r: calc(16px + var(--sa-right));
+
+  --mola: cubic-bezier(.32, .72, 0, 1);
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fonte);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+body { overflow: hidden; }
+
+button, input, select { font: inherit; color: inherit; }
+button { touch-action: manipulation; cursor: pointer; }
+a, button, input, select, label { -webkit-tap-highlight-color: transparent; }
+img { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
+
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* =========================================================
+   ESTRUTURA: cabeçalho e abas fixos, só o conteúdo rola
+   ========================================================= */
+.app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topo {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: calc(var(--sa-top) + 14px) var(--gutter-r) 12px var(--gutter-l);
+  background: var(--bg);
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s;
+  z-index: 2;
+}
+.topo.rolado { border-bottom-color: var(--linha); }
+.topo-textos { flex: 1; min-width: 0; }
+.topo h1 {
+  margin: 0;
+  font-family: var(--fonte-display);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+.topo-sub {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.btn-mais {
+  flex: none;
+  width: 48px; height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  display: grid;
+  place-items: center;
+}
+.btn-mais svg { width: 26px; height: 26px; }
+.btn-mais:active { transform: scale(.94); }
+
+.conteudo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 24px;
+}
+
+.abas {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0 var(--sa-right) var(--sa-bottom) var(--sa-left);
+  background: rgba(26, 26, 26, .94);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--linha);
+  z-index: 2;
+}
+.aba {
+  min-height: 56px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 0;
+}
+.aba svg { width: 26px; height: 26px; }
+.aba[aria-selected="true"] { color: var(--accent); }
+.aba:focus-visible { outline-offset: -4px; }
+
+/* =========================================================
+   BUSCA E FILTRO
+   ========================================================= */
+.barra-busca { padding: 4px var(--gutter-r) 0 var(--gutter-l); }
+.campo-busca { position: relative; }
+.campo-busca svg {
+  position: absolute; left: 14px; top: 50%;
+  width: 18px; height: 18px; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none;
+}
+.campo-busca input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px 0 42px;
+  border: 1px solid var(--linha);
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.campo-busca input::placeholder { color: var(--muted); }
+.campo-busca input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px var(--gutter-r) 14px var(--gutter-l);
+  scrollbar-width: none;
+  scroll-padding-left: var(--gutter-l);
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--linha);
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.chip-ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--cat); }
+.chip[aria-pressed="true"] {
+  background: var(--cat, var(--accent));
+  border-color: var(--cat, var(--accent));
+  color: var(--on-accent);
+}
+.chip[aria-pressed="true"] .chip-ponto { background: var(--on-accent); }
+
+/* =========================================================
+   GRADE E CARD: a caixa do Funko Pop
+   ========================================================= */
+.grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 var(--gutter-r) 0 var(--gutter-l);
+}
+@media (min-width: 700px) {
+  .grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.pop {
+  position: relative;
+  background: var(--card);
+  border-radius: 18px 18px 12px 12px;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  transition: transform .5s var(--mola);
+}
+/* tampa da caixa na cor da categoria */
+.pop::before {
+  content: "";
+  display: block;
+  height: 7px;
+  background: var(--cat);
+}
+.pop.pressionado { transform: scale(.96); }
+
+.pop-corpo {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  border-radius: 0 0 12px 12px;
+}
+.pop-corpo:focus-visible { outline-offset: -3px; border-radius: 12px; }
+
+.pop-janela {
+  position: relative;
+  margin: 9px 9px 0;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px 14px 10px 10px;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 30%, #333 0%, #1b1b1b 70%);
+  border: 1px solid rgba(255, 255, 255, .07);
+}
+.pop-janela img { width: 100%; height: 100%; object-fit: cover; }
+.pop-janela svg.silhueta { width: 100%; height: 100%; }
+/* reflexo do plástico da janela */
+.pop-janela::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(118deg,
+    transparent 28%, rgba(255, 255, 255, .10) 34%, transparent 44%,
+    transparent 58%, rgba(255, 255, 255, .05) 62%, transparent 67%);
+  pointer-events: none;
+}
+
+.pop-numero {
+  position: absolute;
+  top: 8px; right: 8px;
+  min-width: 38px; height: 38px;
+  padding: 0 7px;
+  border-radius: 19px;
+  background: var(--bg);
+  border: 2px solid var(--cat);
+  display: grid;
+  place-items: center;
+  font-family: var(--fonte-display);
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  z-index: 1;
+}
+
+.pop-mais {
+  position: absolute;
+  top: 14px; left: 12px;
+  width: 44px; height: 44px;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  z-index: 3;
+}
+.pop-mais span {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(15, 15, 15, .78);
+  display: grid;
+  place-items: center;
+}
+.pop-mais svg { width: 20px; height: 20px; }
+.pop-mais:focus-visible { outline-offset: -4px; border-radius: 50%; }
+
+.pop-info { padding: 10px 12px 12px; }
+.pop-nome {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.pop-serie {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted-card);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: var(--cat-fundo);
+  color: var(--cat);
+  font-size: 12px;
+  font-weight: 700;
+}
+.pop-valores {
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px dashed #3a3a3a;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  font-size: 13px;
+}
+.pop-valores dt { color: var(--muted-card); }
+.pop-valores dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   ESTADO VAZIO
+   ========================================================= */
+.vazio {
+  padding: 48px calc(32px + var(--sa-right)) 32px calc(32px + var(--sa-left));
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.vazio svg { width: 88px; height: 88px; color: var(--accent); }
+.vazio h2 {
+  margin: 18px 0 6px;
+  font-family: var(--fonte-display);
+  font-size: 21px;
+  font-weight: 800;
+}
+.vazio p { margin: 0 0 22px; color: var(--muted); max-width: 30ch; }
+
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+.btn {
+  min-height: 50px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:active { opacity: .85; }
+.btn:disabled { opacity: .5; }
+.btn-primario { background: var(--accent); color: var(--on-accent); }
+.btn-secundario { background: var(--card); color: var(--text); }
+.btn-perigo { background: var(--danger); color: var(--on-accent); }
+.btn-largo { width: 100%; }
+.btn svg { width: 20px; height: 20px; }
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+.painel-dash { padding: 4px var(--gutter-r) 0 var(--gutter-l); display: grid; gap: 14px; }
+
+.contagens { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.contagem {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.contagem-num {
+  display: block;
+  font-family: var(--fonte-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.contagem-rotulo { color: var(--muted); font-size: 14px; }
+
+.extrato {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+}
+.extrato h2, .bloco h2 {
+  margin: 0 0 10px;
+  font-family: var(--fonte-display);
+  font-size: 19px;
+  font-weight: 800;
+}
+.extrato dl { margin: 0; display: grid; grid-template-columns: 1fr auto; row-gap: 8px; }
+.extrato dt { color: var(--muted); }
+.extrato dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.extrato .diferenca-linha {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed #3a3a3a;
+}
+.extrato .diferenca-linha dt { color: var(--text); font-weight: 600; }
+.diferenca {
+  font-family: var(--fonte-display);
+  font-size: 24px;
+  font-weight: 800;
+}
+.positivo { color: var(--success); }
+.negativo { color: var(--danger); }
+
+.bloco { background: var(--surface); border-radius: 16px; padding: 16px; }
+.bloco-texto { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
+.categorias-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.categoria-linha { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: baseline; }
+.categoria-nome { font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.categoria-nome::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--cat); }
+.categoria-num { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.categoria-num strong { color: var(--text); font-weight: 700; }
+.barra { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: #2a2a2a; overflow: hidden; }
+.barra span { display: block; height: 100%; border-radius: 4px; background: var(--cat); }
+
+.backup-botoes { display: grid; gap: 10px; }
+
+/* =========================================================
+   FOLHAS (bottom sheet e action sheet)
+   ========================================================= */
+.camada { position: fixed; inset: 0; z-index: 50; }
+.camada-fundo {
+  position: absolute; inset: 0;
+  background: rgba(0, 0, 0, .62);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.folha {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  margin: 0 auto;
+  max-width: 560px;
+  max-height: calc(100% - var(--sa-top) - 20px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  padding: 8px var(--gutter-r) calc(var(--sa-bottom) + 18px) var(--gutter-l);
+  transform: translateY(100%);
+  transition: transform .34s var(--mola);
+}
+.camada.aberta .camada-fundo { opacity: 1; }
+.camada.aberta .folha { transform: translateY(0); }
+
+.folha-alca { width: 38px; height: 5px; border-radius: 3px; background: #444; margin: 0 auto 12px; }
+.folha h2 {
+  margin: 0 0 16px;
+  font-family: var(--fonte-display);
+  font-size: 23px;
+  font-weight: 800;
+}
+.folha-texto { margin: -6px 0 18px; color: var(--muted); }
+
+.folha-acoes { background: transparent; padding-top: 0; }
+.grupo-acoes { background: var(--card); border-radius: 16px; overflow: hidden; }
+.grupo-acoes-titulo {
+  padding: 14px 16px 12px;
+  text-align: center;
+  color: var(--muted-card);
+  font-size: 14px;
+  border-bottom: 1px solid #333;
+  overflow-wrap: anywhere;
+}
+.acao {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 18px;
+  border: 0;
+  border-bottom: 1px solid #333;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: left;
+}
+.acao:last-child { border-bottom: 0; }
+.acao svg { width: 22px; height: 22px; color: var(--muted-card); }
+.acao-perigo, .acao-perigo svg { color: var(--danger); }
+.acao:focus-visible { outline-offset: -3px; }
+.acao-cancelar { margin-top: 10px; width: 100%; background: var(--card); justify-content: center; font-weight: 700; border-radius: 16px; }
+
+/* =========================================================
+   FORMULÁRIO
+   ========================================================= */
+.form { display: grid; gap: 16px; }
+.linha-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.campo { display: grid; gap: 6px; min-width: 0; align-content: start; }
+.campo > label, .campo-rotulo { font-size: 14px; font-weight: 600; color: #cfcfcf; }
+.obrigatorio { color: var(--accent); }
+.entrada {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid #333;
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.entrada::placeholder { color: #6f6f6f; }
+.entrada:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; border-radius: 12px; }
+select.entrada {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 18px;
+  padding-right: 40px;
+}
+.com-prefixo { position: relative; }
+.com-prefixo span {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-weight: 600; pointer-events: none;
+}
+.com-prefixo .entrada { padding-left: 44px; font-variant-numeric: tabular-nums; }
+.entrada[aria-invalid="true"] { border-color: var(--danger); }
+.erro-campo { margin: 0; color: var(--danger); font-size: 14px; }
+
+.foto-area { display: flex; align-items: center; gap: 14px; }
+.foto-preview {
+  width: 84px; height: 104px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px dashed #444;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.foto-preview img { width: 100%; height: 100%; object-fit: cover; }
+.foto-preview svg { width: 32px; height: 32px; }
+.foto-botoes { display: grid; gap: 8px; flex: 1; }
+.foto-botoes .btn { min-height: 44px; font-size: 15px; }
+.btn-remover-foto { background: none; color: var(--danger); border: 1px solid #3a3a3a; }
+
+.form-botoes { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 4px; }
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+.toasts {
+  position: fixed;
+  left: 0; right: 0;
+  top: calc(var(--sa-top) + 10px);
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--gutter-r) 0 var(--gutter-l);
+  pointer-events: none;
+  z-index: 100;
+}
+.toast {
+  max-width: 420px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: #f0f0f0;
+  color: #0f0f0f;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateY(-16px);
+  opacity: 0;
+  transition: transform .3s var(--mola), opacity .2s;
+}
+.toast.visivel { transform: none; opacity: 1; }
+.toast svg { width: 20px; height: 20px; flex: none; }
+.toast-sucesso svg { color: #15803d; }
+.toast-erro { background: #3a1d1d; color: #fde2e2; border: 1px solid var(--danger); }
+.toast-erro svg { color: var(--danger); }
+
+/* =========================================================
+   MOVIMENTO REDUZIDO
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+  }
+  .pop.pressionado { transform: none; outline: 2px solid var(--accent); }
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px">Ative o JavaScript para usar o Funko Tracker.</p></noscript>
+
+<div class="app" id="app">
+  <header class="topo" id="topo">
+    <div class="topo-textos">
+      <h1 id="titulo">Coleção</h1>
+      <p class="topo-sub" id="subtitulo" aria-live="polite"></p>
+    </div>
+    <button type="button" class="btn-mais" id="btn-adicionar" aria-label="Adicionar Funko à coleção"></button>
+  </header>
+
+  <main class="conteudo" id="conteudo">
+    <section id="painel-colecao" role="tabpanel" aria-labelledby="aba-colecao"></section>
+    <section id="painel-wishlist" role="tabpanel" aria-labelledby="aba-wishlist" hidden></section>
+    <section id="painel-dashboard" role="tabpanel" aria-labelledby="aba-dashboard" hidden></section>
+  </main>
+
+  <nav class="abas" role="tablist" aria-label="Seções do app">
+    <button type="button" class="aba" role="tab" id="aba-colecao" data-aba="colecao" aria-controls="painel-colecao" aria-selected="true"></button>
+    <button type="button" class="aba" role="tab" id="aba-wishlist" data-aba="wishlist" aria-controls="painel-wishlist" aria-selected="false" tabindex="-1"></button>
+    <button type="button" class="aba" role="tab" id="aba-dashboard" data-aba="dashboard" aria-controls="painel-dashboard" aria-selected="false" tabindex="-1"></button>
+  </nav>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<input type="file" id="arquivo-backup" accept="application/json,.json" hidden>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =======================================================
+     CONFIGURAÇÃO
+     ======================================================= */
+  const CATEGORIAS = [
+    { nome: 'Standard', cor: '#a8a29e' },
+    { nome: 'Chase', cor: '#facc15' },
+    { nome: 'GITD', cor: '#a3e635' },
+    { nome: 'Glow Chase', cor: '#34d399' },
+    { nome: 'Exclusive', cor: '#60a5fa' },
+    { nome: 'Limited', cor: '#c084fc' },
+    { nome: 'Flocked', cor: '#fdba74' },
+    { nome: 'Metallic', cor: '#d4a373' },
+    { nome: 'Diamond', cor: '#a5f3fc' },
+    { nome: 'Chrome', cor: '#e2e8f0' },
+  ];
+  const MAPA_CATEGORIAS = new Map(CATEGORIAS.map((c) => [c.nome, c]));
+  const CHAVES = { colecao: 'funko_colecao', wishlist: 'funko_wishlist' };
+  const CHAVE_ULTIMO_BACKUP = 'funko_ultimo_backup';
+  const TIPOS = ['colecao', 'wishlist'];
+  const FOTO_LADO_MAX = 800;
+  const FOTO_QUALIDADE = 0.7;
+  const TOQUE_LONGO_MS = 500;
+
+  const ROTULOS = {
+    colecao: { titulo: 'Coleção', adicionar: 'Adicionar Funko à coleção' },
+    wishlist: { titulo: 'Wishlist', adicionar: 'Adicionar Funko à wishlist' },
+    dashboard: { titulo: 'Dashboard', adicionar: 'Adicionar Funko à coleção' },
+  };
+
+  // Ícones são constantes do próprio app: nunca recebem dados do usuário.
+  const ICONES = {
+    mais: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    colecao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3" width="17" height="18" rx="2.5"/><rect x="7" y="6.5" width="10" height="9" rx="3"/><path d="M7 18.5h10"/></svg>',
+    wishlist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+    dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>',
+    busca: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
+    reticencias: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>',
+    editar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+    lixeira: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+    mover: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>',
+    camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    alerta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg>',
+    exportar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5L12 3l4.5 4.5M5 13v7h14v-7"/></svg>',
+    importar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M5 13v7h14v-7"/></svg>',
+    estante: '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-dasharray="7 5" aria-hidden="true"><rect x="18" y="8" width="60" height="48" rx="15"/><rect x="31" y="58" width="34" height="30" rx="9"/><circle cx="37" cy="33" r="4" fill="currentColor" stroke="none"/><circle cx="59" cy="33" r="4" fill="currentColor" stroke="none"/></svg>',
+    estrela: '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" aria-hidden="true"><path d="M48 12l10.6 21.5 23.7 3.4-17.2 16.7 4.1 23.6L48 66l-21.2 11.2 4.1-23.6-17.2-16.7 23.7-3.4z" stroke-dasharray="7 5"/></svg>',
+    lupa: '<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="42" cy="42" r="24"/><path d="M60 60l20 20M34 42h16"/></svg>',
+  };
+
+  /* =======================================================
+     UTILIDADES
+     ======================================================= */
+  const Util = {
+    gerarId() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        try { return window.crypto.randomUUID(); } catch (e) { /* segue para o fallback */ }
+      }
+      const bytes = new Uint8Array(16);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(bytes);
+      } else {
+        for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+      }
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const h = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+      return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+    },
+
+    // Cria elementos sempre com textContent/setAttribute, nunca innerHTML com dados do usuário.
+    el(tag, props, ...filhos) {
+      const no = document.createElement(tag);
+      const p = props || {};
+      for (const [chave, valor] of Object.entries(p)) {
+        if (valor === null || valor === undefined || valor === false) continue;
+        if (chave === 'class') no.className = valor;
+        else if (chave === 'text') no.textContent = valor;
+        else if (chave === 'on') for (const [ev, fn] of Object.entries(valor)) no.addEventListener(ev, fn);
+        else if (chave === 'vars') for (const [nome, v] of Object.entries(valor)) no.style.setProperty(nome, v);
+        else if (chave === 'dataset') Object.assign(no.dataset, valor);
+        else if (chave in no && typeof valor !== 'string') no[chave] = valor;
+        else no.setAttribute(chave, valor === true ? '' : String(valor));
+      }
+      Util.anexar(no, filhos);
+      return no;
+    },
+
+    anexar(pai, filhos) {
+      for (const f of filhos.flat(Infinity)) {
+        if (f === null || f === undefined || f === false) continue;
+        pai.append(f instanceof Node ? f : document.createTextNode(String(f)));
+      }
+      return pai;
+    },
+
+    icone(nome) {
+      const t = document.createElement('template');
+      t.innerHTML = ICONES[nome];
+      return t.content.firstElementChild;
+    },
+
+    escapeHtml(texto) {
+      return String(texto)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    },
+
+    moeda: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }),
+    moedaComSinal: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', signDisplay: 'exceptZero' }),
+    percentual: new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 0 }),
+
+    formatarMoeda(valor) {
+      return typeof valor === 'number' ? Util.moeda.format(valor) : '—';
+    },
+
+    // Aceita "89,90", "1.234,56", "1234.56" e "R$ 50". Devolve número, null (vazio) ou NaN (inválido).
+    lerValor(texto) {
+      let s = String(texto || '').replace(/R\$/gi, '').replace(/\s/g, '');
+      if (s === '') return null;
+      if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+      else if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
+      if (!/^\d+(\.\d+)?$/.test(s)) return NaN;
+      const n = Math.round(parseFloat(s) * 100) / 100;
+      return n >= 0 && n <= 10000000 ? n : NaN;
+    },
+
+    valorParaCampo(valor) {
+      return typeof valor === 'number' ? valor.toFixed(2).replace('.', ',') : '';
+    },
+
+    normalizarBusca(texto) {
+      return String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    },
+
+    hexParaRgba(hex, alfa) {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alfa})`;
+    },
+
+    varsCategoria(nome) {
+      const cor = (MAPA_CATEGORIAS.get(nome) || CATEGORIAS[0]).cor;
+      return { '--cat': cor, '--cat-fundo': Util.hexParaRgba(cor, 0.16) };
+    },
+
+    plural(n, singular, plural) {
+      return `${n} ${n === 1 ? singular : plural}`;
+    },
+
+    hoje() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    },
+
+    carregarImagem(arquivo) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(arquivo);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('imagem ilegível')); };
+        img.src = url;
+      });
+    },
+
+    async fotoParaJpeg(arquivo) {
+      const img = await Util.carregarImagem(arquivo);
+      const maior = Math.max(img.naturalWidth, img.naturalHeight);
+      if (!maior) throw new Error('imagem vazia');
+      const escala = Math.min(1, FOTO_LADO_MAX / maior);
+      const largura = Math.max(1, Math.round(img.naturalWidth * escala));
+      const altura = Math.max(1, Math.round(img.naturalHeight * escala));
+      const canvas = document.createElement('canvas');
+      canvas.width = largura;
+      canvas.height = altura;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, largura, altura);
+      ctx.drawImage(img, 0, 0, largura, altura);
+      return canvas.toDataURL('image/jpeg', FOTO_QUALIDADE);
+    },
+
+    lerArquivoTexto(arquivo) {
+      if (typeof arquivo.text === 'function') return arquivo.text();
+      return new Promise((resolve, reject) => {
+        const leitor = new FileReader();
+        leitor.onload = () => resolve(String(leitor.result));
+        leitor.onerror = () => reject(leitor.error);
+        leitor.readAsText(arquivo);
+      });
+    },
+  };
+
+  /* =======================================================
+     STORAGE
+     ======================================================= */
+  const Storage = {
+    disponivel() {
+      try {
+        const k = '__funko_teste__';
+        localStorage.setItem(k, '1');
+        localStorage.removeItem(k);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+
+    lerBruto(chave) {
+      try {
+        const texto = localStorage.getItem(chave);
+        if (texto === null) return [];
+        const dados = JSON.parse(texto);
+        return Array.isArray(dados) ? dados : [];
+      } catch (e) {
+        return [];
+      }
+    },
+
+    gravar(chave, valor) {
+      try {
+        localStorage.setItem(chave, JSON.stringify(valor));
+        return { ok: true };
+      } catch (e) {
+        const cota = e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+        return { ok: false, cota };
+      }
+    },
+
+    lerTexto(chave) {
+      try { return localStorage.getItem(chave); } catch (e) { return null; }
+    },
+
+    gravarTexto(chave, valor) {
+      try { localStorage.setItem(chave, valor); return true; } catch (e) { return false; }
+    },
+
+    texto(s, max) {
+      return typeof s === 'string' ? s.trim().slice(0, max) : (typeof s === 'number' ? String(s).slice(0, max) : '');
+    },
+
+    numero(v) {
+      if (v === null || v === undefined || v === '') return null;
+      const n = typeof v === 'number' ? v : Util.lerValor(v);
+      return typeof n === 'number' && Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
+    },
+
+    // Valida e normaliza um item lido do disco ou de um backup. Devolve null se não der para salvar.
+    normalizar(bruto, tipo, idsVistos) {
+      if (!bruto || typeof bruto !== 'object' || Array.isArray(bruto)) return null;
+      const nome = Storage.texto(bruto.nome, 120);
+      if (!nome) return null;
+      const categoria = MAPA_CATEGORIAS.has(bruto.categoria) ? bruto.categoria : 'Standard';
+      let id = Storage.texto(bruto.id, 64);
+      if (!id || idsVistos.has(id)) id = Util.gerarId();
+      idsVistos.add(id);
+      const data = new Date(bruto.dataCriacao);
+      const foto = typeof bruto.foto === 'string' && /^data:image\/(jpeg|jpg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(bruto.foto) ? bruto.foto : null;
+      return {
+        id,
+        numero: Storage.texto(bruto.numero, 12),
+        nome,
+        serie: Storage.texto(bruto.serie, 120),
+        categoria,
+        foto,
+        valorPago: tipo === 'colecao' ? Storage.numero(bruto.valorPago) : null,
+        valorEstimado: tipo === 'colecao' ? Storage.numero(bruto.valorEstimado) : null,
+        dataCriacao: Number.isNaN(data.getTime()) ? new Date().toISOString() : data.toISOString(),
+        tipo,
+      };
+    },
+
+    normalizarListas(colecaoBruta, wishlistBruta) {
+      const ids = new Set();
+      const colecao = colecaoBruta.map((i) => Storage.normalizar(i, 'colecao', ids)).filter(Boolean);
+      const wishlist = wishlistBruta.map((i) => Storage.normalizar(i, 'wishlist', ids)).filter(Boolean);
+      return { colecao, wishlist };
+    },
+
+    carregarTudo() {
+      return Storage.normalizarListas(Storage.lerBruto(CHAVES.colecao), Storage.lerBruto(CHAVES.wishlist));
+    },
+  };
+
+  /* =======================================================
+     ESTADO
+     ======================================================= */
+  const Estado = {
+    aba: 'colecao',
+    listas: { colecao: [], wishlist: [] },
+    filtros: {
+      colecao: { busca: '', categoria: null },
+      wishlist: { busca: '', categoria: null },
+    },
+
+    buscar(tipo, id) {
+      return Estado.listas[tipo].find((i) => i.id === id) || null;
+    },
+
+    // Grava no disco antes de aceitar a mudança; se falhar, o estado em memória continua igual.
+    persistir(novas) {
+      const gravadas = [];
+      for (const tipo of TIPOS) {
+        if (!novas[tipo]) continue;
+        const r = Storage.gravar(CHAVES[tipo], novas[tipo]);
+        if (!r.ok) {
+          for (const t of gravadas) Storage.gravar(CHAVES[t], Estado.listas[t]);
+          Toast.erro(r.cota
+            ? 'Sem espaço para salvar. Exporte um backup e remova fotos ou Funkos antigos.'
+            : 'O navegador bloqueou o salvamento. Saia da navegação privada e tente de novo.');
+          return false;
+        }
+        gravadas.push(tipo);
+      }
+      for (const tipo of gravadas) Estado.listas[tipo] = novas[tipo];
+      Render.tudo();
+      return true;
+    },
+
+    adicionar(tipo, dados) {
+      const item = {
+        id: Util.gerarId(),
+        ...dados,
+        valorPago: tipo === 'colecao' ? dados.valorPago : null,
+        valorEstimado: tipo === 'colecao' ? dados.valorEstimado : null,
+        dataCriacao: new Date().toISOString(),
+        tipo,
+      };
+      return Estado.persistir({ [tipo]: [item, ...Estado.listas[tipo]] });
+    },
+
+    atualizar(tipo, id, dados) {
+      const lista = Estado.listas[tipo].map((i) => (i.id === id ? { ...i, ...dados } : i));
+      return Estado.persistir({ [tipo]: lista });
+    },
+
+    excluir(tipo, id) {
+      return Estado.persistir({ [tipo]: Estado.listas[tipo].filter((i) => i.id !== id) });
+    },
+
+    mover(id, de, para, valores) {
+      const item = Estado.buscar(de, id);
+      if (!item) return false;
+      const movido = {
+        ...item,
+        tipo: para,
+        valorPago: para === 'colecao' ? valores.valorPago : null,
+        valorEstimado: para === 'colecao' ? valores.valorEstimado : null,
+      };
+      return Estado.persistir({
+        [de]: Estado.listas[de].filter((i) => i.id !== id),
+        [para]: [movido, ...Estado.listas[para]],
+      });
+    },
+
+    substituirTudo(colecao, wishlist) {
+      return Estado.persistir({ colecao, wishlist });
+    },
+
+    visiveis(tipo) {
+      const { busca, categoria } = Estado.filtros[tipo];
+      const termo = Util.normalizarBusca(busca);
+      return Estado.listas[tipo]
+        .filter((i) => !categoria || i.categoria === categoria)
+        .filter((i) => !termo || [i.nome, i.serie, i.numero].some((c) => Util.normalizarBusca(c).includes(termo)))
+        .sort((a, b) => (a.dataCriacao < b.dataCriacao ? 1 : a.dataCriacao > b.dataCriacao ? -1 : 0));
+    },
+  };
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+  const el = Util.el;
+  const dom = {};
+
+  const Render = {
+    montar() {
+      dom.app = document.getElementById('app');
+      dom.topo = document.getElementById('topo');
+      dom.titulo = document.getElementById('titulo');
+      dom.subtitulo = document.getElementById('subtitulo');
+      dom.btnAdicionar = document.getElementById('btn-adicionar');
+      dom.conteudo = document.getElementById('conteudo');
+      dom.paineis = {
+        colecao: document.getElementById('painel-colecao'),
+        wishlist: document.getElementById('painel-wishlist'),
+        dashboard: document.getElementById('painel-dashboard'),
+      };
+      dom.abas = Array.from(document.querySelectorAll('.aba'));
+      dom.btnAdicionar.append(Util.icone('mais'));
+
+      const nomesAbas = { colecao: 'Coleção', wishlist: 'Wishlist', dashboard: 'Dashboard' };
+      for (const aba of dom.abas) {
+        Util.anexar(aba, [Util.icone(aba.dataset.aba), el('span', { text: nomesAbas[aba.dataset.aba] })]);
+      }
+
+      dom.listas = {};
+      for (const tipo of TIPOS) dom.listas[tipo] = Render.montarPainelLista(tipo);
+      dom.dashboard = el('div', { class: 'painel-dash' });
+      dom.paineis.dashboard.append(dom.dashboard);
+    },
+
+    montarPainelLista(tipo) {
+      const painel = dom.paineis[tipo];
+      const busca = el('input', {
+        type: 'search',
+        class: 'busca',
+        placeholder: 'Buscar por nome, série ou número',
+        'aria-label': tipo === 'colecao' ? 'Buscar na coleção' : 'Buscar na wishlist',
+        autocomplete: 'off',
+        autocorrect: 'off',
+        autocapitalize: 'off',
+        spellcheck: 'false',
+        enterkeyhint: 'search',
+        on: {
+          input: (e) => { Estado.filtros[tipo].busca = e.target.value; Render.lista(tipo); },
+          keydown: (e) => { if (e.key === 'Enter') e.target.blur(); },
+        },
+      });
+
+      const chips = el('div', { class: 'chips', role: 'group', 'aria-label': 'Filtrar por categoria' });
+      const criarChip = (categoria) => el('button', {
+        type: 'button',
+        class: 'chip',
+        'aria-pressed': 'false',
+        dataset: { categoria: categoria ? categoria.nome : '' },
+        vars: categoria ? Util.varsCategoria(categoria.nome) : null,
+        on: {
+          click: () => {
+            Estado.filtros[tipo].categoria = categoria ? categoria.nome : null;
+            Render.lista(tipo);
+          },
+        },
+      }, categoria ? el('span', { class: 'chip-ponto', 'aria-hidden': 'true' }) : null, categoria ? categoria.nome : 'Todas');
+      chips.append(criarChip(null), ...CATEGORIAS.map(criarChip));
+
+      const grade = el('div', { class: 'grade', role: 'list' });
+      const vazio = el('div', { class: 'vazio', hidden: true });
+
+      const barra = el('div', { class: 'barra-busca' }, el('div', { class: 'campo-busca' }, Util.icone('busca'), busca));
+      painel.append(
+        barra,
+        chips,
+        grade,
+        vazio,
+      );
+      Interacoes.ligarCards(grade, tipo);
+      return { barra, busca, chips, grade, vazio };
+    },
+
+    tudo() {
+      Render.cabecalho();
+      Render.lista('colecao');
+      Render.lista('wishlist');
+      Render.dashboard();
+    },
+
+    cabecalho() {
+      const aba = Estado.aba;
+      dom.titulo.textContent = ROTULOS[aba].titulo;
+      dom.btnAdicionar.setAttribute('aria-label', ROTULOS[aba].adicionar);
+      const nC = Estado.listas.colecao.length;
+      const nW = Estado.listas.wishlist.length;
+      if (aba === 'colecao') dom.subtitulo.textContent = nC ? `${Util.plural(nC, 'Funko', 'Funkos')} na estante` : 'Estante vazia';
+      else if (aba === 'wishlist') dom.subtitulo.textContent = nW ? `${Util.plural(nW, 'Funko', 'Funkos')} para caçar` : 'Nada na mira ainda';
+      else dom.subtitulo.textContent = `${Util.plural(nC + nW, 'Funko', 'Funkos')} catalogados`;
+      for (const botao of dom.abas) {
+        const ativa = botao.dataset.aba === aba;
+        botao.setAttribute('aria-selected', String(ativa));
+        botao.tabIndex = ativa ? 0 : -1;
+      }
+      for (const [nome, painel] of Object.entries(dom.paineis)) painel.hidden = nome !== aba;
+    },
+
+    lista(tipo) {
+      const refs = dom.listas[tipo];
+      const filtro = Estado.filtros[tipo];
+      for (const chip of refs.chips.children) {
+        chip.setAttribute('aria-pressed', String((chip.dataset.categoria || null) === filtro.categoria));
+      }
+      if (refs.busca.value !== filtro.busca) refs.busca.value = filtro.busca;
+      const temItens = Estado.listas[tipo].length > 0;
+      refs.barra.hidden = !temItens;
+      refs.chips.hidden = !temItens;
+
+      const itens = Estado.visiveis(tipo);
+      refs.grade.replaceChildren(...itens.map((i) => Render.card(i, tipo)));
+      refs.grade.hidden = itens.length === 0;
+      refs.vazio.hidden = itens.length > 0;
+      if (!itens.length) refs.vazio.replaceChildren(...Render.estadoVazio(tipo));
+    },
+
+    estadoVazio(tipo) {
+      const filtro = Estado.filtros[tipo];
+      if (Estado.listas[tipo].length && (filtro.busca || filtro.categoria)) {
+        let texto;
+        if (filtro.busca && filtro.categoria) texto = `Nenhum ${filtro.categoria} combina com “${filtro.busca.trim()}”.`;
+        else if (filtro.busca) texto = `Nenhum Funko combina com “${filtro.busca.trim()}”. Confira a grafia ou busque pelo número.`;
+        else texto = `Você ainda não tem nenhum ${filtro.categoria} aqui.`;
+        return [
+          Util.icone('lupa'),
+          el('h2', { text: 'Nada encontrado' }),
+          el('p', { text: texto }),
+          el('button', {
+            type: 'button', class: 'btn btn-secundario',
+            on: { click: () => { Estado.filtros[tipo] = { busca: '', categoria: null }; Render.lista(tipo); } },
+          }, 'Limpar busca e filtro'),
+        ];
+      }
+      const colecao = tipo === 'colecao';
+      return [
+        Util.icone(colecao ? 'estante' : 'estrela'),
+        el('h2', { text: colecao ? 'Sua estante está vazia' : 'Sua wishlist está vazia' }),
+        el('p', { text: colecao ? 'Cadastre o primeiro Funko com foto, número e quanto você pagou.' : 'Anote os Funkos que você quer encontrar. Quando comprar um, mova para a coleção.' }),
+        el('button', {
+          type: 'button', class: 'btn btn-primario',
+          on: { click: () => Modais.formulario(tipo) },
+        }, colecao ? 'Adicionar Funko' : 'Adicionar à wishlist'),
+      ];
+    },
+
+    silhueta(item) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 100 125');
+      svg.setAttribute('class', 'silhueta');
+      svg.setAttribute('aria-hidden', 'true');
+      const forma = (tag, attrs) => {
+        const n = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+        svg.append(n);
+        return n;
+      };
+      forma('rect', { x: 20, y: 22, width: 60, height: 50, rx: 15, fill: 'rgba(255,255,255,.07)' });
+      forma('rect', { x: 33, y: 70, width: 34, height: 34, rx: 9, fill: 'rgba(255,255,255,.05)' });
+      const letra = forma('text', {
+        x: 50, y: 58, 'text-anchor': 'middle',
+        'font-family': 'ui-rounded, -apple-system, system-ui, sans-serif',
+        'font-weight': 800, 'font-size': 34, fill: 'var(--cat)',
+      });
+      letra.textContent = Array.from(item.nome.trim())[0].toUpperCase();
+      return svg;
+    },
+
+    card(item, tipo) {
+      const janela = el('div', { class: 'pop-janela' },
+        item.foto ? el('img', { src: item.foto, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' }) : Render.silhueta(item),
+        item.numero ? el('span', { class: 'pop-numero', 'aria-hidden': 'true' }, item.numero) : null,
+      );
+
+      const info = el('div', { class: 'pop-info' },
+        el('h3', { class: 'pop-nome', text: item.nome }),
+        item.serie ? el('p', { class: 'pop-serie', text: item.serie }) : null,
+        el('span', { class: 'tag', text: item.categoria }),
+        tipo === 'colecao' ? el('dl', { class: 'pop-valores' },
+          el('dt', { text: 'Pago' }), el('dd', { text: Util.formatarMoeda(item.valorPago) }),
+          el('dt', { text: 'Estimado' }), el('dd', { text: Util.formatarMoeda(item.valorEstimado) }),
+        ) : null,
+      );
+
+      const rotulo = [item.numero ? `Número ${item.numero}` : '', item.nome].filter(Boolean).join(', ');
+      return el('article', {
+        class: 'pop', role: 'listitem', dataset: { id: item.id }, vars: Util.varsCategoria(item.categoria),
+      },
+        el('button', { type: 'button', class: 'pop-corpo', 'aria-label': `Editar ${rotulo}` }, janela, info),
+        el('button', { type: 'button', class: 'pop-mais', 'aria-label': `Mais ações para ${item.nome}` },
+          el('span', null, Util.icone('reticencias'))),
+      );
+    },
+
+    dashboard() {
+      const { colecao, wishlist } = Estado.listas;
+      const somaPago = colecao.reduce((s, i) => s + (i.valorPago || 0), 0);
+      const somaEstimado = colecao.reduce((s, i) => s + (i.valorEstimado || 0), 0);
+      const diferenca = Math.round((somaEstimado - somaPago) * 100) / 100;
+      const positiva = diferenca >= 0;
+
+      const contagens = el('div', { class: 'contagens' },
+        el('div', { class: 'contagem' },
+          el('span', { class: 'contagem-num', text: String(colecao.length) }),
+          el('span', { class: 'contagem-rotulo', text: colecao.length === 1 ? 'Funko na coleção' : 'Funkos na coleção' })),
+        el('div', { class: 'contagem' },
+          el('span', { class: 'contagem-num', text: String(wishlist.length) }),
+          el('span', { class: 'contagem-rotulo', text: wishlist.length === 1 ? 'Funko na wishlist' : 'Funkos na wishlist' })),
+      );
+
+      const extrato = el('section', { class: 'extrato', 'aria-labelledby': 'titulo-extrato' },
+        el('h2', { id: 'titulo-extrato', text: 'Valor da estante' }),
+        el('dl', null,
+          el('dt', { text: 'Você pagou' }), el('dd', { text: Util.moeda.format(somaPago) }),
+          el('dt', { text: 'Vale hoje (estimado)' }), el('dd', { text: Util.moeda.format(somaEstimado) }),
+          el('div', { class: 'diferenca-linha' },
+            el('dt', { text: positiva ? 'Valorização' : 'Desvalorização' }),
+            el('dd', {
+              class: `diferenca ${positiva ? 'positivo' : 'negativo'}`,
+              'aria-label': `${positiva ? 'Ganho' : 'Perda'} de ${Util.moeda.format(Math.abs(diferenca))}`,
+            }, `${positiva ? '▲' : '▼'} ${Util.moedaComSinal.format(diferenca)}`)),
+        ),
+      );
+
+      const contagem = new Map();
+      for (const i of colecao) contagem.set(i.categoria, (contagem.get(i.categoria) || 0) + 1);
+      const ordemOriginal = new Map(CATEGORIAS.map((c, idx) => [c.nome, idx]));
+      const linhas = Array.from(contagem.entries())
+        .sort((a, b) => b[1] - a[1] || ordemOriginal.get(a[0]) - ordemOriginal.get(b[0]))
+        .map(([nome, qtd]) => {
+          const frac = qtd / colecao.length;
+          return el('li', { class: 'categoria-linha', vars: Util.varsCategoria(nome) },
+            el('span', { class: 'categoria-nome', text: nome }),
+            el('span', { class: 'categoria-num' }, el('strong', { text: String(qtd) }), ` (${Util.percentual.format(frac)})`),
+            el('div', { class: 'barra', 'aria-hidden': 'true' }, el('span', { vars: { width: `${(frac * 100).toFixed(1)}%` } })));
+        });
+
+      const categorias = el('section', { class: 'bloco', 'aria-labelledby': 'titulo-categorias' },
+        el('h2', { id: 'titulo-categorias', text: 'Por categoria' }),
+        linhas.length
+          ? el('ul', { class: 'categorias-lista' }, linhas)
+          : el('p', { class: 'bloco-texto', text: 'Adicione Funkos à coleção para ver quantos você tem de cada categoria.' }),
+      );
+
+      const ultimo = Storage.lerTexto(CHAVE_ULTIMO_BACKUP);
+      const dataUltimo = ultimo && !Number.isNaN(new Date(ultimo).getTime())
+        ? new Date(ultimo).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+        : null;
+
+      const backup = el('section', { class: 'bloco', 'aria-labelledby': 'titulo-backup' },
+        el('h2', { id: 'titulo-backup', text: 'Backup' }),
+        el('p', { class: 'bloco-texto', text: dataUltimo
+          ? `Último backup em ${dataUltimo}. O Safari pode apagar os dados de apps sem uso, então exporte com frequência.`
+          : 'Você ainda não fez backup. O Safari pode apagar os dados de apps sem uso: exporte um arquivo e guarde no iCloud Drive.' }),
+        el('div', { class: 'backup-botoes' },
+          el('button', { type: 'button', class: 'btn btn-primario btn-largo', on: { click: Backup.exportar } }, Util.icone('exportar'), 'Exportar backup (JSON)'),
+          el('button', { type: 'button', class: 'btn btn-secundario btn-largo', on: { click: Backup.escolherArquivo } }, Util.icone('importar'), 'Importar backup')),
+      );
+
+      dom.dashboard.replaceChildren(contagens, extrato, categorias, backup);
+    },
+  };
+
+  /* =======================================================
+     MODAIS: toast, folhas, formulários e confirmações
+     ======================================================= */
+  const Toast = {
+    timer: null,
+    mostrar(mensagem, tipo) {
+      const area = document.getElementById('toasts');
+      const erro = tipo === 'erro';
+      const toast = el('div', {
+        class: `toast ${erro ? 'toast-erro' : 'toast-sucesso'}`,
+        role: erro ? 'alert' : 'status',
+      }, Util.icone(erro ? 'alerta' : 'ok'), el('span', { text: mensagem }));
+      area.replaceChildren(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('visivel')));
+      clearTimeout(Toast.timer);
+      Toast.timer = setTimeout(() => {
+        toast.classList.remove('visivel');
+        setTimeout(() => toast.remove(), 300);
+      }, erro ? 4200 : 2400);
+    },
+    ok(m) { Toast.mostrar(m, 'sucesso'); },
+    erro(m) { Toast.mostrar(m, 'erro'); },
+  };
+
+  const Folha = {
+    atual: null,
+
+    abrir({ rotulo, conteudo, acoes = false, aoFechar = null }) {
+      if (Folha.atual) Folha.atual.fechar(true);
+      const focoAnterior = document.activeElement;
+      const painel = el('div', {
+        class: `folha${acoes ? ' folha-acoes' : ''}`,
+        role: 'dialog', 'aria-modal': 'true', 'aria-label': rotulo,
+      }, acoes ? null : el('div', { class: 'folha-alca', 'aria-hidden': 'true' }), conteudo);
+      const fundo = el('div', { class: 'camada-fundo' });
+      const camada = el('div', { class: 'camada' }, fundo, painel);
+
+      const controle = {
+        painel,
+        fechado: false,
+        fechar(imediato) {
+          if (controle.fechado) return;
+          controle.fechado = true;
+          document.removeEventListener('keydown', teclado, true);
+          if (Folha.atual === controle) Folha.atual = null;
+          if (!Folha.atual) dom.app.inert = false;
+          const remover = () => camada.remove();
+          if (imediato) remover();
+          else {
+            camada.classList.remove('aberta');
+            setTimeout(remover, 360);
+          }
+          if (!Folha.atual && focoAnterior && document.contains(focoAnterior)) focoAnterior.focus({ preventScroll: true });
+          if (aoFechar) aoFechar();
+        },
+      };
+
+      const teclado = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); controle.fechar(); return; }
+        if (e.key !== 'Tab') return;
+        const focaveis = Array.from(painel.querySelectorAll('button, input, select, [tabindex]:not([tabindex="-1"])'))
+          .filter((n) => !n.disabled && n.offsetParent !== null);
+        if (!focaveis.length) return;
+        const primeiro = focaveis[0];
+        const ultimo = focaveis[focaveis.length - 1];
+        if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+        else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
+      };
+
+      fundo.addEventListener('click', () => controle.fechar());
+      document.addEventListener('keydown', teclado, true);
+      document.body.append(camada);
+      dom.app.inert = true;
+      Folha.atual = controle;
+      requestAnimationFrame(() => requestAnimationFrame(() => camada.classList.add('aberta')));
+      const alvo = painel.querySelector('[data-foco-inicial]') || painel.querySelector('button, input, select');
+      if (alvo) alvo.focus({ preventScroll: true });
+      return controle;
+    },
+  };
+
+  const Modais = {
+    campoTexto({ id, rotulo, valor, obrigatorio, placeholder, maxlength, inputmode, autocapitalize }) {
+      const input = el('input', {
+        id, class: 'entrada', type: 'text', value: valor || '', placeholder, maxlength,
+        inputmode, autocapitalize, autocomplete: 'off', 'aria-required': obrigatorio ? 'true' : null,
+      });
+      const erro = el('p', { class: 'erro-campo', id: `${id}-erro`, hidden: true });
+      const campo = el('div', { class: 'campo' },
+        el('label', { for: id }, rotulo, obrigatorio ? el('span', { class: 'obrigatorio', 'aria-hidden': 'true' }, ' *') : null),
+        input, erro);
+      return { campo, input, erro };
+    },
+
+    campoValor({ id, rotulo, valor }) {
+      const input = el('input', {
+        id, class: 'entrada', type: 'text', inputmode: 'decimal', value: Util.valorParaCampo(valor),
+        placeholder: '0,00', autocomplete: 'off', enterkeyhint: 'next',
+      });
+      const erro = el('p', { class: 'erro-campo', id: `${id}-erro`, hidden: true });
+      const campo = el('div', { class: 'campo' },
+        el('label', { for: id, text: rotulo }),
+        el('div', { class: 'com-prefixo' }, el('span', { 'aria-hidden': 'true', text: 'R$' }), input),
+        erro);
+      return { campo, input, erro };
+    },
+
+    marcarErro(ref, mensagem) {
+      if (mensagem) {
+        ref.erro.textContent = mensagem;
+        ref.erro.hidden = false;
+        ref.input.setAttribute('aria-invalid', 'true');
+        ref.input.setAttribute('aria-describedby', ref.erro.id);
+      } else {
+        ref.erro.hidden = true;
+        ref.input.removeAttribute('aria-invalid');
+        ref.input.removeAttribute('aria-describedby');
+      }
+      return !mensagem;
+    },
+
+    validarValor(ref) {
+      const v = Util.lerValor(ref.input.value);
+      Modais.marcarErro(ref, Number.isNaN(v) ? 'Use só números, como 89,90.' : null);
+      return v;
+    },
+
+    formulario(tipo, item) {
+      const editando = Boolean(item);
+      const colecao = tipo === 'colecao';
+      let foto = item ? item.foto : null;
+
+      const numero = Modais.campoTexto({ id: 'f-numero', rotulo: 'Número', valor: item && item.numero, placeholder: '001', maxlength: 12, inputmode: 'numeric' });
+      const nome = Modais.campoTexto({ id: 'f-nome', rotulo: 'Nome', valor: item && item.nome, obrigatorio: true, placeholder: 'Ex.: Darth Vader', maxlength: 120, autocapitalize: 'words' });
+      const serie = Modais.campoTexto({ id: 'f-serie', rotulo: 'Série', valor: item && item.serie, placeholder: 'Ex.: Star Wars', maxlength: 120, autocapitalize: 'words' });
+
+      const select = el('select', { id: 'f-categoria', class: 'entrada', 'aria-required': 'true' },
+        el('option', { value: '', text: 'Escolha' }),
+        CATEGORIAS.map((c) => el('option', { value: c.nome, text: c.nome })));
+      select.value = item ? item.categoria : '';
+      const categoria = {
+        input: select,
+        erro: el('p', { class: 'erro-campo', id: 'f-categoria-erro', hidden: true }),
+      };
+      const campoCategoria = el('div', { class: 'campo' },
+        el('label', { for: 'f-categoria' }, 'Categoria', el('span', { class: 'obrigatorio', 'aria-hidden': 'true' }, ' *')),
+        select, categoria.erro);
+
+      const pago = colecao ? Modais.campoValor({ id: 'f-pago', rotulo: 'Valor pago', valor: item && item.valorPago }) : null;
+      const estimado = colecao ? Modais.campoValor({ id: 'f-estimado', rotulo: 'Valor estimado', valor: item && item.valorEstimado }) : null;
+
+      const preview = el('div', { class: 'foto-preview' });
+      const seletor = el('input', { type: 'file', accept: 'image/*', hidden: true, 'aria-hidden': 'true', tabindex: '-1' });
+      const btnFoto = el('button', { type: 'button', class: 'btn btn-secundario' });
+      const btnRemover = el('button', { type: 'button', class: 'btn btn-remover-foto', text: 'Remover foto' });
+      const desenharFoto = () => {
+        preview.replaceChildren(foto ? el('img', { src: foto, alt: 'Foto do Funko' }) : Util.icone('camera'));
+        btnFoto.replaceChildren(Util.icone('camera'), foto ? 'Trocar foto' : 'Adicionar foto');
+        btnRemover.hidden = !foto;
+      };
+      btnFoto.addEventListener('click', () => seletor.click());
+      btnRemover.addEventListener('click', () => { foto = null; desenharFoto(); btnFoto.focus(); });
+      seletor.addEventListener('change', async () => {
+        const arquivo = seletor.files && seletor.files[0];
+        seletor.value = '';
+        if (!arquivo) return;
+        if (arquivo.type && !arquivo.type.startsWith('image/')) {
+          Toast.erro('Esse arquivo não é uma imagem. Escolha uma foto.');
+          return;
+        }
+        btnFoto.disabled = true;
+        btnFoto.replaceChildren('Preparando foto…');
+        try {
+          foto = await Util.fotoParaJpeg(arquivo);
+        } catch (e) {
+          Toast.erro('Não foi possível abrir essa imagem. Tente outra foto em JPEG ou PNG.');
+        }
+        btnFoto.disabled = false;
+        desenharFoto();
+      });
+      desenharFoto();
+
+      const campoFoto = el('div', { class: 'campo' },
+        el('span', { class: 'campo-rotulo', text: 'Foto' }),
+        el('div', { class: 'foto-area' }, preview, el('div', { class: 'foto-botoes' }, btnFoto, btnRemover)), seletor);
+
+      const btnSalvar = el('button', { type: 'submit', class: 'btn btn-primario', text: editando ? 'Salvar alterações' : (colecao ? 'Salvar Funko' : 'Salvar na wishlist') });
+      let folha;
+      const form = el('form', { class: 'form', novalidate: true },
+        campoFoto,
+        el('div', { class: 'linha-2' }, numero.campo, campoCategoria),
+        nome.campo,
+        serie.campo,
+        colecao ? el('div', { class: 'linha-2' }, pago.campo, estimado.campo) : null,
+        el('div', { class: 'form-botoes' },
+          el('button', { type: 'button', class: 'btn btn-secundario', text: 'Cancelar', on: { click: () => folha.fechar() } }),
+          btnSalvar));
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const okNome = Modais.marcarErro(nome, nome.input.value.trim() ? null : 'Digite o nome do Funko.');
+        const okCategoria = Modais.marcarErro(categoria, MAPA_CATEGORIAS.has(select.value) ? null : 'Escolha uma categoria.');
+        const valorPago = colecao ? Modais.validarValor(pago) : null;
+        const valorEstimado = colecao ? Modais.validarValor(estimado) : null;
+        const okValores = !Number.isNaN(valorPago) && !Number.isNaN(valorEstimado);
+        if (!okNome || !okCategoria || !okValores) {
+          const primeiroErro = form.querySelector('[aria-invalid="true"]');
+          if (primeiroErro) primeiroErro.focus();
+          return;
+        }
+        const dados = {
+          numero: numero.input.value.trim(),
+          nome: nome.input.value.trim(),
+          serie: serie.input.value.trim(),
+          categoria: select.value,
+          foto,
+          valorPago,
+          valorEstimado,
+        };
+        const ok = editando ? Estado.atualizar(tipo, item.id, dados) : Estado.adicionar(tipo, dados);
+        if (!ok) return;
+        folha.fechar();
+        Toast.ok(editando ? 'Alterações salvas' : (colecao ? 'Funko salvo na coleção' : 'Funko salvo na wishlist'));
+      });
+
+      for (const ref of [nome, categoria, pago, estimado].filter(Boolean)) {
+        ref.input.addEventListener(ref.input.tagName === 'SELECT' ? 'change' : 'input', () => Modais.marcarErro(ref, null));
+      }
+
+      const titulo = editando ? 'Editar Funko' : (colecao ? 'Novo Funko na coleção' : 'Novo Funko na wishlist');
+      if (!editando) nome.input.setAttribute('data-foco-inicial', '');
+      folha = Folha.abrir({ rotulo: titulo, conteudo: [el('h2', { text: titulo }), form] });
+    },
+
+    acoes(tipo, id) {
+      const item = Estado.buscar(tipo, id);
+      if (!item) return;
+      const colecao = tipo === 'colecao';
+      let folha;
+      const acao = (icone, texto, fn, perigo) => el('button', {
+        type: 'button', class: `acao${perigo ? ' acao-perigo' : ''}`,
+        on: { click: () => { folha.fechar(true); fn(); } },
+      }, Util.icone(icone), texto);
+
+      const conteudo = [
+        el('div', { class: 'grupo-acoes' },
+          el('div', { class: 'grupo-acoes-titulo', text: item.numero ? `#${item.numero} ${item.nome}` : item.nome }),
+          acao('editar', 'Editar', () => Modais.formulario(tipo, item)),
+          colecao
+            ? acao('mover', 'Mover para Wishlist', () => {
+              if (Estado.mover(id, 'colecao', 'wishlist', {})) Toast.ok('Movido para a wishlist');
+            })
+            : acao('mover', 'Mover para Coleção', () => Modais.moverParaColecao(id)),
+          acao('lixeira', 'Excluir', () => Modais.confirmarExclusao(tipo, item), true)),
+        el('button', { type: 'button', class: 'acao acao-cancelar', text: 'Cancelar', on: { click: () => folha.fechar() } }),
+      ];
+      folha = Folha.abrir({ rotulo: `Ações para ${item.nome}`, conteudo, acoes: true });
+    },
+
+    confirmar({ titulo, texto, confirmar, perigo }) {
+      return new Promise((resolve) => {
+        let resposta = false;
+        let folha;
+        const conteudo = [
+          el('h2', { text: titulo }),
+          el('p', { class: 'folha-texto', text: texto }),
+          el('div', { class: 'form-botoes' },
+            el('button', { type: 'button', class: 'btn btn-secundario', text: 'Cancelar', 'data-foco-inicial': true, on: { click: () => folha.fechar() } }),
+            el('button', {
+              type: 'button', class: `btn ${perigo ? 'btn-perigo' : 'btn-primario'}`, text: confirmar,
+              on: { click: () => { resposta = true; folha.fechar(); } },
+            })),
+        ];
+        folha = Folha.abrir({ rotulo: titulo, conteudo, aoFechar: () => resolve(resposta) });
+      });
+    },
+
+    async confirmarExclusao(tipo, item) {
+      const sim = await Modais.confirmar({
+        titulo: `Excluir ${item.nome}?`,
+        texto: `O Funko e a foto saem da ${tipo === 'colecao' ? 'coleção' : 'wishlist'}. Não dá para desfazer.`,
+        confirmar: 'Excluir Funko',
+        perigo: true,
+      });
+      if (sim && Estado.excluir(tipo, item.id)) Toast.ok('Funko excluído');
+    },
+
+    moverParaColecao(id) {
+      const item = Estado.buscar('wishlist', id);
+      if (!item) return;
+      const pago = Modais.campoValor({ id: 'm-pago', rotulo: 'Valor pago', valor: null });
+      const estimado = Modais.campoValor({ id: 'm-estimado', rotulo: 'Valor estimado', valor: null });
+      pago.input.setAttribute('data-foco-inicial', '');
+      for (const ref of [pago, estimado]) ref.input.addEventListener('input', () => Modais.marcarErro(ref, null));
+      let folha;
+      const form = el('form', { class: 'form', novalidate: true },
+        el('p', { class: 'folha-texto', text: `Quanto você pagou por ${item.nome}? Deixe em branco se não souber.` }),
+        el('div', { class: 'linha-2' }, pago.campo, estimado.campo),
+        el('div', { class: 'form-botoes' },
+          el('button', { type: 'button', class: 'btn btn-secundario', text: 'Cancelar', on: { click: () => folha.fechar() } }),
+          el('button', { type: 'submit', class: 'btn btn-primario', text: 'Mover para a coleção' })));
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const valorPago = Modais.validarValor(pago);
+        const valorEstimado = Modais.validarValor(estimado);
+        if (Number.isNaN(valorPago) || Number.isNaN(valorEstimado)) {
+          form.querySelector('[aria-invalid="true"]').focus();
+          return;
+        }
+        if (!Estado.mover(id, 'wishlist', 'colecao', { valorPago, valorEstimado })) return;
+        folha.fechar();
+        Toast.ok('Movido para a coleção');
+      });
+      folha = Folha.abrir({ rotulo: 'Mover para a coleção', conteudo: [el('h2', { text: 'Mover para a coleção' }), form] });
+    },
+  };
+
+  /* =======================================================
+     BACKUP
+     ======================================================= */
+  const Backup = {
+    montarArquivo() {
+      const dados = {
+        app: 'funko-tracker',
+        versao: 1,
+        exportadoEm: new Date().toISOString(),
+        colecao: Estado.listas.colecao,
+        wishlist: Estado.listas.wishlist,
+      };
+      const nome = `funko-tracker-backup-${Util.hoje()}.json`;
+      const json = JSON.stringify(dados, null, 2);
+      return { nome, json };
+    },
+
+    registrar() {
+      Storage.gravarTexto(CHAVE_ULTIMO_BACKUP, new Date().toISOString());
+      Render.dashboard();
+      Toast.ok('Backup exportado');
+    },
+
+    baixar(nome, json) {
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const link = el('a', { href: url, download: nome, hidden: true });
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    },
+
+    async exportar() {
+      const { nome, json } = Backup.montarArquivo();
+      let arquivo = null;
+      try { arquivo = new File([json], nome, { type: 'application/json' }); } catch (e) { arquivo = null; }
+      if (arquivo && navigator.canShare && navigator.share && navigator.canShare({ files: [arquivo] })) {
+        try {
+          await navigator.share({ files: [arquivo], title: 'Backup do Funko Tracker' });
+          Backup.registrar();
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+        }
+      }
+      try {
+        Backup.baixar(nome, json);
+        Backup.registrar();
+      } catch (e) {
+        Toast.erro('Não foi possível gerar o arquivo. Tente de novo pelo Safari.');
+      }
+    },
+
+    escolherArquivo() {
+      const input = document.getElementById('arquivo-backup');
+      input.value = '';
+      input.click();
+    },
+
+    async importar(arquivo) {
+      let dados;
+      try {
+        dados = JSON.parse(await Util.lerArquivoTexto(arquivo));
+      } catch (e) {
+        Toast.erro('Esse arquivo não é um backup válido. Escolha o .json exportado pelo Funko Tracker.');
+        return;
+      }
+      if (!dados || typeof dados !== 'object' || (!Array.isArray(dados.colecao) && !Array.isArray(dados.wishlist))) {
+        Toast.erro('Esse arquivo não é um backup válido. Escolha o .json exportado pelo Funko Tracker.');
+        return;
+      }
+      const brutoC = Array.isArray(dados.colecao) ? dados.colecao : [];
+      const brutoW = Array.isArray(dados.wishlist) ? dados.wishlist : [];
+      const { colecao, wishlist } = Storage.normalizarListas(brutoC, brutoW);
+      const ignorados = brutoC.length + brutoW.length - colecao.length - wishlist.length;
+      if (!colecao.length && !wishlist.length && ignorados > 0) {
+        Toast.erro('Nenhum Funko desse backup pôde ser lido. Confira se o arquivo é do Funko Tracker.');
+        return;
+      }
+
+      const atuais = Estado.listas.colecao.length + Estado.listas.wishlist.length;
+      const partes = [
+        `O backup tem ${Util.plural(colecao.length, 'Funko', 'Funkos')} na coleção e ${wishlist.length} na wishlist.`,
+        atuais ? `Os ${Util.plural(atuais, 'Funko', 'Funkos')} de agora serão apagados.` : '',
+        ignorados ? `${Util.plural(ignorados, 'item inválido será ignorado', 'itens inválidos serão ignorados')}.` : '',
+      ].filter(Boolean);
+      const sim = await Modais.confirmar({
+        titulo: 'Substituir seus dados?',
+        texto: partes.join(' '),
+        confirmar: 'Substituir dados',
+        perigo: atuais > 0,
+      });
+      if (sim && Estado.substituirTudo(colecao, wishlist)) Toast.ok('Backup importado');
+    },
+  };
+
+  /* =======================================================
+     INTERAÇÕES: abas, cards e toque longo
+     ======================================================= */
+  const Interacoes = {
+    trocarAba(aba, focar) {
+      if (Estado.aba === aba) {
+        dom.conteudo.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      Estado.aba = aba;
+      Render.cabecalho();
+      dom.conteudo.scrollTop = 0;
+      dom.topo.classList.remove('rolado');
+      if (focar) dom.abas.find((b) => b.dataset.aba === aba).focus();
+    },
+
+    ligarCards(grade, tipo) {
+      let timer = null;
+      let inicio = null;
+      let alvo = null;
+      let suprimirClique = false;
+
+      const cancelar = () => {
+        if (timer) { clearTimeout(timer); timer = null; }
+        if (alvo) { alvo.classList.remove('pressionado'); alvo = null; }
+      };
+
+      grade.addEventListener('pointerdown', (e) => {
+        suprimirClique = false;
+        const card = e.target.closest('.pop');
+        if (!card || e.target.closest('.pop-mais')) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        inicio = { x: e.clientX, y: e.clientY };
+        alvo = card;
+        card.classList.add('pressionado');
+        timer = setTimeout(() => {
+          timer = null;
+          suprimirClique = true;
+          const id = card.dataset.id;
+          cancelar();
+          Modais.acoes(tipo, id);
+        }, TOQUE_LONGO_MS);
+      });
+      grade.addEventListener('pointermove', (e) => {
+        if (timer && inicio && Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y) > 10) cancelar();
+      });
+      for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) grade.addEventListener(ev, cancelar);
+      grade.addEventListener('contextmenu', (e) => { if (e.target.closest('.pop')) e.preventDefault(); });
+
+      grade.addEventListener('click', (e) => {
+        if (suprimirClique) {
+          suprimirClique = false;
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        const card = e.target.closest('.pop');
+        if (!card) return;
+        const id = card.dataset.id;
+        if (e.target.closest('.pop-mais')) Modais.acoes(tipo, id);
+        else if (e.target.closest('.pop-corpo')) {
+          const item = Estado.buscar(tipo, id);
+          if (item) Modais.formulario(tipo, item);
+        }
+      });
+    },
+
+    ligar() {
+      for (const botao of dom.abas) {
+        botao.addEventListener('click', () => Interacoes.trocarAba(botao.dataset.aba));
+        botao.addEventListener('keydown', (e) => {
+          const ordem = dom.abas.map((b) => b.dataset.aba);
+          const i = ordem.indexOf(botao.dataset.aba);
+          let proxima = null;
+          if (e.key === 'ArrowRight') proxima = ordem[(i + 1) % ordem.length];
+          else if (e.key === 'ArrowLeft') proxima = ordem[(i - 1 + ordem.length) % ordem.length];
+          else if (e.key === 'Home') proxima = ordem[0];
+          else if (e.key === 'End') proxima = ordem[ordem.length - 1];
+          if (proxima) { e.preventDefault(); Interacoes.trocarAba(proxima, true); }
+        });
+      }
+      dom.btnAdicionar.addEventListener('click', () => Modais.formulario(Estado.aba === 'wishlist' ? 'wishlist' : 'colecao'));
+      dom.conteudo.addEventListener('scroll', () => {
+        dom.topo.classList.toggle('rolado', dom.conteudo.scrollTop > 4);
+      }, { passive: true });
+      document.getElementById('arquivo-backup').addEventListener('change', (e) => {
+        const arquivo = e.target.files && e.target.files[0];
+        if (arquivo) Backup.importar(arquivo);
+      });
+    },
+  };
+
+  /* =======================================================
+     INICIALIZAÇÃO
+     ======================================================= */
+  function iniciar() {
+    Render.montar();
+    const { colecao, wishlist } = Storage.carregarTudo();
+    Estado.listas.colecao = colecao;
+    Estado.listas.wishlist = wishlist;
+    Interacoes.ligar();
+    Render.tudo();
+    if (!Storage.disponivel()) {
+      Toast.erro('O navegador bloqueou o armazenamento. Saia da navegação privada para salvar seus Funkos.');
+    }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(() => { /* o app segue funcionando online */ });
+      });
+    }
+  }
+
+  iniciar();
+})();
+</script>
+</body>
+</html>
